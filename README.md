@@ -8,6 +8,23 @@ Static assets served at `https://credentials.andamio.io`. Hosts the JSON-LD cont
 |---|---|---|
 | `context/v0.jsonld` | `credentials.andamio.io/context/v0.jsonld` | **Pre-stable** JSON-LD context for Andamio's OB 3.0 extension terms (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). Used by spike credentials while the schema iterates toward v1. |
 
+## Planned: badge imagery
+
+A `badges/` directory will live alongside `context/`, holding the visual artifacts referenced by `achievement.image` in OB 3.0 credentials:
+
+```
+credentials.andamio.io/context/v0.jsonld       ← schema
+credentials.andamio.io/badges/{...}.png        ← imagery
+```
+
+The `image` field is part of standard OB 3.0 (no `andamio:` extension needed), but the *hosting* lives here so badges sit next to the schema they belong to. Open questions still to settle before content lands:
+
+- Naming convention (by policyId? by human-readable slug? per-achievement-version?)
+- Format and sizing (likely SVG primary + PNG fallback at ~512×512)
+- Whether issuer-org-owned badges live here or in per-issuer repos long-term
+
+These get answered as part of the badge-design workstream — separate from this repo's infrastructure setup.
+
 ## Versioning
 
 - **`v0`** is the **pre-stable** schema. Expect breaking changes. Demo credentials issued against v0 (e.g. the OB 3.0 spike's james and njuguna samples) are explicitly snapshots of in-flight work, not durable references.
