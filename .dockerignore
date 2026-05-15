@@ -6,6 +6,8 @@
 !context/**
 !issuer/
 !issuer/**
+!badges/
+!badges/**
 !README.md
 !nginx/
 !nginx/**

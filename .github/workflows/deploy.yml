@@ -64,9 +64,12 @@ jobs:
       - name: Verify Content-Type + reachability on the *.run.app URL
         run: |
           URL=$(gcloud run services describe "${GCP_SERVICE}" --region "${GCP_REGION}" --project "${GCP_PROJECT}" --format='value(status.url)')
-          for path in /context/v0.jsonld /issuer; do
-            ct=$(curl -sI "${URL}${path}" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
-            echo "${path} Content-Type: $ct"
-            test "$ct" = "application/ld+json"
-            curl -sf "${URL}${path}" >/dev/null
-          done
+          assert_ct() {
+            ct=$(curl -sI "${URL}$1" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+            echo "$1 Content-Type: $ct (expected $2)"
+            test "$ct" = "$2"
+            curl -sf "${URL}$1" >/dev/null
+          }
+          assert_ct /context/v0.jsonld   application/ld+json
+          assert_ct /issuer              application/ld+json
+          assert_ct /badges/_placeholder.svg image/svg+xml

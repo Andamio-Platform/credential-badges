@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Andamio badge placeholder">
+  <title>Andamio badge — placeholder</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f2a44"/>
+      <stop offset="1" stop-color="#3b4d7a"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="240" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="240" fill="none" stroke="#9fb3e0" stroke-width="6"/>
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#9fb3e0" stroke-width="2" stroke-dasharray="4 8"/>
+  <text x="256" y="232" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
+        font-size="44" fill="#ffffff" font-weight="bold" letter-spacing="2">ANDAMIO</text>
+  <text x="256" y="280" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
+        font-size="22" fill="#9fb3e0" letter-spacing="3">CREDENTIAL</text>
+  <text x="256" y="330" text-anchor="middle" font-family="-apple-system, Helvetica, Arial, sans-serif"
+        font-size="16" fill="#6f82ad" letter-spacing="2">PLACEHOLDER ART</text>
+</svg>
