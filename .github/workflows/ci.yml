@@ -19,14 +19,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build image (no push) — proves the Dockerfile + allowlist build
         run: docker build -t credential-badges:ci .
-      - name: Smoke test — context + issuer profile resolve with JSON-LD content type
+      - name: Smoke test — served paths resolve with correct content types
         run: |
           docker run -d --name cb -p 8080:8080 credential-badges:ci
           sleep 2
-          for path in /context/v0.jsonld /issuer; do
-            ct=$(curl -sI "http://localhost:8080${path}" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
-            echo "${path} Content-Type: $ct"
-            test "$ct" = "application/ld+json"
-            curl -sf "http://localhost:8080${path}" >/dev/null
-          done
+          assert_ct() {
+            ct=$(curl -sI "http://localhost:8080$1" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+            echo "$1 Content-Type: $ct (expected $2)"
+            test "$ct" = "$2"
+            curl -sf "http://localhost:8080$1" >/dev/null
+          }
+          assert_ct /context/v0.jsonld   application/ld+json
+          assert_ct /issuer              application/ld+json
+          assert_ct /badges/_placeholder.svg image/svg+xml
           docker rm -f cb

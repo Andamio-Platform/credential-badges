@@ -6,9 +6,10 @@
 # deciding it is safe to serve publicly and forever.
 #
 # Currently allowlisted: context/ (the deliverable), issuer/ (the hosted
-# OB 3.0 issuer Profile), and README.md.
-# When schemas/ or badges/ land and are confirmed public, add explicit
-# COPY lines for them here AND update scripts/ci/check-allowlist.sh.
+# OB 3.0 issuer Profile), badges/ (presentation-layer badge imagery), and
+# README.md.
+# When schemas/ land and are confirmed public, add an explicit COPY line
+# here AND update scripts/ci/check-allowlist.sh.
 
 FROM nginx:alpine
 
@@ -19,6 +20,7 @@ COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 COPY context/   /usr/share/nginx/html/context/
 COPY issuer/    /usr/share/nginx/html/issuer/
+COPY badges/    /usr/share/nginx/html/badges/
 COPY README.md  /usr/share/nginx/html/README.md
 
 EXPOSE 8080

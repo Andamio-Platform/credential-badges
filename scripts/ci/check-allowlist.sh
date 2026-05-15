@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # Top-level repo entries that ARE allowed to be served.
-ALLOWED=("context" "issuer" "README.md")
+ALLOWED=("context" "issuer" "badges" "README.md")
 
 # Repo paths that exist for tooling/build and are never served — ignore them.
 IGNORED_PREFIXES=(".git" ".github" "nginx" "scripts" "Dockerfile" ".dockerignore" "DEPLOY.md")

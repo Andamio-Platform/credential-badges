@@ -8,23 +8,35 @@ Static assets served at `https://credentials.andamio.io`. Hosts the JSON-LD cont
 |---|---|---|
 | `context/v0.jsonld` | `credentials.andamio.io/context/v0.jsonld` | **Pre-stable** JSON-LD context for Andamio's OB 3.0 extension terms (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). Used by spike credentials while the schema iterates toward v1. |
 | `issuer/profile.jsonld` | `credentials.andamio.io/issuer` | Hosted OB 3.0 issuer `Profile`. Credentials carry `issuer.url` = this URL; strict verifiers (e.g. 1EdTech) dereference it and expect `application/ld+json`. Served at the extensionless path `/issuer` via an nginx exact-match. **Mutable** (unlike versioned contexts) — cached but not `immutable`. |
+| `badges/*.svg` (+ `.png`) | `credentials.andamio.io/badges/...` | Presentation-layer badge imagery referenced by `achievement.image` in OB 3.0 credentials. **Never identity-bearing** — the on-chain anchor is the credential's identity; the image is a mutable pointer. SVG-primary (git-diffable, no history bloat). **Mutable** — cached but not `immutable`. `_placeholder.svg` is a demo asset. |
 
-## Planned: badge imagery
+## Badge imagery
 
-A `badges/` directory will live alongside `context/`, holding the visual artifacts referenced by `achievement.image` in OB 3.0 credentials:
+The `badges/` directory holds the visual artifacts referenced by
+`achievement.image` in OB 3.0 credentials:
 
 ```
-credentials.andamio.io/context/v0.jsonld       ← schema
-credentials.andamio.io/badges/{...}.png        ← imagery
+credentials.andamio.io/context/v0.jsonld          ← schema (immutable, versioned)
+credentials.andamio.io/badges/{...}.svg           ← imagery (mutable)
 ```
 
-The `image` field is part of standard OB 3.0 (no `andamio:` extension needed), but the *hosting* lives here so badges sit next to the schema they belong to. Open questions still to settle before content lands:
+The `image` field is standard OB 3.0 (no `andamio:` extension). Hosting lives
+here so badges sit next to the schema they belong to. **v1 design decision**
+(full rationale in the `credential-imagery` design doc in the OB 3.0 spike;
+work tracked as repo issues):
 
-- Naming convention (by policyId? by human-readable slug? per-achievement-version?)
-- Format and sizing (likely SVG primary + PNG fallback at ~512×512)
-- Whether issuer-org-owned badges live here or in per-issuer repos long-term
+- **Presentation-layer only.** The image is *never* identity-bearing. A
+  credential's identity is its on-chain anchor; the image is a pointer the
+  credential carries. An issuer may refresh badge art at any time without
+  invalidating any issued credential — hence the non-`immutable` cache.
+- **Keys off `badge_id`** (a badge = any subset of 1+ modules), not the
+  course or the SLT.
+- **SVG-primary**, optional small PNG fallback (~512×512). SVG is text:
+  git-diffable, no history bloat, scales crisply.
 
-These get answered as part of the badge-design workstream — separate from this repo's infrastructure setup.
+Still to settle (tracked as issues, decision-coupled to the issuer-identity
+work): final naming convention (policyId vs human slug vs per-version), and
+whether per-org badges live in this repo or per-issuer repos long-term.
 
 ## Versioning
 
