@@ -5,7 +5,8 @@
 # internal content to strict verifiers worldwide. Add a path here only after
 # deciding it is safe to serve publicly and forever.
 #
-# Currently allowlisted: context/ (the deliverable) and README.md.
+# Currently allowlisted: context/ (the deliverable), issuer/ (the hosted
+# OB 3.0 issuer Profile), and README.md.
 # When schemas/ or badges/ land and are confirmed public, add explicit
 # COPY lines for them here AND update scripts/ci/check-allowlist.sh.
 
@@ -17,6 +18,7 @@ RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 COPY context/   /usr/share/nginx/html/context/
+COPY issuer/    /usr/share/nginx/html/issuer/
 COPY README.md  /usr/share/nginx/html/README.md
 
 EXPOSE 8080

@@ -7,6 +7,7 @@ Static assets served at `https://credentials.andamio.io`. Hosts the JSON-LD cont
 | Path | Served at | Purpose |
 |---|---|---|
 | `context/v0.jsonld` | `credentials.andamio.io/context/v0.jsonld` | **Pre-stable** JSON-LD context for Andamio's OB 3.0 extension terms (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). Used by spike credentials while the schema iterates toward v1. |
+| `issuer/profile.jsonld` | `credentials.andamio.io/issuer` | Hosted OB 3.0 issuer `Profile`. Credentials carry `issuer.url` = this URL; strict verifiers (e.g. 1EdTech) dereference it and expect `application/ld+json`. Served at the extensionless path `/issuer` via an nginx exact-match. **Mutable** (unlike versioned contexts) — cached but not `immutable`. |
 
 ## Planned: badge imagery
 

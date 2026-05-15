@@ -1,0 +1,11 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"
+  ],
+  "id": "https://credentials.andamio.io/issuer",
+  "type": ["Profile"],
+  "name": "Andamio",
+  "url": "https://credentials.andamio.io",
+  "description": "Andamio is an on-chain credential protocol on Cardano. Andamio credentials anchor course and project attestations in a recipient's on-chain Access Token global state; the Open Badges 3.0 / W3C VC 2.0 JSON-LD shape is a portable view of that anchor so non-Cardano verifiers can read it. This is the hosted issuer profile that the `issuer.url` field in those credentials dereferences to. Pre-stable: spike credentials (e.g. the OB 3.0 james and njuguna samples) identify their issuer by a throwaway did:key and reference this profile only as an informational URL; production credentials will move to did:web:credentials.andamio.io or a per-organization issuer DID."
+}
