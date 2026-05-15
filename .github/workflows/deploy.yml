@@ -1,0 +1,70 @@
+name: deploy
+
+# Triggers ONLY on version tags. This matches the WIF binding, which is
+# ref-constrained at the OIDC assertion level to refs/tags/v* in
+# andamio-ops (terraform/credentials/credential-badges). A push to a branch
+# or a workflow_dispatch cannot mint a deploy token even if this file were
+# tampered with on a feature branch — enforcement is at token-mint time.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  id-token: write # required for WIF OIDC
+
+env:
+  GCP_PROJECT: andamio-credentials
+  GCP_REGION: us-central1
+  GCP_SERVICE: credential-badges
+  AR_IMAGE: us-central1-docker.pkg.dev/andamio-credentials/credential-badges/app
+  WIF_PROVIDER: projects/780530615158/locations/global/workloadIdentityPools/credential-badges-pool/providers/github-actions
+  CICD_SA: credential-badges-cicd-sa@andamio-credentials.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce served-file allowlist
+        run: bash scripts/ci/check-allowlist.sh
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.CICD_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build + tag (SHA-pinned AND semver; never :latest)
+        run: |
+          SEMVER="${GITHUB_REF_NAME}"
+          docker build -t "${AR_IMAGE}:${GITHUB_SHA}" -t "${AR_IMAGE}:${SEMVER}" .
+
+      - name: Push (immutable AR rejects any re-push of an existing tag)
+        run: |
+          docker push "${AR_IMAGE}:${GITHUB_SHA}"
+          docker push "${AR_IMAGE}:${GITHUB_REF_NAME}"
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "${GCP_SERVICE}" \
+            --image "${AR_IMAGE}:${GITHUB_REF_NAME}" \
+            --region "${GCP_REGION}" \
+            --project "${GCP_PROJECT}" \
+            --platform managed \
+            --quiet
+
+      - name: Verify Content-Type + reachability on the *.run.app URL
+        run: |
+          URL=$(gcloud run services describe "${GCP_SERVICE}" --region "${GCP_REGION}" --project "${GCP_PROJECT}" --format='value(status.url)')
+          ct=$(curl -sI "${URL}/context/v0.jsonld" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "Content-Type: $ct"
+          test "$ct" = "application/ld+json"
+          curl -sf "${URL}/context/v0.jsonld" >/dev/null

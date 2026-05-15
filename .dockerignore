@@ -1,0 +1,9 @@
+# Belt-and-suspenders. The allowlist Dockerfile is the load-bearing control
+# (it COPYs explicit paths, never `.`), but this keeps the build context
+# minimal and is a second line of defense against accidental disclosure.
+*
+!context/
+!context/**
+!README.md
+!nginx/
+!nginx/**

@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  allowlist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enforce served-file allowlist
+        run: bash scripts/ci/check-allowlist.sh
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (no push) — proves the Dockerfile + allowlist build
+        run: docker build -t credential-badges:ci .
+      - name: Smoke test — context resolves with JSON-LD content type
+        run: |
+          docker run -d --name cb -p 8080:8080 credential-badges:ci
+          sleep 2
+          ct=$(curl -sI http://localhost:8080/context/v0.jsonld | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "Content-Type: $ct"
+          test "$ct" = "application/ld+json"
+          curl -sf http://localhost:8080/context/v0.jsonld >/dev/null
+          docker rm -f cb

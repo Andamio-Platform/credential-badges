@@ -33,16 +33,16 @@ These get answered as part of the badge-design workstream — separate from this
 
 ## How it gets deployed
 
-Hosted on Google Cloud Run with a custom domain mapping to `credentials.andamio.io`. DNS is managed in [`andamio-ops`](https://github.com/Andamio-Platform/andamio-ops). Deployment is a `gcloud run deploy` from this repo's `main` branch.
+Hosted on Google Cloud Run (`andamio-credentials` GCP project) with a custom domain mapping to `credentials.andamio.io`. Infra is managed in [`andamio-ops`](https://github.com/Andamio-Platform/andamio-ops) under `terraform/credentials/`. Deployment is **tag-triggered** via GitHub Actions + Workload Identity Federation — pushing a `vX.Y.Z` tag builds the image and deploys it. There is intentionally **no branch/`main` deploy**: the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC assertion level, so only tag pushes can mint a deploy token.
 
-For the deploy command and Cloud Run service config, see [`DEPLOY.md`](DEPLOY.md) (TODO once service is created).
+For the full deploy mechanism, allowlist rule, and tag policy, see [`DEPLOY.md`](DEPLOY.md).
 
 ## How to update
 
-1. Open a PR. Context files are immutable — only fix typos or add a new version file; never edit a published version in place.
+1. Open a PR. Context files are immutable — only fix typos or add a **new** version file; never edit a published version in place. CI enforces the served-file allowlist.
 2. Merge to `main`.
-3. Run `gcloud run deploy` (or trigger via Cloud Build, once wired).
-4. Verify the URL resolves with `Content-Type: application/ld+json` and the file is byte-identical to the repo copy.
+3. Push a version tag: `git tag v0.1.2 && git push origin v0.1.2`. GitHub Actions builds, pushes (SHA + semver tags, never `:latest`), and deploys. Artifact Registry has immutable tags — re-pushing an existing tag is rejected, so always bump.
+4. Verify `https://credentials.andamio.io/context/v0.jsonld` resolves with `Content-Type: application/ld+json` and is byte-identical to the repo copy.
 
 ## Background
 
