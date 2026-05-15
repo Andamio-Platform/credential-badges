@@ -1,10 +1,10 @@
 name: deploy
 
 # Triggers ONLY on version tags. This matches the WIF binding, which is
-# ref-constrained at the OIDC assertion level to refs/tags/v* in
-# andamio-ops (terraform/credentials/credential-badges). A push to a branch
-# or a workflow_dispatch cannot mint a deploy token even if this file were
-# tampered with on a feature branch — enforcement is at token-mint time.
+# ref-constrained at the OIDC assertion level to refs/tags/v* in the
+# private ops Terraform. A push to a branch or a workflow_dispatch cannot
+# mint a deploy token even if this file were tampered with on a feature
+# branch — enforcement is at token-mint time.
 on:
   push:
     tags:

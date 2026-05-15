@@ -34,7 +34,7 @@ These get answered as part of the badge-design workstream — separate from this
 
 ## How it gets deployed
 
-Hosted on Google Cloud Run (`andamio-credentials` GCP project) with a custom domain mapping to `credentials.andamio.io`. Infra is managed in [`andamio-ops`](https://github.com/Andamio-Platform/andamio-ops) under `terraform/credentials/`. Deployment is **tag-triggered** via GitHub Actions + Workload Identity Federation — pushing a `vX.Y.Z` tag builds the image and deploys it. There is intentionally **no branch/`main` deploy**: the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC assertion level, so only tag pushes can mint a deploy token.
+Hosted on Google Cloud Run (`andamio-credentials` GCP project) with a custom domain mapping to `credentials.andamio.io`. Infra is managed with Terraform in a private operations repository. Deployment is **tag-triggered** via GitHub Actions + Workload Identity Federation — pushing a `vX.Y.Z` tag builds the image and deploys it. There is intentionally **no branch/`main` deploy**: the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC assertion level, so only tag pushes can mint a deploy token.
 
 For the full deploy mechanism, allowlist rule, and tag policy, see [`DEPLOY.md`](DEPLOY.md).
 

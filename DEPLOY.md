@@ -12,7 +12,7 @@ How `credential-badges` gets to `https://credentials.andamio.io/`.
 | Artifact Registry | `immutable_tags = true`, no cleanup policy — published tags are retrievable forever |
 | Auth | Workload Identity Federation, **ref-constrained to `refs/tags/v*`** |
 | Domain | `google_cloud_run_domain_mapping`, Google-managed cert, `force_override = false` |
-| Infra source of truth | [`andamio-ops`](https://github.com/Andamio-Platform/andamio-ops) `terraform/credentials/credential-badges/` |
+| Infra source of truth | Terraform, in a private operations repository |
 
 ## Deploy = push a version tag
 
@@ -38,10 +38,10 @@ The `Dockerfile` uses **explicit `COPY` of allowlisted paths only** (`context/`,
 
 ## Versioning & permanence
 
-`vN.jsonld` files are immutable once published. Add a new version as a new file (`v1.jsonld`); never edit a published one. Immutable AR tags + the andamio-ops project-deletion lien + an off-org mirror (see andamio-ops `terraform/credentials/credential-badges/README.md`) back the "resolves forever" commitment.
+`vN.jsonld` files are immutable once published. Add a new version as a new file (`v1.jsonld`); never edit a published one. Immutable AR tags + the GCP project-deletion lien + an off-org mirror back the "resolves forever" commitment.
 
 ## First deploy / rollback notes
 
-- Initial bootstrap (project, WIF, AR, Cloud Run, domain mapping) was done in andamio-ops; the first image was built and deployed manually as `v0.1.1` (equivalent to what this workflow does).
-- Rollback: re-pin the previous tag in andamio-ops `envs/credentials.tfvars` and `terraform apply`, or `gcloud run deploy` the previous tag. Cloud Run rolls back in <60s.
+- Initial bootstrap (project, WIF, AR, Cloud Run, domain mapping) was done via Terraform; the first image was built and deployed manually as `v0.1.1` (equivalent to what this workflow does).
+- Rollback: re-pin the previous tag in the Terraform vars and `terraform apply`, or `gcloud run deploy` the previous tag. Cloud Run rolls back in <60s.
 - `/` returns a tiny 200 landing page (keeps health probes trivial); the deliverable is `/context/v0.jsonld`.
