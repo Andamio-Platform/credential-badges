@@ -4,6 +4,8 @@
 *
 !context/
 !context/**
+!issuer/
+!issuer/**
 !README.md
 !nginx/
 !nginx/**
