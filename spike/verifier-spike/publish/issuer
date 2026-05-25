@@ -1,0 +1,14 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"
+  ],
+  "id": "did:web:workshop-maybe.github.io:credential-badges-verifier-spike",
+  "type": [
+    "Profile",
+    "AttestationHost"
+  ],
+  "name": "Andamio",
+  "url": "https://workshop-maybe.github.io/credential-badges-verifier-spike/issuer",
+  "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner, the assessor, and the Cardano chain. Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain — it does not claim authority over what the credential means."
+}

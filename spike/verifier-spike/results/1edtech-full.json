@@ -1,0 +1,79 @@
+{
+    "id": "53c11b7b-064c-40d1-9b94-39a86ba94fd2",
+    "generated": "2026-05-25T18:06:17",
+    "generator": "OB30Inspector",
+    "input": {
+        "name": "credential.jsonld",
+        "type": "JSON"
+    },
+    "summary": {
+        "outcome": "ERROR",
+        "fatals": 0,
+        "errors": 1,
+        "warnings": 5,
+        "exceptions": 0,
+        "notRun": 0,
+        "totalRun": 13
+    },
+    "specification": {
+        "pid": "ob30.pid",
+        "shortName": "ob",
+        "version": "3.0",
+        "title": "Open Badges 3.0"
+    },
+    "fatals": [],
+    "errors": [
+        {
+            "message": "evidence is not of type \"Evidence\"",
+            "location": {
+                "resource": "https://workshop-maybe.github.io/credential-badges-verifier-spike/credential.jsonld"
+            },
+            "generator": "EvidenceProbe",
+            "detailsMessage": null
+        }
+    ],
+    "warnings": [
+        {
+            "message": "JSON-LD schema validation succeed. However, Plain JSON schema validation failed, so it could have an impact when working with plain JSON platforms. Error:$: must be valid to one and only one schema, but 0 are valid",
+            "location": {
+                "resource": "https://workshop-maybe.github.io/credential-badges-verifier-spike/credential.jsonld"
+            },
+            "generator": "JsonSchemasProbe",
+            "detailsMessage": null
+        },
+        {
+            "message": "JSON-LD schema validation succeed. However, Plain JSON schema validation failed, so it could have an impact when working with plain JSON platforms. Error:$.evidence[0].type: string found, array expected",
+            "location": {
+                "resource": "https://workshop-maybe.github.io/credential-badges-verifier-spike/credential.jsonld"
+            },
+            "generator": "JsonSchemasProbe",
+            "detailsMessage": null
+        },
+        {
+            "message": "JSON-LD schema validation succeed. However, Plain JSON schema validation failed, so it could have an impact when working with plain JSON platforms. Error:$.proof: object found, array expected",
+            "location": {
+                "resource": "https://workshop-maybe.github.io/credential-badges-verifier-spike/credential.jsonld"
+            },
+            "generator": "JsonSchemasProbe",
+            "detailsMessage": null
+        },
+        {
+            "message": "JSON-LD schema validation succeed. However, Plain JSON schema validation failed, so it could have an impact when working with plain JSON platforms. Error:$: required property 'issuanceDate' not found",
+            "location": {
+                "resource": "https://workshop-maybe.github.io/credential-badges-verifier-spike/credential.jsonld"
+            },
+            "generator": "JsonSchemasProbe",
+            "detailsMessage": null
+        },
+        {
+            "message": "url \"https://workshop-maybe.github.io/credential-badges-verifier-spike/issuer\" in issuer is not accessible",
+            "location": {
+                "resource": "https://workshop-maybe.github.io/credential-badges-verifier-spike/credential.jsonld"
+            },
+            "generator": "IssuerProbe",
+            "detailsMessage": null
+        }
+    ],
+    "exceptions": [],
+    "notRun": []
+}

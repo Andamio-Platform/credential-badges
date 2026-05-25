@@ -273,11 +273,16 @@ actually custodies. That is the gap this plan closes.
      field stating the role ("Andamio is the protocol-layer attestor of a multi-party
      credential process; this credential references the on-chain record below for the
      authoritative truth of issuance").
-  2. **Structured anchor-proof field** — emit as the VC standard `evidence` field with type
-     `OnChainCredentialAnchor`. Carries `network`, `policyId`, `asset`, `claimTxHash`.
-     Supersedes the earlier ad-hoc `onChainAnchor` / `onChainAttestation` field names — use
-     `evidence` (typed `OnChainCredentialAnchor`) consistently throughout the plan and
-     implementation; no other field name is correct.
+  2. **Structured anchor-proof field** — emit as the VC standard `evidence` field with
+     **array-form type `["OnChainCredentialAnchor", "Evidence"]`** (NOT bare
+     `"OnChainCredentialAnchor"`; OB 3.0 requires every evidence entry to include the
+     base `Evidence` type, with custom subtypes alongside). Carries `network`, `policyId`,
+     `asset`, `claimTxHash`. Supersedes the earlier ad-hoc `onChainAnchor` /
+     `onChainAttestation` field names — use `evidence` (typed
+     `["OnChainCredentialAnchor", "Evidence"]`) consistently throughout the plan and
+     implementation; no other field name is correct. *(Empirical: Phase 0 pre-flight
+     verifier spike, 2026-05-25, `spike/verifier-spike/`: 1EdTech `EvidenceProbe` rejected
+     bare-string type; array form passed.)*
   3. **Course-owner reference** included as a structured field referencing the Access Token
      holder (pseudonymous URN; e.g. `urn:andamio:{network}:course-owner:{accessTokenAsset}`).
      The course-owner is the credential-program operator; the credential should expose this.
@@ -458,6 +463,18 @@ The remaining gates:
   `BitstringStatusListEntry` with `statusPurpose: "suspension"` (P1-01), `OnChainCredentialAnchor`
   as opaque custom evidence type. Any candidate that fails the spike must be replaced
   before Phase 0 starts; do not enter the gate with verifier-set viability unknown.
+  **Status (2026-05-25): RUN.** `spike/verifier-spike/` carries the workspace, signed
+  credential, and verifier transcripts. Outcome: 1EdTech public validator reached
+  `outcome=VALID, errors=0, warnings=0, totalRun=13` after three mapper-grade findings
+  were addressed (now baked into Decision 2 implication 2 + Unit 3 attestation-framing
+  emission + Unit 4 served-response shape — see `spike/verifier-spike/results/SUMMARY.md`).
+  Self-loopback (`@digitalbazaar/vc`) green. **`spruceid/ssi` and `walt-id/waltid-identity`
+  remain empirically TBD** — neither was exercised because each requires a local toolchain
+  install (Rust + cargo for spruce; docker or gradle-from-source for walt-id; walt-id's
+  hosted `verifier.portal.walt.id` is OpenID4VP-only). Phase 0 day-1 setup task: install
+  both toolchains, write the small spruce verifier binary + walt-id verify invocation,
+  and re-run against the same `spike/verifier-spike/publish/credential.jsonld`.
+  P1bis-10 set composition does NOT need revision based on what the spike surfaced.
   **Pass criteria:** all three libraries must verify the same credential bytes with **no
   errors AND no warnings**. A warning from any library is a finding to investigate before
   the gate closes. **Arbitration on disagreement:** W3C VC 2.0 + OB 3.0 specs are the
@@ -907,8 +924,11 @@ not start until Phase 0 closes.
   hardcoded `did:key` fallback. Pin `validFrom`/`proof.created` to claim-tx `block_time`.
 - **Attestation-framing emission (Decision 2 — implements implications 2–5 of the 5
   implications listed in Key Technical Decisions; implication 1, `AttestationHost` on the
-  Profile, is implemented in Unit 2):** the mapper MUST emit (a) `evidence` of type
-  `OnChainCredentialAnchor` carrying `network`, `policyId`, `asset`, `claimTxHash`
+  Profile, is implemented in Unit 2):** the mapper MUST emit (a) `evidence` with
+  **array-form `type: ["OnChainCredentialAnchor", "Evidence"]`** (NOT bare
+  `"OnChainCredentialAnchor"` — OB 3.0 requires base `Evidence` alongside custom subtypes;
+  empirically caught by Phase 0 pre-flight spike's 1EdTech `EvidenceProbe`, 2026-05-25)
+  carrying `network`, `policyId`, `asset`, `claimTxHash`
   (implication 2); (b) a `courseOwner` structured field with URN
   `urn:andamio:{network}:course-owner:{accessTokenAsset}` (implication 3); (c) where the
   on-chain record yields an assessor (teacher Access Token), an `assessor` structured field
@@ -1126,8 +1146,12 @@ this service; everything else → static host).
   `asciiToHex`/upstream-path interpolation (SSRF/path-injection). Then: one datum read →
   Unit 3 anchor gate → on pass, map with **`validFrom` AND `proof.created` pinned to the
   claim-tx `block_time`** (deterministic; byte-stable across fetches), emit attestation-
-  framing fields + `credentialStatus` entry → KMS sign → return JSON-LD. **No persistence** —
-  re-derivation is byte-identical, so third parties can cache/re-share/offline-verify safely.
+  framing fields + `credentialStatus` entry → KMS sign → **wrap `proof` in array form
+  `[{...}]` before serialization** (OB 3.0 Plain JSON schema requires `proof` as an array;
+  `@digitalbazaar/vc` emits a singular proof as a JSON-LD-lenient object, which 1EdTech's
+  Plain JSON schema check rejects — empirically caught by Phase 0 pre-flight spike,
+  2026-05-25) → return JSON-LD. **No persistence** — re-derivation is byte-identical, so
+  third parties can cache/re-share/offline-verify safely.
 - **`did:web` resolution survives signing-service outage** (Decision 4 win, with the
   scope tightened per second-pass auto-fix): if this Cloud Run service is down, the static
   host still serves `did.json` and `/status/{listId}`, so verifiers can verify any
@@ -1621,4 +1645,16 @@ exists so productionization is a known finite delta, not a re-architecture exerc
   multi-key caveat); `spruceid/ssi` v0.16.x supports DI eddsa-rdfc-2022 (90/91 W3C
   interop) + did:web rigorously, OB3 schema needs custom code; **surfaced 1EdTech
   `digital-credentials-public-validator`** as the free third-independent verifier
+- **Pre-Phase-0 verifier spike 2026-05-25** (`spike/verifier-spike/`): constructed a
+  credential carrying all four production features simultaneously (`did:web`,
+  `eddsa-rdfc-2022`, `BitstringStatusListEntry/suspension`, `OnChainCredentialAnchor`
+  as typed evidence), published to throwaway GH Pages host
+  (`workshop-maybe.github.io/credential-badges-verifier-spike`), submitted to verifiers.
+  Results: **1EdTech public validator returned `outcome=VALID, errors=0, warnings=0,
+  totalRun=13`** after iterating through 3 findings (now in plan). `@digitalbazaar/vc`
+  self-loopback green. `spruceid/ssi` + `walt-id/waltid-identity` empirically deferred
+  pending toolchain install. P1bis-10 set composition confirmed without revision.
+  Note: 1EdTech canonical `vc.1edtech.org` URL (from upstream README) does not resolve;
+  community deployment at `verifybadge.org` runs the same codebase and is the live
+  public instance.
   that gives most of the 1EdTech credibility value at zero scheduling cost.

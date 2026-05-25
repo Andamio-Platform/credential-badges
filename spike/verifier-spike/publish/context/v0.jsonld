@@ -1,0 +1,22 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@protected": true,
+    "andamio": "https://credentials.andamio.io/ns/v0#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "AttestationHost": "andamio:AttestationHost",
+    "OnChainCredentialAnchor": "andamio:OnChainCredentialAnchor",
+    "courseOwner": {
+      "@id": "andamio:courseOwner",
+      "@type": "@id"
+    },
+    "assessor": {
+      "@id": "andamio:assessor",
+      "@type": "@id"
+    },
+    "network": "andamio:network",
+    "policyId": "andamio:policyId",
+    "asset": "andamio:asset",
+    "claimTxHash": "andamio:claimTxHash"
+  }
+}
