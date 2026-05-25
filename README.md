@@ -34,9 +34,15 @@ work tracked as repo issues):
 - **SVG-primary**, optional small PNG fallback (~512×512). SVG is text:
   git-diffable, no history bloat, scales crisply.
 
+The `badge_id` naming convention is now `<course_id>.<slt_hash>.svg` (URN
+shape from the deployment plan; in production use as of `v0.0.3`, 2026-05-25
+with the 4 *Andamio for Developers* per-module badges). The convention will
+be formalized in `docs/badge-registry.md` (Issue #11, Unit 6).
+
 Still to settle (tracked as issues, decision-coupled to the issuer-identity
-work): final naming convention (policyId vs human slug vs per-version), and
-whether per-org badges live in this repo or per-issuer repos long-term.
+work): whether per-org badges live in this repo or per-issuer repos long-term
+(Issues #4 / #6 / #11 — coupled to the Unit 6 designed-not-built per-org
+issuer DID work).
 
 ## Versioning
 
