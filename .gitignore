@@ -7,6 +7,33 @@ out/
 *.log
 .DS_Store
 
+# Credential / key file extensions — defense in depth. The realistic paths
+# (out/, .env) are already covered above; these catch a contributor's other
+# tooling habits (openssl, java keystores, ad-hoc *-key.json files) before
+# they reach a commit.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.cer
+*-key.json
+*-keys.json
+*.private.json
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+
+# Other env conventions (direnv, per-environment files). .env.example is the
+# one tracked exception — it carries placeholders only.
+.envrc
+*.env
+*.env.*
+!.env.example
+
 # Imported spike: build, deps, throwaway signing keys, context cache
 spike/node_modules/
 spike/dist/
