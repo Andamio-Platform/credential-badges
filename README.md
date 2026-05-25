@@ -61,11 +61,11 @@ For the full deploy mechanism, allowlist rule, and tag policy, see [`DEPLOY.md`]
 
 The repo also houses material that is **not** baked into the served image (the served-file allowlist in `Dockerfile` + `scripts/ci/check-allowlist.sh` enforces this):
 
+- [`ROADMAP.md`](ROADMAP.md) — living public checklist of where this repo is going. Start here if you want to know what's next.
+- [`MOC.md`](MOC.md) — one-screen map of every component in this stack.
 - `docs/plans/` — the OB 3.0 issuer deployment plan that will stand up a sibling Cloud Run service (`credential-badges-issuer`) at `credentials.andamio.io/credentials/*`.
 - `spike/` — the validated OB 3.0 prototype (TypeScript, end-to-end) the plan promotes from.
 - `spike/verifier-spike/` — the Phase 0 pre-flight verifier spike (2026-05-25, 1EdTech green; mapper findings folded into the plan).
-
-See [`MOC.md`](MOC.md) for a one-screen map of every component in this stack.
 
 ## Background
 
