@@ -1,0 +1,29 @@
+{
+    "id": "89578e9a-437c-4291-91d5-933aebd49a50",
+    "generated": "2026-05-25T18:32:19",
+    "generator": "OB30Inspector",
+    "input": {
+        "name": "credential.jsonld",
+        "type": "JSON"
+    },
+    "summary": {
+        "outcome": "VALID",
+        "fatals": 0,
+        "errors": 0,
+        "warnings": 0,
+        "exceptions": 0,
+        "notRun": 0,
+        "totalRun": 13
+    },
+    "specification": {
+        "pid": "ob30.pid",
+        "shortName": "ob",
+        "version": "3.0",
+        "title": "Open Badges 3.0"
+    },
+    "fatals": [],
+    "errors": [],
+    "warnings": [],
+    "exceptions": [],
+    "notRun": []
+}
