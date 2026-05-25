@@ -11,6 +11,8 @@ For *why* each item exists, follow the link into the
 ## Today
 
 - ✅ Static host live at `https://credentials.andamio.io` — `/context/v0.jsonld`, `/issuer`, `/badges/*` (deployed `v0.0.2`, 2026-05-25)
+- ✅ Real badge imagery deployed (`v0.0.3`, 2026-05-25) — 4 per-module badges for the *Andamio for Developers* course at `/badges/<policy_id>.<slt_hash>.svg`. The URN-shaped naming convention from the deployment plan is now in production use.
+- ✅ Phase 0 target course identified — *Andamio for Developers* (policy `6348bba0f9b7d7e0353715ece5946f3b61de433d314e84dad313a677`) on Cardano preprod. De-risks [#17](https://github.com/Andamio-Platform/credential-badges/issues/17): the unlock narrows from "find a course AND mint a claim" to just "mint a claim".
 - ✅ Repo public — `andamio-ops` references removed (PR #9)
 - ✅ Plan refined through 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (2026-05-25)
 - ✅ Phase 0 pre-flight verifier spike — 1EdTech `digital-credentials-public-validator` reached `VALID, errors=0, warnings=0` on the production-shape credential (PR #12, 2026-05-25). 3 mapper findings folded into Decision 2 / Unit 3 / Unit 4.
