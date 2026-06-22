@@ -47,3 +47,7 @@ spike/.env.local
 spike/end-user-ux-research.md
 spike/DEMO.md
 spike/screencast-script.md
+
+# python build artifacts
+generator/__pycache__/
+*.pyc
