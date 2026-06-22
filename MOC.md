@@ -9,7 +9,7 @@ Start here when you open the repo for the first time.
 |---|---|---|---|
 | `/context/v0.jsonld` | `context/v0.jsonld` | no (versioned, `immutable` cache) | Pre-stable JSON-LD context for Andamio's OB 3.0 extension terms (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). |
 | `/issuer` | `issuer/profile.jsonld` | yes (cached, not `immutable`) | Hosted OB 3.0 issuer `Profile`. Strict verifiers dereference `issuer.url` here; nginx exact-match serves the extensionless path as `application/ld+json`. |
-| `/badges/*.svg` (+ `.png`) | `badges/` | yes (cached, not `immutable`) | Presentation-layer badge imagery referenced by `achievement.image`. Never identity-bearing — the on-chain anchor is the credential's identity. |
+| `/badges/*.svg` (+ `.png`) | `badges/` | yes (cached, not `immutable`) | Presentation-layer badge imagery referenced by `achievement.image`. Never identity-bearing — the on-chain anchor is the credential's identity. **Build output — see [Badge generator](#badge-generator); regenerate with `make badges`.** |
 | `/` | nginx config | n/a | Tiny 200 landing page (keeps health probes trivial; pointer for humans). |
 
 ## Static-host infrastructure
@@ -25,6 +25,23 @@ Start here when you open the repo for the first time.
 | `.dockerignore` | Pairs with the allowlist — keeps build context small. |
 
 GCP project: `andamio-credentials` (dedicated, project-deletion lien). Cloud Run service: `credential-badges` (us-central1). Infra source of truth: Terraform in a private operations repository.
+
+## Badge generator
+
+`badges/*.svg` are **build output**, regenerated from chain data — not hand-authored. **Start at [`generator/README.md`](generator/README.md)**; run `make help`.
+
+| File | Role |
+|---|---|
+| `Makefile` | `make badges` (offline, deterministic) · `verify` · `fetch` (authed) · `fonts`. |
+| `generator/README.md` | The pipeline (fetch → `credentials.json` → build → `badges/`). Start here to regenerate. |
+| `generator/build.py` | Snapshot → SVGs (per-course palette, light interior). |
+| `generator/gen.py` · `colors.py` | The d04 "Proof Rings" generator + the 10 palettes. |
+| `generator/decode.py` | Ring-geometry verifier — proves a badge round-trips to its on-chain hashes (`make verify`). |
+| `generator/fetch.py` | Refresh `credentials.json` from andamioscan (public) + the Andamio CLI (authed). |
+| `generator/embed_fonts.py` · `fonts.css` | Subset + base64-embed the fonts so SVGs are self-contained. |
+| `generator/credentials.json` | Data snapshot — one row per credential (course_id, slt_hash, titles). |
+
+Not served (build tooling) — excluded from the Docker allowlist.
 
 ## Planning
 
