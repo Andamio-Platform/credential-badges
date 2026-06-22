@@ -46,6 +46,9 @@ def light_interior(pal):
              core2=_mix("#FFFFFF", pal["prim"], 0.08),  # bottom: faint primary tinge
              itext="#15203A", imuted="#5C6680",     # dark ink / muted on light
              iline="#E5E9F0",                        # light divider
+             # titles = much darker shades of their ring hue (course↔prim, module↔sec)
+             ctitle=_mix(pal["prim"], "#0C0F17", 0.64),
+             mtitle=_mix(pal["sec"], "#0C0F17", 0.64),
              slt_label=pal["sec"], ev_label=pal["sec"])  # SLT label tied to inner ring (sec)
     p["name"]=pal["name"]+" (light interior)"
     return p

@@ -33,7 +33,7 @@ NETWORK      = "preprod"
 CX=CY=512
 
 BASE=["deep","ink","raised","prim","prim_lt","sec","sec_lt","bone","slate","hair"]
-INT =["core1","core2","itext","imuted","iline","extlabel","slt_label","ev_label"]
+INT =["core1","core2","itext","imuted","iline","extlabel","slt_label","ev_label","ctitle","mtitle"]
 ALLTOKENS=BASE+INT
 
 PAL_ANDAMIO = dict(name="Andamio Navy",
@@ -49,6 +49,7 @@ def fill_defaults(pal):
     P.setdefault("itext",P["bone"]);   P.setdefault("imuted",P["slate"])
     P.setdefault("iline",P["hair"]);   P.setdefault("extlabel",P["slate"])
     P.setdefault("slt_label",P["prim_lt"]); P.setdefault("ev_label",P["sec_lt"])
+    P.setdefault("ctitle",P["itext"]);  P.setdefault("mtitle",P["itext"])
     return P
 
 def ring_ticks(R, hexstr, color, hair):
@@ -101,6 +102,28 @@ def fit_title(text, base, maxw=384.0, factor=0.56, floor=16):
     n=max(len(text),1)
     return max(min(base, int(maxw/(factor*n))), floor)
 
+def _wrap2(text):
+    """Split into at most 2 lines, breaking at the space nearest the middle."""
+    mid=len(text)//2
+    l=text.rfind(" ",0,mid); r=text.find(" ",mid)
+    if l<0 and r<0: return [text]
+    cut = r if l<0 else l if r<0 else (l if mid-l<=r-mid else r)
+    return [text[:cut].strip(), text[cut:].strip()]
+
+def lay_title(text, base, maxw, factor, min_one, floor=15):
+    """Lay a title as 1 line at the largest size up to `base`; if that would drop
+    below `min_one`, wrap to 2 lines instead (still sized to fill `maxw`).
+    Returns (lines, font_size)."""
+    n=max(len(text),1)
+    one=min(base, int(maxw/(factor*n)))
+    if one>=min_one or " " not in text:
+        return [text], max(one, floor)
+    lines=_wrap2(text)
+    if len(lines)==1:
+        return lines, max(one, floor)
+    longest=max(len(l) for l in lines)
+    return lines, max(min(base, int(maxw/(factor*longest))), floor)
+
 def build_svg(pal=PAL_ANDAMIO):
     P=fill_defaults(pal)
     def c(k): return f'var(--{k}, {P[k]})'
@@ -151,18 +174,36 @@ def build_svg(pal=PAL_ANDAMIO):
         if ls is not None: a+=f' letter-spacing="{ls}"'
         return a+f'>{s}</text>'
 
-    p.append(T(344,"COURSE",11,c("imuted"),"mono",None,4))
-    p.append(T(380,esc(COURSE_TITLE),fit_title(COURSE_TITLE,31,384,0.54),c("itext"),"sans",600,None))
-    p.append(T(416,"MODULE",11,c("imuted"),"mono",None,4))
-    p.append(T(466,esc(MODULE_TITLE),fit_title(MODULE_TITLE,58,384,0.58),c("itext"),"sans",800,None))
-    p.append(f'<line x1="{CX-150}" y1="492" x2="{CX+150}" y2="492" stroke="{c("iline")}" stroke-width="1.25"/>')
-    # Labels carry the ring's hue (prim = outer, sec = inner) so color — not words —
-    # implies which ring encodes which value.
-    p.append(T(524,"COURSE_ID",11,c("prim"),"mono",None,3))
-    p.append(T(546,COURSE_ID,14,c("itext"),"mono",None,0))
-    p.append(T(580,"SLT_HASH",11,c("sec"),"mono",None,3))
-    p.append(T(602,SLT_HASH,14,c("itext"),"mono",None,0))
-    p.append(T(688,"ANDAMIO",12,c("imuted"),"sans",600,7))
+    # Center content: titles are the heroes (big, wrap to 2 lines when long);
+    # course_id/slt_hash sit below the divider. The whole block is measured and
+    # vertically centered, with the ANDAMIO maker's mark tiny at the very bottom.
+    items=[]               # (rel_y, render(absolute_y))
+    cur=[0.0]
+    def emit(fn, advance): items.append((cur[0], fn)); cur[0]+=advance
+    def text(s,size,fill,cls,w=None,ls=None):
+        return lambda y,s=s,size=size,fill=fill,cls=cls,w=w,ls=ls: p.append(T(y,s,size,fill,cls,w,ls))
+
+    clines,csz = lay_title(COURSE_TITLE,34,500,0.54,24)
+    mlines,msz = lay_title(MODULE_TITLE,60,520,0.58,40)
+    EG=18  # gap from an eyebrow label's baseline to the title's cap-top (scales with title size)
+
+    emit(text("COURSE",11,c("imuted"),"mono",None,4), int(EG+csz*0.72))
+    for ln in clines: emit(text(esc(ln),csz,c("ctitle"),"sans",600,None), int(csz*1.12))
+    cur[0]+=22
+    emit(text("MODULE",11,c("imuted"),"mono",None,4), int(EG+msz*0.72))
+    for ln in mlines: emit(text(esc(ln),msz,c("mtitle"),"sans",800,None), int(msz*1.06))
+    cur[0]+=40
+    div_rel=cur[0]; cur[0]+=54                                    # hashes pushed further down
+    emit(text("COURSE_ID",11,c("ctitle"),"mono",None,3), 24)      # dark outer-ring (course) hue
+    emit(text(COURSE_ID,15,c("itext"),"mono",None,0), 42)         # slightly larger
+    emit(text("SLT_HASH",11,c("mtitle"),"mono",None,3), 24)       # dark inner-ring (module) hue
+    emit(text(SLT_HASH,13,c("itext"),"mono",None,0), 0)           # slightly smaller
+
+    start = 532 - cur[0]/2.0     # block shifted down (module title nearer circle center)
+    for rel,fn in items: fn(start+rel)
+    dy=start+div_rel
+    p.append(f'<line x1="{CX-150}" y1="{dy:.1f}" x2="{CX+150}" y2="{dy:.1f}" stroke="{c("iline")}" stroke-width="1.25"/>')
+    p.append(T(884,"ANDAMIO",9,c("imuted"),"sans",600,6))         # tiny, at the bottom
     p.append('</svg>')
     return ''.join(p)
 

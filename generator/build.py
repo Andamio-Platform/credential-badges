@@ -22,6 +22,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "credentials.json")
 DEFAULT_OUT = os.path.join(HERE, "..", "badges")
 
+# Courses to skip for now (kept in credentials.json). FCB Fan Engagement is done
+# last with a custom Barça palette; remove from this set when that lands.
+SKIP_COURSES = {"5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc"}
+
 
 def palette_for(course_id):
     """Stable per-course palette: course_id is hex, so this is deterministic."""
@@ -40,7 +44,7 @@ def render(rec):
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
     os.makedirs(out, exist_ok=True)
-    data = json.load(open(DATA))
+    data = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
     for rec in data:
         svg = render(rec)
         open(os.path.join(out, f"{rec['course_id']}.{rec['slt_hash']}.svg"), "w").write(svg)
