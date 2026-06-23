@@ -2,6 +2,8 @@
 
 Static assets served at `https://credentials.andamio.io`. Hosts the JSON-LD context and supporting documents for Andamio Open Badges 3.0 credentials.
 
+> Badge images are **build output** — regenerate them with `make badges`. See [`generator/README.md`](generator/README.md) for the pipeline, and [`MOC.md`](MOC.md) to map the repo.
+
 ## What's here
 
 | Path | Served at | Purpose |
