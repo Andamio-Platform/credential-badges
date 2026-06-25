@@ -76,18 +76,18 @@ def quad_labels(R, color):
         out.append(f'<text class="mono" x="{CX+rr*math.cos(a):.1f}" y="{CY+rr*math.sin(a)+4:.1f}" text-anchor="middle" font-size="12" fill="{color}" opacity="0.5">{bi:02d}</text>')
     return "".join(out)
 
-def credential_json(P):
+def credential_json(P, *, course_title, module_title, course_id, slt_hash, network):
     return json.dumps({
         "@context":["https://www.w3.org/ns/credentials/v2",
                     "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
                     "https://credentials.andamio.io/context/v0.jsonld"],
         "type":["VerifiableCredential","OpenBadgeCredential"],
-        "issuer":"did:web:credentials.andamio.io","name":MODULE_TITLE,
+        "issuer":"did:web:credentials.andamio.io","name":module_title,
         "credentialSubject":{"type":["AchievementSubject"],
-            "achievement":{"type":["Achievement"],"name":MODULE_TITLE,
-                           "description":f"{MODULE_TITLE} — {COURSE_TITLE}"}},
-        "andamio:course":COURSE_TITLE,
-        "andamio:onChainAnchor":{"network":NETWORK,"courseId":COURSE_ID,"sltHash":SLT_HASH},
+            "achievement":{"type":["Achievement"],"name":module_title,
+                           "description":f"{module_title} — {course_title}"}},
+        "andamio:course":course_title,
+        "andamio:onChainAnchor":{"network":network,"courseId":course_id,"sltHash":slt_hash},
         "andamio:theme":{k:P[k] for k in ALLTOKENS},
         "_note":"Presentation artifact. Colors are CSS vars (--token) overridable for theming; signed VC-JWT bakes into openbadges:credential verify= at issue time."
     },indent=2)
@@ -124,7 +124,12 @@ def lay_title(text, base, maxw, factor, min_one, floor=15):
     longest=max(len(l) for l in lines)
     return lines, max(min(base, int(maxw/(factor*longest))), floor)
 
-def build_svg(pal=PAL_ANDAMIO):
+def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=PAL_ANDAMIO):
+    """Render a badge SVG from explicit inputs — no module globals are read or
+    mutated, so concurrent calls with different inputs are safe (per-request use).
+    `build_svg(pal)` is the legacy globals-driven wrapper around this."""
+    COURSE_TITLE=course_title; MODULE_TITLE=module_title
+    COURSE_ID=course_id; SLT_HASH=slt_hash; NETWORK=network
     P=fill_defaults(pal)
     def c(k): return f'var(--{k}, {P[k]})'
     R_OUT,R_IN=472,440
@@ -133,7 +138,8 @@ def build_svg(pal=PAL_ANDAMIO):
     # No evidence_hash (that is per-person and absent from shared badges).
     lit_o,dim_o=ring_ticks(R_OUT,COURSE_ID,c("prim"),c("hair"))
     lit_i,dim_i=ring_ticks(R_IN,SLT_HASH,c("sec"),c("hair"))
-    cred=credential_json(P)
+    cred=credential_json(P, course_title=COURSE_TITLE, module_title=MODULE_TITLE,
+                         course_id=COURSE_ID, slt_hash=SLT_HASH, network=NETWORK)
     # palette vars live in a per-element style attribute (NOT a global `svg{}` rule)
     # so many SVGs can be inlined on one page without their colors colliding.
     var_style="".join(f"--{k}:{P[k]};" for k in ALLTOKENS)
@@ -206,6 +212,13 @@ def build_svg(pal=PAL_ANDAMIO):
     p.append(T(884,"ANDAMIO",9,c("imuted"),"sans",600,6))         # tiny, at the bottom
     p.append('</svg>')
     return ''.join(p)
+
+def build_svg(pal=PAL_ANDAMIO):
+    """Legacy entry point: render from the module-level COURSE_TITLE/MODULE_TITLE/
+    COURSE_ID/SLT_HASH/NETWORK globals. Kept for `python3 gen.py` and colors.py's
+    palette previews. New callers (the on-demand render service) use render_svg()."""
+    return render_svg(course_title=COURSE_TITLE, module_title=MODULE_TITLE,
+                      course_id=COURSE_ID, slt_hash=SLT_HASH, network=NETWORK, pal=pal)
 
 def wrap(svg,px,bg):
     return ('<!doctype html><meta charset=utf-8>'
