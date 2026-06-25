@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: completed
 created: 2026-06-25
 target_repo: credential-badges
 origin: andamio/docs/plans/2026-06-25-credential-badges-proof-rings-redeploy.md (orch-vault handoff — premise corrected, see Problem Frame)
