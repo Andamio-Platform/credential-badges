@@ -64,6 +64,12 @@ def white_interior(pal):
     p["name"]=pal["name"]+" (white interior)"
     return p
 
+def palette_for(course_id):
+    """Stable per-course palette: course_id is hex, so this is deterministic.
+    Shared by build.py (static build) and render.py (on-demand service) so both
+    pick the identical palette for a given course."""
+    return PALETTES[int(course_id[:8], 16) % len(PALETTES)]
+
 if __name__=="__main__":
     os.makedirs("colors", exist_ok=True)
     for pal in PALETTES:
