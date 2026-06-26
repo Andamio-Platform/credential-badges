@@ -1,0 +1,112 @@
+# nginx config for the credential-badges static host.
+#
+# The registered media type for JSON-LD is application/ld+json. nginx's stock
+# mime.types maps .jsonld to application/octet-stream, which violates the
+# OB 3.0 Content-Type requirement and breaks strict verifiers. Map it
+# explicitly.
+#
+# NOTE: a server-level `types {}` block REPLACES the inherited global mime
+# map for this server — so every type we serve must be listed here, including
+# badge image formats. Adding a new served file extension means adding it
+# here too, or it falls back to `default_type` (octet-stream).
+
+types {
+    application/ld+json  jsonld;
+    application/json     json;
+    image/svg+xml        svg;
+    image/png            png;
+    image/jpeg           jpg jpeg;
+    image/webp           webp;
+}
+
+server {
+    listen       8080;
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    autoindex off;
+
+    # Unknown types are NOT guessed as something dangerous.
+    default_type application/octet-stream;
+
+    # Long cache: published context versions are immutable forever.
+    location ~ \.jsonld$ {
+        add_header Cache-Control "public, max-age=86400, immutable";
+        try_files $uri =404;
+    }
+
+    # Hosted OB 3.0 issuer Profile. Credentials carry `issuer.url`
+    # "https://credentials.andamio.io/issuer" (no extension); strict OB 3.0
+    # verifiers dereference it and expect application/ld+json. Exact-match so
+    # the request URI has no .jsonld extension — set the type explicitly
+    # rather than relying on the served file's extension. Unlike versioned
+    # contexts this profile is mutable, so it is cached but NOT immutable.
+    location = /issuer {
+        default_type application/ld+json;
+        add_header Cache-Control "public, max-age=86400";
+        try_files /issuer/profile.jsonld =404;
+    }
+
+    # Badge imagery — static-first with on-demand render fallback (#33, KTD-4).
+    #
+    # `^~` makes this a prefix match that OWNS /badges/ and short-circuits the
+    # generic image regex below — so the 404 fallback is scoped to badge paths
+    # only and never leaks to other image URLs. A baked badge (the pre-rendered
+    # set copied into the image) or an already-cached badge is served straight
+    # from disk; on a miss, `try_files` falls through to @render, which proxies
+    # to the on-demand render service (it checks the GCS cache, renders on a
+    # miss, persists, and returns the SVG).
+    #
+    # Badge art is MUTABLE (an issuer may refresh a graphic without
+    # invalidating any credential — the OB 3.0 credential references the image
+    # URL, not its bytes; the on-chain anchor is the identity), so badges are
+    # cached but explicitly NOT immutable. The render service emits the same
+    # `Cache-Control: public, max-age=86400`, so the header is identical
+    # whether a badge is served from disk or freshly rendered.
+    location ^~ /badges/ {
+        add_header Cache-Control "public, max-age=86400";
+        try_files $uri @render;
+    }
+
+    # On-demand render fallback target (#33, KTD-4). RENDER_UPSTREAM is injected
+    # at container start by the nginx image's envsubst templating (see
+    # Dockerfile) — the render service's Cloud Run URL in production, a stub in
+    # the CI fallback test. `proxy_pass` with no URI component forwards the
+    # original `/badges/{cid}.{slt}.svg` request verbatim. The render service
+    # sets its own `image/svg+xml` Content-Type and `Cache-Control`, which pass
+    # through unchanged. `proxy_ssl_server_name` sends SNI for the HTTPS Cloud
+    # Run upstream; `Host` is the upstream host (Cloud Run routes by Host), with
+    # the public host preserved in X-Forwarded-Host.
+    #
+    # Production alternative (hardening path, NOT this repo): an external HTTPS
+    # load balancer with a URL-map path-route `/badges/* -> render NEG`, defined
+    # in private-ops Terraform (deployment plan Decision 5). Same render service
+    # and GCS cache; only the routing layer differs.
+    location @render {
+        proxy_pass ${RENDER_UPSTREAM};
+        proxy_ssl_server_name on;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Non-badge imagery (if any is ever served outside /badges/). Cached, not
+    # immutable; a miss is a plain 404 with NO render fallback — that is
+    # /badges/-only, above.
+    location ~* \.(svg|png|jpe?g|webp)$ {
+        add_header Cache-Control "public, max-age=86400";
+        try_files $uri =404;
+    }
+
+    # Minimal landing page at "/" — returns 200 so health probes succeed
+    # and humans hitting the root get a pointer instead of a bare 404.
+    location = / {
+        add_header Content-Type text/plain;
+        return 200 "Andamio credential contexts\n\nPublished JSON-LD contexts:\n  /context/v0.jsonld\n\nHosted issuer profile:\n  /issuer\n\nBadge imagery:\n  /badges/\n\nSee https://github.com/Andamio-Platform/credential-badges\n";
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
