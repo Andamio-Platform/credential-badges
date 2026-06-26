@@ -1,22 +1,18 @@
 # nginx config for the credential-badges static host.
 #
-# The registered media type for JSON-LD is application/ld+json. nginx's stock
-# mime.types maps .jsonld to application/octet-stream, which violates the
-# OB 3.0 Content-Type requirement and breaks strict verifiers. Map it
-# explicitly.
+# The registered media type for JSON-LD is application/ld+json, which is NOT in
+# nginx's stock mime.types — without a mapping a `.jsonld` file falls back to
+# `default_type` (application/octet-stream), violating the OB 3.0 Content-Type
+# requirement and breaking strict verifiers. Add the one missing mapping.
 #
-# NOTE: a server-level `types {}` block REPLACES the inherited global mime
-# map for this server — so every type we serve must be listed here, including
-# badge image formats. Adding a new served file extension means adding it
-# here too, or it falls back to `default_type` (octet-stream).
-
+# NOTE: this `types {}` block is in the http context (conf.d is included into
+# http), where `types` blocks ACCUMULATE onto the stock map (`include
+# mime.types`) rather than replacing it — so every other served type (json,
+# svg, png, jpeg, webp) still resolves from mime.types. Re-listing those here
+# only re-defines them and produces "duplicate extension" warnings; keep this
+# block limited to extensions stock mime.types does not already cover.
 types {
     application/ld+json  jsonld;
-    application/json     json;
-    image/svg+xml        svg;
-    image/png            png;
-    image/jpeg           jpg jpeg;
-    image/webp           webp;
 }
 
 server {
