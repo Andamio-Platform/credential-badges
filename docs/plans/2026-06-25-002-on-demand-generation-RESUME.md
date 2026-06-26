@@ -5,7 +5,7 @@
 Quick-resume note so this WIP is recoverable from any machine. The plan is the
 source of truth; this is just "where we stopped + what's local-only."
 
-## Progress: 5 of 8 units done
+## Progress: 6 of 8 units done
 
 | Unit | Status | Commit |
 |---|---|---|
@@ -14,13 +14,26 @@ source of truth; this is just "where we stopped + what's local-only."
 | U3 — render-core (`api_client` + `render`) | ✅ done (live-verified vs preprod) | `ae1993a` |
 | U4 — render service + GCS cache | ✅ done (live e2e) | `92e29c0` |
 | U5 — nginx `/badges/` 404 → `@render` fallback | ✅ done (docker e2e + stub) | `7b163a1` |
-| U6 — cache invalidation + orphan-guard | ⏳ next | — |
-| U7 — deploy/CI wiring (allowlist line already done) | ⏳ | — |
+| U6 — cache invalidation + orphan-guard | ✅ done (46 offline tests) | `34a45ac` |
+| U7 — deploy/CI wiring (allowlist line already done) | ⏳ next | — |
 | U8 — docs (README/MOC/ROADMAP + key runbook) | ⏳ | — |
 
-**Resume with:** `/ce-work U6` against the plan file above. **U6 is pure
-config/code — offline-testable, no live key and no #17 dependency.** Do it
-before touching U7 (deploy), which is where the key + #17 land.
+**Resume with:** `/ce-work U7` against the plan file above. **U7 is the deploy
++ CI wiring** — a tag-prefix trigger that builds `service/Dockerfile` and
+`gcloud run deploy`s the render service under the tag-only + WIF conventions,
+plus the out-of-repo private-ops Terraform delta (GCS bucket + lifecycle,
+render Cloud Run service + runtime SA + `secretAccessor` on the gateway keys).
+**This is where the live key + #17 land** — see the mainnet-routing note below.
+
+**U6 shipped (`34a45ac`):** `scripts/cache-admin.py` with `invalidate` (delete
+cache objects — non-destructive, re-renders next request) and `reconcile
+[--delete]` (flag/remove objects whose `course_id` no longer resolves on-chain,
+resolving each course once). Mirrors `serve_badge`'s network logic; **fails
+loudly** on any inconclusive gateway error (auth/timeout/transport/config →
+non-zero abort, never mass-flag live courses). `_placeholder.svg` + baked
+badges are protected. TTL story (max-age + out-of-repo GCS lifecycle) and the
+orphan-guard subsumption are in `docs/cache.md`. `cache.py` gained
+`list_keys()`/`delete()`. 46 offline tests green (cache +2, cache-admin +14).
 
 **U5 shipped (`7b163a1`):** the config is now an envsubst **template**
 (`nginx/default.conf.template`); `RENDER_UPSTREAM` is injected at container
