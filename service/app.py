@@ -18,6 +18,7 @@ The request logic (serve_badge) is a pure, dependency-injected function so it is
 testable without a web framework or google-cloud-storage installed. `application`
 is a stdlib WSGI wrapper that gunicorn serves in the container.
 """
+import logging
 import os
 import re
 import sys
@@ -28,6 +29,9 @@ sys.path.insert(0, os.path.join(REPO, "generator"))
 
 import render                       # noqa: E402  (generator render-core, U3)
 from api_client import GatewayError  # noqa: E402
+from build import SKIP_COURSES       # noqa: E402  (single source of truth for withheld courses)
+
+log = logging.getLogger("badge")
 
 # course_id = 28 bytes (56 hex), slt_hash = 32 bytes (64 hex).
 BADGE_RE = re.compile(r"^([0-9a-f]{56})\.([0-9a-f]{64})\.svg$")
@@ -66,7 +70,21 @@ def serve_badge(name, *, cache, networks, render_fn=render.render_badge, placeho
     course_id, slt_hash = m.group(1), m.group(2)
     key = f"{course_id}.{slt_hash}.svg"
 
-    cached = cache.get(key)
+    # Withheld courses are deliberately excluded from the static build
+    # (build.SKIP_COURSES). The render path must honor the same exclusion or it
+    # would publish + permanently cache art the project held back. Mirror the
+    # static host: 404, never render, never cache. Checked before the cache read
+    # so a previously-cached object for a now-withheld course is not served.
+    if course_id in SKIP_COURSES:
+        if placeholder is not None:
+            return _svg(404, placeholder, cacheable=False)
+        return _resp(404, "badge unavailable (withheld)\n", "text/plain")
+
+    try:
+        cached = cache.get(key)
+    except Exception:                  # the cache is a non-fatal accelerator, not a dependency:
+        log.warning("cache.get failed for %s; falling through to render", key, exc_info=True)
+        cached = None
     if cached is not None:
         return _svg(200, cached, cacheable=True)   # hit: no gateway call, no render
 
@@ -79,7 +97,10 @@ def serve_badge(name, *, cache, networks, render_fn=render.render_badge, placeho
             if e.kind in _TRY_NEXT:
                 continue           # maybe wrong network — try the next one
             break                  # transient/config — stop hammering
-        cache.put(key, svg)        # only a successful render is ever cached (KTD-3b)
+        try:
+            cache.put(key, svg)    # only a successful render is ever cached (KTD-3b)
+        except Exception:          # a cache write blip must not discard a good render:
+            log.warning("cache.put failed for %s; serving the rendered badge anyway", key, exc_info=True)
         return _svg(200, svg, cacheable=True)
 
     # Every configured network failed — do NOT cache. 404 only when every error was
@@ -110,8 +131,16 @@ def _deps():
     """Build (once) the production dependency set from env."""
     if not _DEPS:
         from cache import GCSCache
+        bucket = os.environ.get("BADGE_CACHE_BUCKET")
+        if not bucket:
+            # A clear, logged failure beats a bare KeyError: /healthz stays green
+            # (it never calls _deps), so a missing bucket would otherwise surface
+            # only as an opaque 500 on the first real badge request.
+            raise RuntimeError("BADGE_CACHE_BUCKET is not set — the render service "
+                               "cannot serve badges without its GCS cache bucket "
+                               "(check the Cloud Run env / Terraform).")
         networks = [n.strip() for n in os.environ.get("BADGE_NETWORKS", "mainnet,preprod").split(",") if n.strip()]
-        _DEPS.update(cache=GCSCache(os.environ["BADGE_CACHE_BUCKET"]),
+        _DEPS.update(cache=GCSCache(bucket),
                      networks=networks,
                      placeholder=_load_placeholder())
     return _DEPS
@@ -123,7 +152,11 @@ def application(environ, start_response):
     if path == "/healthz":
         status, headers, body = _resp(200, "ok\n", "text/plain")
     elif path.startswith("/badges/"):
-        status, headers, body = serve_badge(path[len("/badges/"):], **_deps())
+        try:
+            status, headers, body = serve_badge(path[len("/badges/"):], **_deps())
+        except Exception:          # misconfig (e.g. missing bucket) or unexpected error —
+            log.exception("badge request failed for %s", path)  # surfaced in Cloud Run logs
+            status, headers, body = _resp(500, "badge service error\n", "text/plain")
     else:
         status, headers, body = _resp(404, "not found\n", "text/plain")
     start_response(f"{status} ", list(headers.items()))
