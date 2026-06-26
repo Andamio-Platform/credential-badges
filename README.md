@@ -46,6 +46,32 @@ work): whether per-org badges live in this repo or per-issuer repos long-term
 (Issues #4 / #6 / #11 — coupled to the Unit 6 designed-not-built per-org
 issuer DID work).
 
+## How badges resolve
+
+Badge serving is **static-first with an on-demand render fallback** (#33), so
+*any* credential resolves at `credentials.andamio.io/badges/<course_id>.<slt_hash>.svg`
+without every badge being pre-generated:
+
+1. **Static hit** — if the SVG is in the pre-generated set baked into the static
+   host, nginx serves it straight from disk.
+2. **Miss → `@render`** — a `/badges/` miss returns nginx `404 → @render`, which
+   proxies to a second Cloud Run service (`credential-badges-render`).
+3. **Render + cache** — the render service reads the course/module titles from
+   the andamio-api gateway (network-scoped `X-API-Key` from Secret Manager),
+   renders the SVG, and writes it to a GCS cache. Repeat requests serve from the
+   cache; the gateway is only hit on a cold miss.
+
+The deployed credential set resolves on the **mainnet** gateway (the render
+service tries `BADGE_NETWORKS` in order). Titles are the only thing fetched —
+the badge geometry is the proof-ring encoding of the on-chain credential, so the
+art is reproducible offline (`make badges`).
+
+Operating the cache (invalidate a stale title, reconcile orphaned objects):
+`scripts/cache-admin.py` — see [`docs/cache.md`](docs/cache.md). The two-service
+topology, the deploy triggers, and the infra apply order are in
+[`DEPLOY.md`](DEPLOY.md); gateway-key provisioning + rotation is in
+[`docs/runbooks/gateway-key.md`](docs/runbooks/gateway-key.md).
+
 ## Versioning
 
 - **`v0`** is the **pre-stable** schema. Expect breaking changes. Demo credentials issued against v0 (e.g. the OB 3.0 spike's james and njuguna samples) are explicitly snapshots of in-flight work, not durable references.

@@ -32,7 +32,7 @@ nginx `404 → @render` fallback to a second Cloud Run service. See
 - [x] U5 — nginx `/badges/` 404 → `@render` fallback (docker e2e)
 - [x] U6 — cache invalidation + orphan-guard (`scripts/cache-admin.py`)
 - [ ] **U7 — deploy + CI wiring** — `deploy-render.yml` (`vrender-*` trigger, root-context `service/Dockerfile` build, image-only deploy, `/healthz` + live-render smoke), static `deploy.yml` tightened to `v[0-9]*.*.*`, allowlist green. Infra delta = [`andamio-ops#170`](https://github.com/Andamio-Platform/andamio-ops/pull/170). Remaining to ship: apply A–C (TF + keys), cut `vrender-0.1.0` (D), real-image cutover (E), wire `RENDER_UPSTREAM` (F).
-- [ ] U8 — docs (DEPLOY/ROADMAP done here; README "How badges resolve" + gateway-key runbook remain)
+- [x] U8 — docs (DEPLOY/ROADMAP, README "How badges resolve", `docs/runbooks/gateway-key.md`)
 
 > **Render service routes to mainnet.** All 22 deployed courses resolve on the
 > **mainnet** gateway (every preprod lookup 502s); `serve_badge` tries
