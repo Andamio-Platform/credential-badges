@@ -17,6 +17,27 @@ For *why* each item exists, follow the link into the
 - ✅ Plan refined through 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (2026-05-25)
 - ✅ Phase 0 pre-flight verifier spike — 1EdTech `digital-credentials-public-validator` reached `VALID, errors=0, warnings=0` on the production-shape credential (PR #12, 2026-05-25). 3 mapper findings folded into Decision 2 / Unit 3 / Unit 4.
 
+## On-demand badge generation — #33 (v1.0 mainnet core, in flight)
+
+[Plan reference](docs/plans/2026-06-25-002-feat-dynamic-on-demand-badge-generation-plan.md) ·
+[resume note](docs/plans/2026-06-25-002-on-demand-generation-RESUME.md). The v1.0
+gate: **any credential generates + serves on demand**, static-first with an
+nginx `404 → @render` fallback to a second Cloud Run service. See
+[`DEPLOY.md`](DEPLOY.md) for the two-service topology + apply order.
+
+- [x] U1 — gateway service-key gate (live-verified GO)
+- [x] U2 — `gen.py` parameterized render
+- [x] U3 — render-core (`api_client` + `render`, live-verified vs the gateway)
+- [x] U4 — render service + GCS cache (live e2e)
+- [x] U5 — nginx `/badges/` 404 → `@render` fallback (docker e2e)
+- [x] U6 — cache invalidation + orphan-guard (`scripts/cache-admin.py`)
+- [ ] **U7 — deploy + CI wiring** — `deploy-render.yml` (`vrender-*` trigger, root-context `service/Dockerfile` build, image-only deploy, `/healthz` + live-render smoke), static `deploy.yml` tightened to `v[0-9]*.*.*`, allowlist green. Infra delta = [`andamio-ops#170`](https://github.com/Andamio-Platform/andamio-ops/pull/170). Remaining to ship: apply A–C (TF + keys), cut `vrender-0.1.0` (D), real-image cutover (E), wire `RENDER_UPSTREAM` (F).
+- [ ] U8 — docs (DEPLOY/ROADMAP done here; README "How badges resolve" + gateway-key runbook remain)
+
+> **Render service routes to mainnet.** All 22 deployed courses resolve on the
+> **mainnet** gateway (every preprod lookup 502s); `serve_badge` tries
+> `BADGE_NETWORKS` in order. Production must wire the mainnet key.
+
 ## Phase 0 — Evidence gate (in flight)
 
 [Plan reference](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md#phase-0--must-resolve-before-units-36-lock-re-scoped-2026-05-22). Gates Unit 3 (mapper freeze).

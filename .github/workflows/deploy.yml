@@ -1,14 +1,18 @@
 name: deploy
 
-# Triggers ONLY on version tags. This matches the WIF binding, which is
+# Triggers ONLY on semver version tags. This matches the WIF binding, which is
 # ref-constrained at the OIDC assertion level to refs/tags/v* in the
 # private ops Terraform. A push to a branch or a workflow_dispatch cannot
 # mint a deploy token even if this file were tampered with on a feature
 # branch — enforcement is at token-mint time.
+#
+# The pattern is `v[0-9]*.*.*` (not `v*.*.*`) so the render service's
+# `vrender-*` tags (deploy-render.yml) never double-fire the static deploy:
+# `vrender-1.0.0` matches `v*.*.*` but NOT `v[0-9]*.*.*`.
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v[0-9]*.*.*"
 
 permissions:
   contents: read

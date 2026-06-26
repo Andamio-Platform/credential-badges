@@ -1,0 +1,92 @@
+name: deploy-render
+
+# On-demand badge RENDER service (#33) — the SECOND Cloud Run service.
+# Distinct from deploy.yml (the static host). Triggers ONLY on `vrender-*`
+# tags. The WIF binding is ref-constrained at the OIDC layer to refs/tags/v*
+# in the private ops Terraform, and `vrender-*` satisfies that constraint
+# while `v[0-9]*.*.*` (the static host's trigger) deliberately does NOT match
+# a `vrender-*` ref — so a render release never double-fires the static deploy.
+on:
+  push:
+    tags:
+      - "vrender-*"
+
+permissions:
+  contents: read
+  id-token: write # required for WIF OIDC
+
+env:
+  GCP_PROJECT: andamio-credentials
+  GCP_REGION: us-central1
+  GCP_SERVICE: credential-badges-render
+  AR_IMAGE: us-central1-docker.pkg.dev/andamio-credentials/credential-badges/render
+  WIF_PROVIDER: projects/780530615158/locations/global/workloadIdentityPools/credential-badges-pool/providers/github-actions
+  CICD_SA: credential-badges-cicd-sa@andamio-credentials.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce served-file allowlist
+        run: bash scripts/ci/check-allowlist.sh
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.CICD_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      # Build context MUST be the repo root: service/Dockerfile ships generator/
+      # (render-core + fonts.css) AND service/. Tag with both the commit SHA and
+      # the vrender-* tag; never :latest.
+      - name: Build + tag (SHA-pinned AND vrender tag; never :latest)
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          docker build -f service/Dockerfile -t "${AR_IMAGE}:${GITHUB_SHA}" -t "${AR_IMAGE}:${TAG}" .
+
+      - name: Push (immutable AR rejects any re-push of an existing tag)
+        run: |
+          docker push "${AR_IMAGE}:${GITHUB_SHA}"
+          docker push "${AR_IMAGE}:${GITHUB_REF_NAME}"
+
+      # The render service's runtime SA, secret-env wiring (ANDAMIO_*_API_KEY),
+      # and cache bucket are managed by the private-ops Terraform. `gcloud run
+      # deploy --image` updates ONLY the image and preserves that config — keep
+      # this step image-only so it never clobbers the TF-managed surface. The
+      # Terraform `render_image_tag` is set to the same vrender tag (step E of
+      # the apply runbook), so the two converge idempotently.
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "${GCP_SERVICE}" \
+            --image "${AR_IMAGE}:${GITHUB_REF_NAME}" \
+            --region "${GCP_REGION}" \
+            --project "${GCP_PROJECT}" \
+            --platform managed \
+            --quiet
+
+      # /healthz needs no gateway/GCS (it short-circuits in app.py) — the
+      # liveness gate. The rendered-badge check exercises the full live path
+      # (GCS cache + gateway key); the target is derived from the first entry
+      # in generator/credentials.json so it never hardcodes a credential.
+      - name: Verify /healthz + a live-rendered badge content-type
+        run: |
+          URL=$(gcloud run services describe "${GCP_SERVICE}" --region "${GCP_REGION}" --project "${GCP_PROJECT}" --format='value(status.url)')
+          echo "service URL: ${URL}"
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${URL}/healthz")
+          echo "/healthz -> ${code}"
+          test "${code}" = "200"
+
+          NAME=$(python3 -c "import json;e=json.load(open('generator/credentials.json'))[0];print(f\"{e['course_id']}.{e['slt_hash']}\")")
+          echo "render smoke target: /badges/${NAME}.svg"
+          ct=$(curl -sI "${URL}/badges/${NAME}.svg" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "/badges/${NAME}.svg Content-Type: ${ct} (expected image/svg+xml)"
+          test "${ct}" = "image/svg+xml"
+          curl -sf "${URL}/badges/${NAME}.svg" >/dev/null
