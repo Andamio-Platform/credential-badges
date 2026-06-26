@@ -23,6 +23,13 @@ class MemoryCache:
     def put(self, key, body):
         self._d[key] = body
 
+    def delete(self, key):
+        """Remove a cache object. Idempotent — returns True if it existed."""
+        return self._d.pop(key, None) is not None
+
+    def list_keys(self):
+        return list(self._d.keys())
+
 
 class GCSCache:
     """GCS-backed cache keyed by object name ("{course_id}.{slt_hash}.svg").
@@ -50,3 +57,18 @@ class GCSCache:
         # badge art is mutable presentation (an issuer may refresh it).
         blob.cache_control = "public, max-age=86400"
         blob.upload_from_string(body, content_type="image/svg+xml")
+
+    def delete(self, key):
+        """Remove a cache object (U6 cache-admin invalidate/reconcile). Idempotent:
+        a missing object is not an error — the badge simply re-renders on the next
+        request, so invalidation is always non-destructive. Returns True if the
+        object existed."""
+        blob = self._bucket.blob(key)
+        if not blob.exists():
+            return False
+        blob.delete()
+        return True
+
+    def list_keys(self):
+        """All object names in the cache bucket (U6 cache-admin reconcile)."""
+        return [b.name for b in self._bucket.list_blobs()]

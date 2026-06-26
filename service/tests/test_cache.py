@@ -18,6 +18,7 @@ class FakeBlob:
     def __init__(self, store, key):
         self.store = store
         self.key = key
+        self.name = key
         self.cache_control = None
         self.content_type = None
 
@@ -31,6 +32,9 @@ class FakeBlob:
         self.store[self.key] = body if isinstance(body, bytes) else body.encode()
         self.content_type = content_type
 
+    def delete(self):
+        del self.store[self.key]
+
 
 class FakeBucket:
     def __init__(self):
@@ -41,6 +45,9 @@ class FakeBucket:
         b = self.blobs.get(key) or FakeBlob(self.store, key)
         self.blobs[key] = b
         return b
+
+    def list_blobs(self):
+        return [self.blob(k) for k in list(self.store.keys())]
 
 
 def test_memory_cache_roundtrip_and_miss():
@@ -61,6 +68,31 @@ def test_gcs_cache_put_sets_headers_and_get_reads_back():
     assert blob.content_type == "image/svg+xml", blob.content_type
     assert blob.cache_control == "public, max-age=86400", blob.cache_control
     print("  ✅ GCSCache put sets content-type + cache-control; get reads back; miss -> None")
+
+
+def test_memory_cache_delete_and_list():
+    c = MemoryCache()
+    c.put("a.b.svg", b"<svg/>")
+    c.put("c.d.svg", b"<svg/>")
+    assert sorted(c.list_keys()) == ["a.b.svg", "c.d.svg"]
+    assert c.delete("a.b.svg") is True
+    assert c.delete("a.b.svg") is False, "delete is idempotent — missing is not an error"
+    assert c.get("a.b.svg") is None, "deleted object re-misses (re-renders next request)"
+    assert c.list_keys() == ["c.d.svg"]
+    print("  ✅ MemoryCache delete (idempotent) + list_keys")
+
+
+def test_gcs_cache_delete_and_list():
+    bucket = FakeBucket()
+    c = GCSCache(bucket=bucket)
+    c.put("a.b.svg", b"<svg/>")
+    c.put("c.d.svg", b"<svg/>")
+    assert sorted(c.list_keys()) == ["a.b.svg", "c.d.svg"]
+    assert c.delete("a.b.svg") is True
+    assert c.delete("a.b.svg") is False, "missing object delete returns False, not error"
+    assert c.get("a.b.svg") is None
+    assert c.list_keys() == ["c.d.svg"]
+    print("  ✅ GCSCache delete (idempotent) + list_keys")
 
 
 def _main():
