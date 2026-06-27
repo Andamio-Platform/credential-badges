@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import tempfile
+from urllib.parse import urlsplit
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GEN = os.path.dirname(HERE)
@@ -51,10 +52,10 @@ def test_parses_course_and_module_titles():
 def test_selects_correct_gateway_per_network():
     calls = []
     get_titles("abc", "preprod", transport=fake(COURSE_OK, MODULES_OK, calls=calls), key="k")
-    assert all(u.startswith("https://preprod.api.andamio.io") for u in calls), calls
+    assert all(urlsplit(u).netloc == "preprod.api.andamio.io" for u in calls), calls
     calls.clear()
     get_titles("abc", "mainnet", transport=fake(COURSE_OK, MODULES_OK, calls=calls), key="k")
-    assert all(u.startswith("https://api.andamio.io") for u in calls), calls
+    assert all(urlsplit(u).netloc == "api.andamio.io" for u in calls), calls
     print("  ✅ network selects the matching gateway base URL")
 
 
