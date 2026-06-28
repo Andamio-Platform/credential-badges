@@ -88,10 +88,8 @@ python3 service/tests/test_app.py               # 9/9  serve_badge cache/error/r
 bash scripts/ci/check-allowlist.sh              # static-host allowlist guard
 ```
 
-## Open coordination item (not blocking U5)
+## Service keys — resolved (2026-06-27)
 
-Send the **#17 preprod service-key provisioning ask** (a *dedicated* service key,
-not the personal CLI key currently in `.env.local`) so production uses a key in
-GCP Secret Manager per KTD-3. Draft text was prepared in-session; gist: dedicated
-preprod (and mainnet) `andamio-api` service keys → Secret Manager in
-`andamio-credentials`, runtime SA gets `secretAccessor` only.
+Dedicated preprod + mainnet `andamio-api` service keys are in hand. No
+provisioning ask outstanding. U7 wires them into Secret Manager in
+`andamio-credentials` (runtime SA gets `secretAccessor` only) per KTD-3.
