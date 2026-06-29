@@ -83,6 +83,17 @@ topology, the deploy triggers, and the infra apply order are in
 - **`v1`** is the first stable schema. Once published, `v1.jsonld` never changes — any further change ships as `v2.jsonld`. Credentials reference a specific version in their `@context` array, so locking a version locks the schema the credential was signed against.
 - Both `v0` and `v1` (and any subsequent versions) are hosted indefinitely once published — credentials in the wild reference their version forever, so the URL must keep resolving.
 
+### Two version axes (don't conflate them)
+
+The **repo release tag** and the **JSON-LD schema version** are independent, and their numbers do not line up. The stable schema (`v1.jsonld`) ships with credential-badges **v1.1**, not v1.0:
+
+| Axis | At v1.0 (today) | At v1.1 (Q3) |
+|---|---|---|
+| Repo / release tag | `v1.0.0` | `v1.1.0` |
+| JSON-LD schema context | `v0` (pre-stable) | `v1` (stable) |
+
+Tagging the repo `v1.0.0` deploys the host but does **not** make the schema stable. The schema goes stable only when the v1.1 signing layer (Ed25519, `did:web`, OB 3.0 baking) lands, because a frozen `v1.jsonld` is what verifiers check against.
+
 ## How it gets deployed
 
 Hosted on Google Cloud Run (`andamio-credentials` GCP project) with a custom domain mapping to `credentials.andamio.io`. Infra is managed with Terraform in a private operations repository. Deployment is **tag-triggered** via GitHub Actions + Workload Identity Federation — pushing a `vX.Y.Z` tag builds the image and deploys it. There is intentionally **no branch/`main` deploy**: the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC assertion level, so only tag pushes can mint a deploy token.
