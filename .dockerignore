@@ -1,6 +1,12 @@
 # Belt-and-suspenders. The allowlist Dockerfile is the load-bearing control
 # (it COPYs explicit paths, never `.`), but this keeps the build context
 # minimal and is a second line of defense against accidental disclosure.
+#
+# Two images build from this same root context:
+#   - the static host (`Dockerfile`)        -> context/ issuer/ badges/ nginx/ README.md
+#   - the on-demand render (`service/Dockerfile`) -> service/ generator/ badges/
+# so service/ and generator/ are re-included for the render build. Both are
+# public source; each Dockerfile still COPYs only its explicit paths.
 *
 !context/
 !context/**
@@ -11,3 +17,7 @@
 !README.md
 !nginx/
 !nginx/**
+!service/
+!service/**
+!generator/
+!generator/**
