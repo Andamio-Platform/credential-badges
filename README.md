@@ -4,7 +4,7 @@ Static assets served at `https://credentials.andamio.io`. Hosts the JSON-LD cont
 
 > Badge images are **build output** — regenerate them with `make badges`. See [`generator/README.md`](generator/README.md) for the pipeline, and [`MOC.md`](MOC.md) to map the repo.
 
-**Release: v1.0 (mainnet core), live since 2026-06-29.** Any credential renders and serves on demand at `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`, on Cardano mainnet, static-first with an on-demand render fallback. The portable/verifiable layer (signing, `did:web`, SDK, standalone viewer) is **v1.1 (Q3)** — see [`ROADMAP.md`](ROADMAP.md). Note: the repo release tag (`v1.0.0`) is separate from the JSON-LD **schema** version, which is still `v0` (pre-stable); the stable `v1.jsonld` ships with v1.1.
+**Release: v1.0 (mainnet core), live since 2026-06-29.** Any credential renders and serves on demand at `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`, on Cardano mainnet, static-first with an on-demand render fallback. The portable/verifiable layer (signing, `did:web`, SDK, standalone viewer) is **v1.1 (Q3)**; see [`ROADMAP.md`](ROADMAP.md). Note: the repo release tag (`v1.0.0`) is separate from the JSON-LD **schema** version, which is still `v0` (pre-stable); the stable `v1.jsonld` ships with v1.1.
 
 ## What's here
 
@@ -38,7 +38,7 @@ work tracked as repo issues):
 - **SVG-primary**, optional small PNG fallback (~512×512). SVG is text:
   git-diffable, no history bloat, scales crisply.
 
-The badge filename is `<policy_id>.<slt_hash>.svg` — the credential's on-chain
+The badge filename is `<policy_id>.<slt_hash>.svg`: the credential's on-chain
 **course policy id** (56-hex) paired with its SLT hash. (In Andamio a course is
 identified by its course-NFT minting policy; that policy id is the filename key,
 not a separate course identifier.) In production use as of `v0.0.3`, 2026-05-25

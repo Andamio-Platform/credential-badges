@@ -10,13 +10,13 @@ For *why* each item exists, follow the link into the
 
 ## Release status
 
-**v1.0 (mainnet core) — SHIPPED 2026-06-29.** A learner's on-chain credential
+**v1.0 (mainnet core), SHIPPED 2026-06-29.** A learner's on-chain credential
 renders as a badge that's visible in the Andamio app and resolves on demand for
 *any* credential at `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`
 (static-first, with an on-demand render fallback so nothing has to be
 pre-generated). Live on Cardano **mainnet**.
 
-**v1.1 (Q3) — portable / verifiable layer** is next: Ed25519 signing, `did:web`
+**v1.1 (Q3), the portable / verifiable layer,** is next: Ed25519 signing, `did:web`
 issuer identity, OB 3.0 signed-VC baking, a third-party SDK embed, and a
 standalone wallet-connect viewer. Until then, a badge's proof is its Proof-Ring
 encoding plus the on-chain anchor.
@@ -36,7 +36,7 @@ encoding plus the on-chain anchor.
 - ✅ Plan refined through 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (2026-05-25)
 - ✅ Phase 0 pre-flight verifier spike — 1EdTech `digital-credentials-public-validator` reached `VALID, errors=0, warnings=0` on the production-shape credential (PR #12, 2026-05-25). 3 mapper findings folded into Decision 2 / Unit 3 / Unit 4.
 
-## ✅ On-demand badge generation — #33 (v1.0 mainnet core) — closed 2026-06-29
+## ✅ On-demand badge generation (#33, v1.0 mainnet core): closed 2026-06-29
 
 **Shipped + verified live.** Any credential renders and serves on demand at
 `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`: static-first, with an
@@ -50,7 +50,7 @@ host. Two-service topology, deploy triggers, and apply order in
 
 ---
 
-# v1.1 (Q3) — portable / verifiable layer
+# v1.1 (Q3): portable / verifiable layer
 
 Everything below is **v1.1**, not yet built. It turns the badge from
 "Proof-Ring + on-chain anchor" into an independently verifiable OB 3.0 / VC.
