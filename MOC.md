@@ -17,14 +17,31 @@ Start here when you open the repo for the first time.
 | File | Role |
 |---|---|
 | `Dockerfile` | Nginx-alpine image. **Explicit `COPY` of allowlisted paths only** — never `COPY .`. Currently allows `context/`, `issuer/`, `badges/`, `README.md`. |
-| `nginx/default.conf` | Per-extension MIME map (`application/ld+json` for `.jsonld`), exact-match for `/issuer`, cache headers, root landing page. |
-| `scripts/ci/check-allowlist.sh` | Fails CI if any repo file outside the allowlist would end up served. `IGNORED_PREFIXES` covers tooling/build/docs/spike paths that are explicitly **not** served. |
-| `.github/workflows/ci.yml` | PR check — allowlist + docker build + smoke-test served Content-Types. |
-| `.github/workflows/deploy.yml` | Tag-triggered deploy (`v*.*.*`) via Workload Identity Federation. Builds, pushes SHA + semver tags (never `:latest`), deploys to Cloud Run, verifies Content-Types on the live `*.run.app` URL. |
-| `DEPLOY.md` | Topology, WIF ref-constraint (`refs/tags/v*`), versioning + permanence, rollback. |
+| `nginx/default.conf.template` | Per-extension MIME map (`application/ld+json` for `.jsonld`), exact-match for `/issuer`, cache headers, root landing page. `^~ /badges/` owns badge serving with `try_files $uri @render` — a miss proxies to `RENDER_UPSTREAM` (injected at container start). |
+| `scripts/ci/check-allowlist.sh` | Fails CI if any repo file outside the allowlist would end up served. `IGNORED_PREFIXES` covers tooling/build/docs/spike/`service` paths that are explicitly **not** served. |
+| `.github/workflows/ci.yml` | PR check — allowlist + docker build + smoke-test served Content-Types + nginx `@render` fallback e2e. |
+| `.github/workflows/deploy.yml` | Tag-triggered deploy (`v[0-9]*.*.*`) via Workload Identity Federation. Builds, pushes SHA + semver tags (never `:latest`), deploys to Cloud Run, verifies Content-Types on the live `*.run.app` URL. |
+| `DEPLOY.md` | Two-service topology, WIF ref-constraint (`refs/tags/v*`), deploy triggers, the `andamio-ops#170` infra delta + apply order, versioning + permanence, rollback. |
 | `.dockerignore` | Pairs with the allowlist — keeps build context small. |
 
 GCP project: `andamio-credentials` (dedicated, project-deletion lien). Cloud Run service: `credential-badges` (us-central1). Infra source of truth: Terraform in a private operations repository.
+
+## Render service — on-demand badge generation (#33)
+
+The second Cloud Run service (`credential-badges-render`). A `/badges/` miss on the static host falls back here, which renders the badge on demand (titles from the andamio-api gateway) and caches the SVG in GCS. See [`DEPLOY.md`](DEPLOY.md) for the topology and [README "How badges resolve"](README.md#how-badges-resolve).
+
+| File | Role |
+|---|---|
+| `service/app.py` | Stdlib WSGI app (gunicorn). `/healthz` + `/badges/<name>.svg` → `serve_badge` (cache-first, gateway on cold miss, network-ordered, never caches non-200). |
+| `service/cache.py` | `GCSCache` — `get`/`put`/`list_keys`/`delete` against the render cache bucket. |
+| `service/Dockerfile` | **Root build context** — ships `generator/` (render-core + `fonts.css`) + `service/`. Runtime env: `BADGE_NETWORKS`, `BADGE_CACHE_BUCKET`, `ANDAMIO_*_API_KEY` (TF-wired secrets). |
+| `service/requirements.txt` | gunicorn + google-cloud-storage. |
+| `scripts/cache-admin.py` | `invalidate` (delete cache objects — non-destructive re-render) + `reconcile [--delete]` (flag/remove orphaned objects). Mirrors `serve_badge` network logic; fails loud on inconclusive gateway errors. |
+| `.github/workflows/deploy-render.yml` | Tag-triggered deploy (`vrender-*`) via the same WIF + CICD SA. Builds `service/Dockerfile`, image-only `gcloud run deploy credential-badges-render` (preserves TF-managed SA/secrets/bucket), verifies `/healthz` + a live-rendered badge. |
+| `docs/cache.md` | TTL story (max-age + GCS lifecycle), orphan-guard, cache-admin usage. |
+| `docs/runbooks/gateway-key.md` | Gateway `X-API-Key` provisioning + rotation + compromise response (Secret Manager, network-scoped keys, dedicated service key). |
+
+Infra (out of repo): GCS cache bucket, render runtime SA (`credential-badges-render-sa`, `secretAccessor` on the two gateway keys only), two gateway-key secrets — Terraform in `andamio-ops#170`.
 
 ## Badge generator
 
@@ -49,6 +66,7 @@ Not served (build tooling) — excluded from the Docker allowlist.
 |---|---|
 | `ROADMAP.md` | **Living public checklist** of what's next, by phase. Tick boxes as items close. Start here if you want the "where are we right now" view. |
 | `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md` | The Andamio OB 3.0 Issuer deployment plan — the "why" behind ROADMAP. Promotes the spike into a deployed signing service (`credential-badges-issuer`) sitting next to the static host behind an external HTTPS LB. 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (resolved 2026-05-25). Prototype posture documented; production-hardening checklist tracks the upgrade path. **Status when this MOC was written:** P1bis-refined; Phase 0 pre-flight verifier spike closed (PR #12). |
+| `docs/plans/2026-06-25-002-feat-dynamic-on-demand-badge-generation-plan.md` + `…-002-on-demand-generation-RESUME.md` | The #33 on-demand render plan (U1–U8) + resume note. The "why" behind the [Render service](#render-service--on-demand-badge-generation-33) section. |
 
 ## Original spike — OB 3.0 prototype
 

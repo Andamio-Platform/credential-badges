@@ -27,18 +27,24 @@ DEFAULT_OUT = os.path.join(HERE, "..", "badges")
 SKIP_COURSES = {"5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc"}
 
 
-def palette_for(course_id):
-    """Stable per-course palette: course_id is hex, so this is deterministic."""
-    return colors.PALETTES[int(course_id[:8], 16) % len(colors.PALETTES)]
+# Per-course palette selection now lives in colors.py so the on-demand render
+# service (render.py) shares the exact same mapping. Re-exported here for
+# back-compat with existing callers/tests that reference build.palette_for.
+palette_for = colors.palette_for
 
 
 def render(rec):
-    gen.COURSE_TITLE = rec["course_title"] or "Andamio"
-    gen.MODULE_TITLE = rec["module_title"] or "Credential"
-    gen.COURSE_ID = rec["course_id"]
-    gen.SLT_HASH = rec["slt_hash"]
-    gen.NETWORK = "mainnet"
-    return gen.build_svg(colors.light_interior(palette_for(rec["course_id"])))
+    # Concurrency-safe: pass inputs as parameters instead of mutating gen's
+    # module globals, so the render path is reusable per-request (the on-demand
+    # service reuses gen.render_svg + palette_for the same way).
+    return gen.render_svg(
+        course_title=rec["course_title"] or "Andamio",
+        module_title=rec["module_title"] or "Credential",
+        course_id=rec["course_id"],
+        slt_hash=rec["slt_hash"],
+        network="mainnet",
+        pal=colors.light_interior(palette_for(rec["course_id"])),
+    )
 
 
 def main():

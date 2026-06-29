@@ -16,7 +16,24 @@ FROM nginx:alpine
 # Strip the stock site so only allowlisted files can ever be served.
 RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+# The config is a TEMPLATE: the nginx image's docker-entrypoint runs envsubst
+# over /etc/nginx/templates/*.template at startup, writing the result to
+# /etc/nginx/conf.d/ (extension stripped). This injects the on-demand render
+# service URL (#33, U5) without baking a deploy-specific host into the image.
+#
+# RENDER_UPSTREAM is where a /badges/ cache-miss is proxied (KTD-4). The real
+# Cloud Run URL is injected at deploy (U7 / private-ops Terraform). The default
+# must be an IP literal, NOT a domain: nginx resolves a literal proxy_pass
+# hostname at STARTUP and fails to boot if it can't — so a placeholder domain
+# would break the container (and the CI smoke test) whenever the env var is
+# unset. 127.0.0.1:9 (discard) needs no DNS, so nginx always boots; with the
+# render service not yet wired, the baked badges still serve from disk and a
+# cache-miss simply returns 502 (connection refused) until U7 sets the URL.
+# NGINX_ENVSUBST_FILTER restricts substitution to RENDER_UPSTREAM so nginx's
+# own runtime $variables ($uri, $host, $proxy_host, $scheme, …) are untouched.
+COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
+ENV RENDER_UPSTREAM="http://127.0.0.1:9"
+ENV NGINX_ENVSUBST_FILTER="RENDER_UPSTREAM"
 
 COPY context/   /usr/share/nginx/html/context/
 COPY issuer/    /usr/share/nginx/html/issuer/
