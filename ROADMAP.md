@@ -8,6 +8,25 @@ finishes, collapse it to a one-line `✅ closed YYYY-MM-DD` summary.
 For *why* each item exists, follow the link into the
 [deployment plan](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md).
 
+## Release status
+
+**v1.0 (mainnet core) — SHIPPED 2026-06-29.** A learner's on-chain credential
+renders as a badge that's visible in the Andamio app and resolves on demand for
+*any* credential at `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`
+(static-first, with an on-demand render fallback so nothing has to be
+pre-generated). Live on Cardano **mainnet**.
+
+**v1.1 (Q3) — portable / verifiable layer** is next: Ed25519 signing, `did:web`
+issuer identity, OB 3.0 signed-VC baking, a third-party SDK embed, and a
+standalone wallet-connect viewer. Until then, a badge's proof is its Proof-Ring
+encoding plus the on-chain anchor.
+
+> **Two version axes, don't conflate them.** The repo/release tag (`v1.0.0`,
+> which deploys the static host) is separate from the **JSON-LD schema**
+> version. The schema is still **`v0` (pre-stable)**; the first *stable*
+> `v1.jsonld` ships with the v1.1 signing work. Tagging the repo `v1.0.0` does
+> **not** make the schema stable. The Phase 0/1/2 checklists below are all v1.1.
+
 ## Today
 
 - ✅ Static host live at `https://credentials.andamio.io` — `/context/v0.jsonld`, `/issuer`, `/badges/*` (deployed `v0.0.2`, 2026-05-25)
@@ -17,28 +36,26 @@ For *why* each item exists, follow the link into the
 - ✅ Plan refined through 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (2026-05-25)
 - ✅ Phase 0 pre-flight verifier spike — 1EdTech `digital-credentials-public-validator` reached `VALID, errors=0, warnings=0` on the production-shape credential (PR #12, 2026-05-25). 3 mapper findings folded into Decision 2 / Unit 3 / Unit 4.
 
-## On-demand badge generation — #33 (v1.0 mainnet core, in flight)
+## ✅ On-demand badge generation — #33 (v1.0 mainnet core) — closed 2026-06-29
 
-[Plan reference](docs/plans/2026-06-25-002-feat-dynamic-on-demand-badge-generation-plan.md) ·
-[resume note](docs/plans/2026-06-25-002-on-demand-generation-RESUME.md). The v1.0
-gate: **any credential generates + serves on demand**, static-first with an
-nginx `404 → @render` fallback to a second Cloud Run service. See
-[`DEPLOY.md`](DEPLOY.md) for the two-service topology + apply order.
+**Shipped + verified live.** Any credential renders and serves on demand at
+`credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`: static-first, with an
+nginx `404 → @render` fallback to the `credential-badges-render` Cloud Run
+service (course/module titles read from the **mainnet** andamio-api gateway, SVG
+cached in GCS). U1–U8 done; cutover applied (Terraform + gateway keys,
+`vrender-0.1.1` render image, `RENDER_UPSTREAM` wired, static host on `v0.1.4`).
+End-to-end confirmed: a not-pre-generated credential renders through the public
+host. Two-service topology, deploy triggers, and apply order in
+[`DEPLOY.md`](DEPLOY.md).
 
-- [x] U1 — gateway service-key gate (live-verified GO)
-- [x] U2 — `gen.py` parameterized render
-- [x] U3 — render-core (`api_client` + `render`, live-verified vs the gateway)
-- [x] U4 — render service + GCS cache (live e2e)
-- [x] U5 — nginx `/badges/` 404 → `@render` fallback (docker e2e)
-- [x] U6 — cache invalidation + orphan-guard (`scripts/cache-admin.py`)
-- [ ] **U7 — deploy + CI wiring** — `deploy-render.yml` (`vrender-*` trigger, root-context `service/Dockerfile` build, image-only deploy, `/healthz` + live-render smoke), static `deploy.yml` tightened to `v[0-9]*.*.*`, allowlist green. Infra delta = [`andamio-ops#170`](https://github.com/Andamio-Platform/andamio-ops/pull/170). Remaining to ship: apply A–C (TF + keys), cut `vrender-0.1.0` (D), real-image cutover (E), wire `RENDER_UPSTREAM` (F).
-- [x] U8 — docs (DEPLOY/ROADMAP, README "How badges resolve", `docs/runbooks/gateway-key.md`)
+---
 
-> **Render service routes to mainnet.** All 22 deployed courses resolve on the
-> **mainnet** gateway (every preprod lookup 502s); `serve_badge` tries
-> `BADGE_NETWORKS` in order. Production must wire the mainnet key.
+# v1.1 (Q3) — portable / verifiable layer
 
-## Phase 0 — Evidence gate (in flight)
+Everything below is **v1.1**, not yet built. It turns the badge from
+"Proof-Ring + on-chain anchor" into an independently verifiable OB 3.0 / VC.
+
+## Phase 0 — Evidence gate
 
 [Plan reference](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md#phase-0--must-resolve-before-units-36-lock-re-scoped-2026-05-22). Gates Unit 3 (mapper freeze).
 
