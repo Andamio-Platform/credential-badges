@@ -1,129 +1,128 @@
 # credential-badges
 
-Static assets served at `https://credentials.andamio.io`. Hosts the JSON-LD context and supporting documents for Andamio Open Badges 3.0 credentials.
+**Turn an on-chain Andamio credential into a badge you can see, embed, and share.**
 
-> Badge images are **build output** — regenerate them with `make badges`. See [`generator/README.md`](generator/README.md) for the pipeline, and [`MOC.md`](MOC.md) to map the repo.
+A credential badge is the visible face of an Andamio credential: a self-contained SVG that renders a learner's on-chain achievement as something a person can look at, hold, and post anywhere. It is free and open source, and that is the point. Anyone can look at a real badge, understand what an Andamio credential is, and start building with it.
 
-**Release: v1.0 (mainnet core), live since 2026-06-29.** Any credential renders and serves on demand at `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`, on Cardano mainnet, static-first with an on-demand render fallback. The portable/verifiable layer (signing, `did:web`, SDK, standalone viewer) is **v1.1 (Q3)**; see [`ROADMAP.md`](ROADMAP.md). Note: the repo release tag (`v1.0.0`) is separate from the JSON-LD **schema** version, which is still `v0` (pre-stable); the stable `v1.jsonld` ships with v1.1.
-
-## What's here
-
-| Path | Served at | Purpose |
-|---|---|---|
-| `context/v0.jsonld` | `credentials.andamio.io/context/v0.jsonld` | **Pre-stable** JSON-LD context for Andamio's OB 3.0 extension terms (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). Used by spike credentials while the schema iterates toward v1. |
-| `issuer/profile.jsonld` | `credentials.andamio.io/issuer` | Hosted OB 3.0 issuer `Profile`. Credentials carry `issuer.url` = this URL; strict verifiers (e.g. 1EdTech) dereference it and expect `application/ld+json`. Served at the extensionless path `/issuer` via an nginx exact-match. **Mutable** (unlike versioned contexts) — cached but not `immutable`. |
-| `badges/*.svg` (+ `.png`) | `credentials.andamio.io/badges/...` | Presentation-layer badge imagery referenced by `achievement.image` in OB 3.0 credentials. **Never identity-bearing** — the on-chain anchor is the credential's identity; the image is a mutable pointer. SVG-primary (git-diffable, no history bloat). **Mutable** — cached but not `immutable`. `_placeholder.svg` is a demo asset. |
-
-## Badge imagery
-
-The `badges/` directory holds the visual artifacts referenced by
-`achievement.image` in OB 3.0 credentials:
+Live on Cardano **mainnet**. Any credential resolves on demand at:
 
 ```
-credentials.andamio.io/context/v0.jsonld          ← schema (immutable, versioned)
-credentials.andamio.io/badges/{...}.svg           ← imagery (mutable)
+https://credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg
 ```
 
-The `image` field is standard OB 3.0 (no `andamio:` extension). Hosting lives
-here so badges sit next to the schema they belong to. **v1 design decision**
-(full rationale in the `credential-imagery` design doc in the OB 3.0 spike;
-work tracked as repo issues):
+**[Look at a real one →](https://credentials.andamio.io/badges/203e63f457e0b8088073ec20959c4e0cc188cf90425d4f29ff3f817f.77547ab066d5fe38038879b785551f6efae17ba38a0d6dc8475cb015e848b42b.svg)**
 
-- **Presentation-layer only.** The image is *never* identity-bearing. A
-  credential's identity is its on-chain anchor; the image is a pointer the
-  credential carries. An issuer may refresh badge art at any time without
-  invalidating any issued credential — hence the non-`immutable` cache.
-- **Keys off `badge_id`** (a badge = any subset of 1+ modules), not the
-  course or the SLT.
-- **SVG-primary**, optional small PNG fallback (~512×512). SVG is text:
-  git-diffable, no history bloat, scales crisply.
+The badge is not just a picture. Its two rings encode the credential's on-chain identity (outer ring = the course policy id, inner ring = the SLT credential hash), so the geometry round-trips back to the chain. **The art *is* the proof.** Run `make verify` to decode a badge and check it against its on-chain hashes.
 
-The badge filename is `<policy_id>.<slt_hash>.svg`: the credential's on-chain
-**course policy id** (56-hex) paired with its SLT hash. (In Andamio a course is
-identified by its course-NFT minting policy; that policy id is the filename key,
-not a separate course identifier.) In production use as of `v0.0.3`, 2026-05-25
-with the 4 *Andamio for Developers* per-module badges. The broader `badge_id`
-registry (a badge spanning a subset of modules) will be formalized in
-`docs/badge-registry.md` (Issue #11, Unit 6).
+---
 
-Still to settle (tracked as issues, decision-coupled to the issuer-identity
-work): whether per-org badges live in this repo or per-issuer repos long-term
-(Issues #4 / #6 / #11 — coupled to the Unit 6 designed-not-built per-org
-issuer DID work).
+## For developers, start here
 
-## How badges resolve
+Welcome. The fast path in:
 
-Badge serving is **static-first with an on-demand render fallback** (#33), so
-*any* credential resolves at `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`
-without every badge being pre-generated:
+| You want to... | Go to |
+|---|---|
+| See a live badge | the link above, or any `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg` |
+| Map the repo (one line per component) | [`MOC.md`](MOC.md) |
+| Regenerate the badges locally (offline, Python 3 only) | `make badges` |
+| Set up and contribute | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| See where this is going | [`ROADMAP.md`](ROADMAP.md) |
+| Understand the deploy model | [`DEPLOY.md`](DEPLOY.md) |
 
-1. **Static hit** — if the SVG is in the pre-generated set baked into the static
-   host, nginx serves it straight from disk.
-2. **Miss → `@render`** — a `/badges/` miss returns nginx `404 → @render`, which
-   proxies to a second Cloud Run service (`credential-badges-render`).
-3. **Render + cache** — the render service reads the course/module titles from
-   the andamio-api gateway (network-scoped `X-API-Key` from Secret Manager),
-   renders the SVG, and writes it to a GCS cache. Repeat requests serve from the
-   cache; the gateway is only hit on a cold miss.
+**The one rule to know first:** badges are **build output, not hand-authored files**. *"If it can be generated, it must be generated."* Each SVG is rendered deterministically from on-chain data by the generator in [`generator/`](generator/README.md). Never hand-edit a file in `badges/`. Change the generator (or the source data) and regenerate.
 
-The deployed credential set resolves on the **mainnet** gateway (the render
-service tries `BADGE_NETWORKS` in order). Titles are the only thing fetched —
-the badge geometry is the proof-ring encoding of the on-chain credential, so the
-art is reproducible offline (`make badges`).
+### What's served
 
-Operating the cache (invalidate a stale title, reconcile orphaned objects):
-`scripts/cache-admin.py` — see [`docs/cache.md`](docs/cache.md). The two-service
-topology, the deploy triggers, and the infra apply order are in
-[`DEPLOY.md`](DEPLOY.md); gateway-key provisioning + rotation is in
-[`docs/runbooks/gateway-key.md`](docs/runbooks/gateway-key.md).
+Three things live at `https://credentials.andamio.io`:
 
-## Versioning
+| Path | What it is |
+|---|---|
+| `/badges/<policy_id>.<slt_hash>.svg` | The badge imagery. Static-first, with an on-demand render fallback, so *any* credential resolves without being pre-generated. Referenced by `achievement.image` in the OB 3.0 credential. Presentation-layer only, never identity-bearing. |
+| `/context/v0.jsonld` | The JSON-LD context for Andamio's Open Badges 3.0 extension terms (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). Pre-stable (`v0`). |
+| `/issuer` | The hosted OB 3.0 issuer `Profile`. Strict verifiers dereference `issuer.url` here and expect `application/ld+json`. |
 
-- **`v0`** is the **pre-stable** schema. Expect breaking changes. Demo credentials issued against v0 (e.g. the OB 3.0 spike's james and njuguna samples) are explicitly snapshots of in-flight work, not durable references.
-- **`v1`** is the first stable schema. Once published, `v1.jsonld` never changes — any further change ships as `v2.jsonld`. Credentials reference a specific version in their `@context` array, so locking a version locks the schema the credential was signed against.
-- Both `v0` and `v1` (and any subsequent versions) are hosted indefinitely once published — credentials in the wild reference their version forever, so the URL must keep resolving.
+> **On naming:** the badge filename's first half is the credential's **course-NFT minting policy id** (56-hex). In Andamio a course is identified by its course-NFT minting policy, so that policy id *is* the course identifier, not a separate one. The second half is the SLT (credential) hash.
 
-### Two version axes (don't conflate them)
+### How a badge resolves
 
-The **repo release tag** and the **JSON-LD schema version** are independent, and their numbers do not line up. The stable schema (`v1.jsonld`) ships with credential-badges **v1.1**, not v1.0:
+Static-first, with an on-demand render fallback, so nothing has to be pre-generated:
 
-| Axis | At v1.0 (today) | At v1.1 (Q3) |
-|---|---|---|
-| Repo / release tag | `v1.0.0` | `v1.1.0` |
-| JSON-LD schema context | `v0` (pre-stable) | `v1` (stable) |
+1. **Static hit.** If the SVG is in the pre-generated set baked into the static host, nginx serves it from disk.
+2. **Miss → render.** A `/badges/` miss returns nginx `404 → @render`, which proxies to a second Cloud Run service (`credential-badges-render`).
+3. **Render + cache.** The render service reads the course and module titles from the Andamio API gateway, renders the SVG, and caches it in GCS. Repeat requests serve from cache.
 
-Tagging the repo `v1.0.0` deploys the host but does **not** make the schema stable. The schema goes stable only when the v1.1 signing layer (Ed25519, `did:web`, OB 3.0 baking) lands, because a frozen `v1.jsonld` is what verifiers check against.
+Titles are the only thing fetched. The badge geometry is the proof-ring encoding of the on-chain credential, so the art is reproducible offline (`make badges`).
 
-## How it gets deployed
+---
 
-Hosted on Google Cloud Run (`andamio-credentials` GCP project) with a custom domain mapping to `credentials.andamio.io`. Infra is managed with Terraform in a private operations repository. Deployment is **tag-triggered** via GitHub Actions + Workload Identity Federation — pushing a `vX.Y.Z` tag builds the image and deploys it. There is intentionally **no branch/`main` deploy**: the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC assertion level, so only tag pushes can mint a deploy token.
+## What's built, what's coming
 
-For the full deploy mechanism, allowlist rule, and tag policy, see [`DEPLOY.md`](DEPLOY.md).
+### ✅ Built: v1.0 (mainnet core), shipped 2026-06-29
 
-## How to update
+A learner's on-chain credential renders as a badge that is visible in the Andamio app and resolves on demand for *any* credential, live on Cardano mainnet.
 
-1. Open a PR. Context files are immutable — only fix typos or add a **new** version file; never edit a published version in place. CI enforces the served-file allowlist.
-2. Merge to `main`.
-3. Push a version tag: `git tag v0.1.2 && git push origin v0.1.2`. GitHub Actions builds, pushes (SHA + semver tags, never `:latest`), and deploys. Artifact Registry has immutable tags — re-pushing an existing tag is rejected, so always bump.
-4. Verify `https://credentials.andamio.io/context/v0.jsonld` resolves with `Content-Type: application/ld+json` and is byte-identical to the repo copy.
+- Static host live at `credentials.andamio.io` (context, issuer profile, badges).
+- Real badge imagery for live credentials, keyed `<policy_id>.<slt_hash>`.
+- On-demand generation: any credential, including newly issued ones, renders through the public host (static-first, nginx `404 → @render` to the render service, GCS-cached).
+- Badges shown in the Andamio app on the learner's Credentials page.
+- Proof-Ring encoding verified to round-trip to on-chain hashes (`make verify`).
 
-## Beyond the served files
+### 🔜 Coming: v1.1 (Q3), the portable / verifiable layer
 
-The repo also houses material that is **not** baked into the served image (the served-file allowlist in `Dockerfile` + `scripts/ci/check-allowlist.sh` enforces this):
+Turns the badge from "Proof-Ring + on-chain anchor" into an independently verifiable OB 3.0 / Verifiable Credential that travels off-platform:
 
-- [`ROADMAP.md`](ROADMAP.md) — living public checklist of where this repo is going. Start here if you want to know what's next.
-- [`MOC.md`](MOC.md) — one-screen map of every component in this stack.
-- `docs/plans/` — the OB 3.0 issuer deployment plan that will stand up a sibling Cloud Run service (`credential-badges-issuer`) at `credentials.andamio.io/credentials/*`.
-- `spike/` — the validated OB 3.0 prototype (TypeScript, end-to-end) the plan promotes from.
-- `spike/verifier-spike/` — the Phase 0 pre-flight verifier spike (2026-05-25, 1EdTech green; mapper findings folded into the plan).
+- Ed25519 signing (GCP KMS) and OB 3.0 signed-VC baking.
+- `did:web` issuer identity and a hosted verification page.
+- A BitstringStatusList for revocation signaling.
+- A third-party SDK embed and a standalone wallet-connect viewer.
 
-## Background
+Until then, a badge's proof is its Proof-Ring encoding plus the on-chain anchor.
 
-These extension terms came out of the Andamio Open Badges 3.0 spike (April–May 2026). The spike is committed at `spike/` in this repo (source of truth); the full deployment plan that promotes it lives at `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`.
+> **Two version axes, do not conflate them.** The repo/release tag (`v1.0.0`, which deploys the static host) is separate from the **JSON-LD schema version**. The schema is still `v0` (pre-stable). The first *stable* `v1.jsonld` ships with the v1.1 signing work. Tagging the repo `v1.0.0` does not make the schema stable.
+
+---
+
+## Ongoing work (live checklist)
+
+The authoritative, phase-by-phase checklist lives in **[`ROADMAP.md`](ROADMAP.md)** (tick boxes as items close). Snapshot of what's live now and what's moving next:
+
+- [x] v1.0 mainnet core: render + serve any credential on demand (shipped 2026-06-29)
+- [x] Badges shown in the Andamio app (Credentials page)
+- [ ] **"Look at this badge" in the app** (in progress, `andamio-app-v2`): show earnable badges on the public course page, the badge in the module learning UX, and an enlarge + metadata + shareable-link path on the Credentials page ([app-v2 #738](https://github.com/Andamio-Platform/andamio-app-v2/issues/738))
+- [ ] v1.1 Phase 0: evidence gate (external verifier runs + comprehension cohort) ([#15](https://github.com/Andamio-Platform/credential-badges/issues/15)–[#21](https://github.com/Andamio-Platform/credential-badges/issues/21))
+- [ ] v1.1 Phase 1: Ed25519 sign key + `did.json` CI emission
+- [ ] v1.1 Phase 2–3: signed-credential service + human verification page
+
+Known issues and good entry points are in [GitHub Issues](https://github.com/Andamio-Platform/credential-badges/issues). Look for [`good first issue`](https://github.com/Andamio-Platform/credential-badges/labels/good%20first%20issue) and [`documentation`](https://github.com/Andamio-Platform/credential-badges/labels/documentation).
+
+---
+
+## How you can use this
+
+Some things you can build on today, and where it's headed:
+
+- **Embed a learner's badge anywhere.** It is a plain SVG at a stable URL, no API key needed to read:
+  ```html
+  <img src="https://credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg"
+       alt="Andamio credential badge" />
+  ```
+- **Resolve any credential on demand.** You do not need a badge to be pre-generated. Request the URL for any `(policy_id, slt_hash)` pair and the host renders and caches it on first hit.
+- **Verify a badge against the chain.** The rings are an encoding, not decoration. `make verify` decodes a built badge and confirms it matches its on-chain hashes, so the image is self-checking.
+- **Read the credential's schema.** Fetch `/context/v0.jsonld` to see Andamio's OB 3.0 extension terms and build your own renderer or validator against them.
+- **Regenerate or restyle locally.** `make badges` renders the full set offline and deterministically. Fork the generator in [`generator/`](generator/README.md) to experiment with palettes or encodings (`gen.py`, `colors.py`).
+- **Coming in v1.1:** import a signed, independently verifiable credential into your own app via the SDK, or point people at the standalone wallet-connect viewer, no Andamio account required.
+
+If you build something with these, or want a surface that does not exist yet, open an issue. We want this to be a thing people pick up and run with.
+
+---
 
 ## Contributing
 
-Credential badges are free and open source — contributions are welcome. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) for the setup, the build-output rule, and how changes ship (tag-triggered deploy, served-file allowlist). New contributors: the [`good first issue`](https://github.com/Andamio-Platform/credential-badges/labels/good%20first%20issue) and [`documentation`](https://github.com/Andamio-Platform/credential-badges/labels/documentation) labels are the best entry points, and [`ROADMAP.md`](ROADMAP.md) shows what's next. Participation is covered by our [Code of Conduct](CODE_OF_CONDUCT.md).
+Credential badges are free and open source, and contributions are welcome. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) for the setup, the build-output rule, and how changes ship (tag-triggered deploy, served-file allowlist). New contributors: the [`good first issue`](https://github.com/Andamio-Platform/credential-badges/labels/good%20first%20issue) and [`documentation`](https://github.com/Andamio-Platform/credential-badges/labels/documentation) labels are the best entry points, and [`ROADMAP.md`](ROADMAP.md) shows what's next. Participation is covered by our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Background
+
+These extension terms came out of the Andamio Open Badges 3.0 spike (April–May 2026). The spike is committed at [`spike/`](spike/README.md) (source of truth), and the full deployment plan that promotes it lives at [`docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md).
 
 ## License
 
