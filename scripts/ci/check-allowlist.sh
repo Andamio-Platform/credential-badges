@@ -11,7 +11,7 @@ set -euo pipefail
 ALLOWED=("context" "issuer" "badges" "README.md")
 
 # Repo paths that exist for tooling/build and are never served — ignore them.
-IGNORED_PREFIXES=(".git" ".github" "nginx" "scripts" "Dockerfile" ".dockerignore" "DEPLOY.md" "MOC.md" "ROADMAP.md" ".gitignore" "docs" "spike" "generator" "Makefile" "service" ".env.example")
+IGNORED_PREFIXES=(".git" ".github" "nginx" "scripts" "Dockerfile" ".dockerignore" "DEPLOY.md" "MOC.md" "ROADMAP.md" ".gitignore" "docs" "spike" "generator" "Makefile" "service" ".env.example" "LICENSE" "CONTRIBUTING.md" "CODE_OF_CONDUCT.md")
 
 cd "$(dirname "$0")/../.."
 

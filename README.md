@@ -120,3 +120,11 @@ The repo also houses material that is **not** baked into the served image (the s
 ## Background
 
 These extension terms came out of the Andamio Open Badges 3.0 spike (April–May 2026). The spike is committed at `spike/` in this repo (source of truth); the full deployment plan that promotes it lives at `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`.
+
+## Contributing
+
+Credential badges are free and open source — contributions are welcome. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) for the setup, the build-output rule, and how changes ship (tag-triggered deploy, served-file allowlist). New contributors: the [`good first issue`](https://github.com/Andamio-Platform/credential-badges/labels/good%20first%20issue) and [`documentation`](https://github.com/Andamio-Platform/credential-badges/labels/documentation) labels are the best entry points, and [`ROADMAP.md`](ROADMAP.md) shows what's next. Participation is covered by our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+[Apache License 2.0](LICENSE) © Andamio Platform.
