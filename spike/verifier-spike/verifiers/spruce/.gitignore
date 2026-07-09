@@ -1,2 +1,3 @@
 /target
-Cargo.lock
+# Cargo.lock is tracked: the ssi verify adapter is version-coupled (plan KTD5),
+# so the exact 0.16.0 dependency graph must be reproducible.

@@ -56,9 +56,13 @@ continuous integrity monitoring, recipient incident notification) are at prototy
      dissolved for v1; production-hardening upgrade path = adopt dbapi/api IAM-binding pattern
    - **P1bis-09** CODEOWNERS = document-only enforcement + glob patterns + force-push disabled
      + minimal Actions permissions; full branch protection deferred to productionization
-   - **P1bis-10** Phase 0 verifier set updated: walt-id/waltid-identity + spruceid/ssi
-     + **1EdTech digital-credentials-public-validator** (free, public — gives most of the
-     1EdTech credibility value at zero scheduling cost) + digitalbazaar self-loopback
+   - **P1bis-10** Phase 0 verifier set (revised 2026-07-09): **launch (1.1) gate = two
+     independent complementary verifiers — spruceid/ssi (DI authority) + 1EdTech
+     digital-credentials-public-validator (OB3 spec + status/evidence) — both green on the
+     credential bytes, plus the digitalbazaar self-loopback.** walt-id/waltid-identity was
+     evaluated and **deferred to post-1.1** (its CLI is JWS-only, cannot verify the DI
+     JSON-LD sample — see `spike/verifier-spike/results/walt-id.md`); revisit as optional
+     third-independent hardening / suspension-UX rendering, not a launch blocker.
 
 **Next step:** Phase 0 spin-up + Unit 1 kickoff in parallel. Pre-flight verifier spike is
 the Phase 0 first sub-task; results inform the suspension-UX disposition (P1bis-02).
@@ -432,17 +436,32 @@ gate (rescheduled to post-launch credibility work), kept the substantive correct
 The remaining gates:
 
 - **Multi-verifier DI conformance** (replaces 1EdTech kit, refined per P1-09 + P1bis-10).
-  Three **independent** verifiers covering complementary coverage gaps (Explore-agent research
-  2026-05-25 surfaced that no single named library covers the full feature combination —
-  walt-id is strong on OB3 + suspension but weak on DI eddsa-rdfc-2022; spruceid/ssi is the
-  inverse), plus a self-loopback check:
+  Original design: three **independent** verifiers covering complementary coverage gaps
+  (Explore-agent research 2026-05-25 surfaced that no single named library covers the full
+  feature combination — walt-id is strong on OB3 + suspension but weak on DI eddsa-rdfc-2022;
+  spruceid/ssi is the inverse), plus a self-loopback check. **Revised 2026-07-09 (empirical):
+  the launch (1.1) gate is TWO independent complementary verifiers — spruce + 1EdTech, both
+  green — plus the loopback. walt-id is deferred (see its bullet below).** Between them the two
+  independents touch every production feature: spruce carries DI `eddsa-rdfc-2022` + did:web;
+  1EdTech carries OB3 spec conformance, the `OnChainCredentialAnchor` evidence shape, and
+  surfaces the `BitstringStatusListEntry`/`suspension` status. The one thing two-instead-of-
+  three gives up is a second independent check on suspension and an independent *rendering*
+  of it — that is the already-deferred P1bis-02, now explicitly a post-1.1 item.
+  - **`spruceid/ssi` Rust crate** and **`1EdTech digital-credentials-public-validator`** —
+    the two launch independents (detailed below).
   - **`walt-id/waltid-identity` verifier (Kotlin/JVM)** — successor to ssikit. v0.20.x+.
-    Primary verifier for **OB3 AchievementCredential + BitstringStatusListEntry with
-    `statusPurpose: "suspension"`**. Documented gap: DI `eddsa-rdfc-2022` not prominently
-    documented; pre-flight spike confirms whether it works in practice (it may; the library
-    handles "W3C" credentials with various policies — needs empirical verification).
-    Caveat: walt-id issue #977 affects multi-key did:web resolution; workaround = use
-    single-key DID docs (which P1-04 + the rotation runbook already implies).
+    **DEFERRED to post-1.1 (decision 2026-07-09).** Was the intended primary for **OB3
+    AchievementCredential + BitstringStatusListEntry with `statusPurpose: "suspension"`**.
+    Empirical finding (built from source, tag v0.20.5): its CLI `vc verify` is **JWS/SD-JWT-
+    only** and cannot ingest the W3C Data Integrity JSON-LD sample at all — it verifies
+    neither the DI proof nor the suspension status on this artifact, and there is no official
+    docker image (source build only). Not worth the integration cost for launch; DI + status
+    coverage is carried by spruce + 1EdTech (independence-by-coverage). Revisit post-1.1 as
+    optional third-independent hardening or for suspension-UX rendering — possibly via a
+    JWT/VC-JWT variant, which is a *different* artifact than the DI credential under test.
+    (Historical caveat if revisited: walt-id issue #977 affects multi-key did:web resolution;
+    workaround = single-key DID docs, which `publish/did.json` already uses.) Full record:
+    `spike/verifier-spike/results/walt-id.md`.
   - **`spruceid/ssi` Rust crate** (v0.16.x+, used directly, not via the archived `didkit-cli`).
     Primary verifier for **DI `eddsa-rdfc-2022` + did:web**: 90/91 on W3C eddsa-rdfc-2022
     interop test suite. OB3 schema enforcement may need custom Rust code (no documented
@@ -453,7 +472,7 @@ The remaining gates:
     scheduling cost. Used as the spec-driven Phase 0 conformance check.
   - **`@digitalbazaar/vc` + `@digitalbazaar/data-integrity` (TS)** — self-loopback check
     that the KMS-signed output still verifies through the signing stack. **Not counted
-    toward the "≥3 independent" criterion** (it's not independent of itself).
+    as an independent verifier** (it's not independent of itself).
   **Note on 1EdTech (Decision 1 refinement):** with the public validator running in Phase 0,
   the deferred-post-launch 1EdTech work narrows to **just the formal membership-gated kit
   run** as the final credibility marker (a much smaller post-launch task than originally
@@ -468,15 +487,16 @@ The remaining gates:
   `outcome=VALID, errors=0, warnings=0, totalRun=13` after three mapper-grade findings
   were addressed (now baked into Decision 2 implication 2 + Unit 3 attestation-framing
   emission + Unit 4 served-response shape — see `spike/verifier-spike/results/SUMMARY.md`).
-  Self-loopback (`@digitalbazaar/vc`) green. **`spruceid/ssi` and `walt-id/waltid-identity`
-  remain empirically TBD** — neither was exercised because each requires a local toolchain
-  install (Rust + cargo for spruce; docker or gradle-from-source for walt-id; walt-id's
-  hosted `verifier.portal.walt.id` is OpenID4VP-only). Phase 0 day-1 setup task: install
-  both toolchains, write the small spruce verifier binary + walt-id verify invocation,
-  and re-run against the same `spike/verifier-spike/publish/credential.jsonld`.
-  P1bis-10 set composition does NOT need revision based on what the spike surfaced.
-  **Pass criteria:** all three libraries must verify the same credential bytes with **no
-  errors AND no warnings**. A warning from any library is a finding to investigate before
+  Self-loopback (`@digitalbazaar/vc`) green. **Update 2026-07-09 — both remaining independents
+  were run** (Rung 1 harness, `feat/rung1-verifier-harness`): **`spruceid/ssi` v0.16.0 → VALID,
+  errors=0, warnings=0** on the DI-signed sample (green, launch independent #2). **`walt-id`
+  built from source (tag v0.20.5) → structural finding: CLI `vc verify` is JWS/SD-JWT-only,
+  cannot ingest the DI JSON-LD sample** — deferred to post-1.1 (see the walt-id bullet above
+  and `spike/verifier-spike/results/walt-id.md`). **P1bis-10 set composition IS revised: the
+  launch gate is now the two independents (spruce + 1EdTech) + loopback.**
+  **Pass criteria:** the two independent libraries (spruce + 1EdTech) must verify the same
+  credential bytes with **no errors AND no warnings** (achieved). A warning from any library
+  is a finding to investigate before
   the gate closes. **Arbitration on disagreement:** W3C VC 2.0 + OB 3.0 specs are the
   tiebreakers. If a library's rejection is spec-correct, we fix the credential. If it is
   over-strict (verifier bug), open an issue with the maintainer, document the deviation,
@@ -1412,7 +1432,7 @@ architecture, the trust boundary, and the deferred T2/PQ3 path.
 | `statusPurpose: "suspension"` not honored by some verifiers (newer than `"revocation"`) | Low | Med | Phase 0 pre-flight spike confirms each candidate library handles `suspension` purpose before the multi-verifier gate is locked (P1-09 + P1bis-10). Fallback: switch to a custom `statusPurpose` value if `suspension` support is gappy. The chain remains authoritative regardless of status-list behavior. |
 | **Mass-suspension UX harm during key-compromise event** (P1bis-02 + P1bis-03) | Med | High | A single `compromised-key` flip causes all credentials signed under that key version to display SUSPENDED in third-party verifier UIs simultaneously (potentially 100s of credentials at once). Mitigations: (a) verification view shows clear suspended-state context with link to optional incident page; (b) recipients re-share the URL after rotation completes (URL transparently serves under new key); (c) runbook documents the mass-event response. Productionization-hardening: required incident page + recipient notification channel. Prototype-posture acceptance: passive comms via verification view; trigger condition for KERI/Veridian substrate workstream if real-event experience shows this is inadequate. |
 | **CI compromise poisons both the bundled and live did.json artifacts (P1bis-07 residual)** | Low | High | Out-of-band smoke probe in separate workflow (`smoke-probe.yml`) fetches live did.json post-deploy with `contents: read` only; SHA-binding (`bundled_with_did_json_sha256`) cryptographically links the bundled file to the matching live did.json at emission time. Residual risk: coordinated compromise of CI + smoke-probe job in same run — accepted under prototype posture; daily integrity monitor + cosign signing are documented productionization upgrades. |
-| **walt-id DI eddsa-rdfc-2022 support not documented (P1bis-10)** | Med | Med | Pre-flight spike confirms in practice before locking the verifier set. Fallback: spruceid/ssi carries DI verification (90/91 W3C interop pass) + 1EdTech public validator provides spec-driven check. The three-verifier composition is independence-by-coverage rather than independence-by-redundancy. |
+| **walt-id DI eddsa-rdfc-2022 support not documented (P1bis-10)** | ~~Med~~ Confirmed | Low | **RESOLVED 2026-07-09:** empirically confirmed worse than "undocumented" — walt-id's CLI `vc verify` is JWS/SD-JWT-only and cannot ingest the DI JSON-LD sample at all (built from source, tag v0.20.5). Fallback engaged as designed: spruceid/ssi carries DI (90/91 W3C interop, VALID errors=0 warnings=0) + 1EdTech public validator provides the spec-driven check. **walt-id deferred to post-1.1; launch gate = these two independents + loopback.** See `spike/verifier-spike/results/walt-id.md`. |
 | **API-key compromise gives attacker read access to `andamio-api` (P1bis-08 prototype tradeoff)** | Low | Low | Acceptable harm class — chain data is publicly observable; `andamio-api` exposes indexed reads of public data only. Mitigations: audit logging on `andamio-api`-side identifies key usage; rotation runbook covers shared-key rotation. Productionization upgrade: replace with cross-project IAM binding pattern (per dbapi/api precedent). |
 | `did:web` resolution edge cases in strict verifiers | Low | High | Unit 4 startup drift check + Phase 0 multi-verifier conformance is the gate; Multikey in both verificationMethod and assertionMethod |
 | T2/PQ3 deferral creates later spec contradiction | Low | Med | Unit 6 writes the designed path now so the deferral is coherent |
@@ -1658,3 +1678,12 @@ exists so productionization is a known finite delta, not a re-architecture exerc
   community deployment at `verifybadge.org` runs the same codebase and is the live
   public instance.
   that gives most of the 1EdTech credibility value at zero scheduling cost.
+- **Rung 1 verifier runs 2026-07-09** (`feat/rung1-verifier-harness`): ran the two deferred
+  independents against the same `publish/credential.jsonld`. **spruce (`ssi` v0.16.0) → VALID,
+  errors=0, warnings=0** (required a KTD5 thin-adapter fix for the 0.16 API + preloading the
+  OB3/custom JSON-LD contexts). **walt-id (built from source, tag v0.20.5) → structural
+  finding: CLI `vc verify` is JWS/SD-JWT-only, cannot ingest DI JSON-LD; no official docker
+  image exists.** **Decision: launch 1.1 on the two independents (spruce + 1EdTech) + loopback;
+  defer walt-id to post-1.1** as optional third-independent hardening / suspension-UX rendering
+  (P1bis-02). Supersedes the 2026-05-25 "P1bis-10 confirmed without revision" note. Full
+  records: `spike/verifier-spike/results/{spruce,walt-id}.md`, `SUMMARY.md`.
