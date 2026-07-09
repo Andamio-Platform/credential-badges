@@ -33,8 +33,8 @@ the spike closes. Production target is `did:web:credentials.andamio.io`.
 |----------|---------------|--------|---------|
 | `@digitalbazaar/vc` (TS) | Self-loopback sanity (not counted toward "≥3 independent") | ✅ Done | Cryptographic proof verifies; status list resolves; did:web resolves |
 | `1EdTech digital-credentials-public-validator` (Java, hosted at verifybadge.org) | Spec-driven OB 3.0 conformance | ✅ Done — `outcome=VALID, errors=0, warnings=0, totalRun=13` | Clean pass after iterating on first-pass findings |
-| `spruceid/ssi` (Rust) | DI eddsa-rdfc-2022 authority (90/91 W3C interop) | ⏸ Blocked on Rust toolchain install | Empirical TBD |
-| `walt-id/waltid-identity` (Kotlin/JVM) | OB 3.0 + suspension primary; published gap on DI documentation | ⏸ Blocked on docker/gradle install (hosted portal is OpenID4VP-only, not direct verify) | Empirical TBD |
+| `spruceid/ssi` (Rust) | DI eddsa-rdfc-2022 authority (90/91 W3C interop) | ⏸ Runner committed (`verifiers/spruce/`); run pending Rust toolchain | Empirical TBD — see `spruce.md` |
+| `walt-id/waltid-identity` (Kotlin/JVM) | OB 3.0 + suspension primary; published gap on DI documentation | ⏸ Runner committed (`verifiers/walt-id/`); run pending docker daemon | Empirical TBD — see `walt-id.md` |
 
 ## Verifier-set viability call
 
@@ -42,14 +42,25 @@ the spike closes. Production target is `did:web:credentials.andamio.io`.
 confirmation is 1-of-3 (1EdTech green). The remaining two are blocked on
 local toolchain installs, not on capability gaps surfaced by the spike.
 
-**Action for Phase 0 proper:**
+**Rung 1 update (2026-07-09):** reproducible runner harnesses for both remaining
+independents are now committed under `spike/verifier-spike/verifiers/` (spruce
+Rust binary against `ssi` v0.16.x per issue #15; walt-id docker `vc verify` per
+issue #16, with a gradle fallback). Both fail fast with a clear `BLOCKED:`
+message when their toolchain is absent — verified 2026-07-09: `cargo`/`rustup`
+not installed, docker daemon not running. The empirical count stays **1-of-3**;
+the harness reduces closing the gate to *install the toolchain and run the
+runner* (see `verifiers/README.md`, `spruce.md`, `walt-id.md`).
 
-- **Required pre-Phase-0 install:** rustup + cargo (for spruceid/ssi), docker
-  or gradle (for walt-id/waltid-identity). Treat as a Phase 0 first-day setup
-  task, not as a verifier-set replacement.
+**Action to close the gate (Rung 1 "verified when"):**
+
+- Install rustup + cargo → run `verifiers/spruce/run.sh` → capture into `spruce.md`.
+- Start docker (or gradle fallback) → run `verifiers/walt-id/run.sh` → capture into `walt-id.md`.
+- When both read zero-errors/zero-warnings, flip their rows to ✅ and update this
+  call to **3-of-3 independent green**. Any walt-id DI warning is a finding, not
+  a blocker: spruce + 1EdTech carry DI (independence-by-coverage).
 - **No verifier replacement needed** based on signal collected so far. The
   P1bis-10 set composition (walt-id + spruce + 1EdTech public validator +
-  digitalbazaar self-loopback) does not need revision before Phase 0 starts.
+  digitalbazaar self-loopback) does not need revision.
 
 ## Direct findings for the plan (mapper-grade, lock into Unit 3 / Unit 4)
 

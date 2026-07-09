@@ -1,0 +1,18 @@
+[package]
+name = "spruce-verify"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Minimal spruceid/ssi verifier for the Phase 0 pre-flight OB3 sample (Rung 1, issue #15)"
+
+[[bin]]
+name = "spruce-verify"
+path = "src/main.rs"
+
+[dependencies]
+# Issue #15 mandates the `ssi` crate used directly — NOT the archived didkit-cli.
+# Pinned to the 0.16 line (DI eddsa-rdfc-2022 + did:web, 90/91 W3C interop).
+# Bump within 0.16.x / 0.17.x as needed; keep src/main.rs the thin adapter (plan KTD5).
+ssi = "0.16"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+serde_json = "1"
