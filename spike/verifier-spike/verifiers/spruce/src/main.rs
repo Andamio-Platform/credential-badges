@@ -51,6 +51,9 @@ async fn main() -> ExitCode {
     // --- adapter point (plan KTD5) ---------------------------------------
     // `verify` returns Ok(Ok(())) on a clean pass, Ok(Err(_)) when the proof
     // is present but invalid, and Err(_) when verification could not run.
+    // `warnings=0` is hardcoded below because ssi DI verification is binary
+    // (valid / invalid) — it does not surface a distinct warning channel, so
+    // the "zero warnings" half of the pass criterion is structurally satisfied.
     match vc.verify(params).await {
         Ok(Ok(())) => {
             println!("outcome=VALID errors=0 warnings=0");

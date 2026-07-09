@@ -40,6 +40,35 @@ echo
 # NOTE (adapter point): confirm the `vc verify` subcommand/flags against the
 # pinned ${WALTID_VERSION} release — the waltid-cli surface is the only piece
 # coupled to the tool version.
-docker run --rm --network host \
-  -v "$(cd "$(dirname "$sample")" && pwd)":/data:ro \
-  "$IMAGE" vc verify --verbose "/data/$(basename "$sample")"
+mount_dir="$(cd "$(dirname "$sample")" && pwd)"
+set +e
+out="$(docker run --rm --network host -v "$mount_dir":/data:ro \
+  "$IMAGE" vc verify --verbose "/data/$(basename "$sample")" 2>&1)"
+status=$?
+set -e
+
+printf '%s\n' "$out"
+echo
+
+# --- assert what this runner exists to confirm (plan U2 test scenarios) -------
+# Unlike spruce (whose binary emits outcome text and exit code from one match
+# arm, so they can't diverge), waltid-cli's exit-code semantics for a
+# "verifies-but-with-a-warning" case are undocumented — trusting the bare exit
+# code alone risks a false PASS. These checks fail CLOSED. The exact output
+# wording is unknown until the first real run (U4): if a check trips on a
+# wording mismatch, inspect the output echoed above and widen the pattern.
+fail=0
+if [ "$status" -ne 0 ]; then
+  echo "FAIL: waltid-cli exited non-zero ($status) — credential did not verify clean." >&2
+  fail=1
+fi
+if ! grep -qiE 'suspension|BitstringStatusList' <<<"$out"; then
+  echo "FAIL: status surfacing not found (expected 'suspension'/'BitstringStatusList') — confirm pattern against real output (U4)." >&2
+  fail=1
+fi
+if grep -qiE '\bwarn(ing)?s?\b' <<<"$out"; then
+  echo "FAIL: verifier emitted a warning — any warning is a finding (pass criterion: zero errors AND zero warnings)." >&2
+  fail=1
+fi
+[ "$fail" -eq 0 ] && echo "outcome=VALID errors=0 warnings=0"
+exit "$fail"
