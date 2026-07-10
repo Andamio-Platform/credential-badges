@@ -1,0 +1,14 @@
+{
+  "name": "credential-badges-tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build-only tooling for credential-badges. NEVER served (see scripts/ci/check-allowlist.sh IGNORED_PREFIXES). Dependency-free by design — trust-critical, CODEOWNERS-gated crypto tooling runs on Node's native TypeScript type-stripping (Node >=22.18 / default in 24), no third-party runtime or dev packages.",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "gen": "node --experimental-strip-types gen-did-json.ts",
+    "test": "node --experimental-strip-types --test *.test.ts"
+  }
+}
