@@ -6,8 +6,8 @@
 # deciding it is safe to serve publicly and forever.
 #
 # Currently allowlisted: context/ (the deliverable), issuer/ (the hosted
-# OB 3.0 issuer Profile), badges/ (presentation-layer badge imagery), and
-# README.md.
+# OB 3.0 issuer Profile), badges/ (presentation-layer badge imagery),
+# .well-known/ (the did:web DID document), and README.md.
 # When schemas/ land and are confirmed public, add an explicit COPY line
 # here AND update scripts/ci/check-allowlist.sh.
 
@@ -38,6 +38,8 @@ ENV NGINX_ENVSUBST_FILTER="RENDER_UPSTREAM"
 COPY context/   /usr/share/nginx/html/context/
 COPY issuer/    /usr/share/nginx/html/issuer/
 COPY badges/    /usr/share/nginx/html/badges/
+# did:web DID document — a forever-public endpoint (did:web:credentials.andamio.io).
+COPY .well-known/ /usr/share/nginx/html/.well-known/
 COPY README.md  /usr/share/nginx/html/README.md
 
 EXPOSE 8080

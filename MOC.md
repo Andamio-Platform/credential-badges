@@ -9,6 +9,7 @@ Start here when you open the repo for the first time.
 |---|---|---|---|
 | `/context/v0.jsonld` | `context/v0.jsonld` | no (versioned, `immutable` cache) | Pre-stable JSON-LD context for Andamio's OB 3.0 extension terms (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). |
 | `/issuer` | `issuer/profile.jsonld` | yes (cached, not `immutable`) | Hosted OB 3.0 issuer `Profile`. Strict verifiers dereference `issuer.url` here; nginx exact-match serves the extensionless path as `application/ld+json`. |
+| `/.well-known/did.json` | `.well-known/did.json` | yes (cached, not `immutable`; mutable on key rotation) | `did:web:credentials.andamio.io` DID document. Publishes the issuer signing key (`#key-2026-07`, pinned to KMS `vc-sign-ed25519` v1). Served exact-match as `application/did+ld+json`. **The key is only published here, nothing signs yet** (OB 3.0 signing is a later rung). Regenerate with `tools/gen-did-json.ts`; the key-pin invariant test guards drift. |
 | `/badges/*.svg` (+ `.png`) | `badges/` | yes (cached, not `immutable`) | Presentation-layer badge imagery referenced by `achievement.image`. Never identity-bearing — the on-chain anchor is the credential's identity. **Build output — see [Badge generator](#badge-generator); regenerate with `make badges`.** |
 | `/` | nginx config | n/a | Tiny 200 landing page (keeps health probes trivial; pointer for humans). |
 
@@ -16,7 +17,7 @@ Start here when you open the repo for the first time.
 
 | File | Role |
 |---|---|
-| `Dockerfile` | Nginx-alpine image. **Explicit `COPY` of allowlisted paths only** — never `COPY .`. Currently allows `context/`, `issuer/`, `badges/`, `README.md`. |
+| `Dockerfile` | Nginx-alpine image. **Explicit `COPY` of allowlisted paths only** — never `COPY .`. Currently allows `context/`, `issuer/`, `badges/`, `.well-known/`, `README.md`. |
 | `nginx/default.conf.template` | Per-extension MIME map (`application/ld+json` for `.jsonld`), exact-match for `/issuer`, cache headers, root landing page. `^~ /badges/` owns badge serving with `try_files $uri @render` — a miss proxies to `RENDER_UPSTREAM` (injected at container start). |
 | `scripts/ci/check-allowlist.sh` | Fails CI if any repo file outside the allowlist would end up served. `IGNORED_PREFIXES` covers tooling/build/docs/spike/`service` paths that are explicitly **not** served. |
 | `.github/workflows/ci.yml` | PR check — allowlist + docker build + smoke-test served Content-Types + nginx `@render` fallback e2e. |
@@ -100,7 +101,7 @@ Pre-flight verifier spike — confirms the target verifier set actually handles 
 
 ## Conventions
 
-- **Allowlist or it doesn't ship.** To serve a new path, add an explicit `COPY` line in `Dockerfile` **and** the matching entry in `scripts/ci/check-allowlist.sh`. Both must change together; CI enforces both.
+- **Allowlist or it doesn't ship.** To serve a new path, add an explicit `COPY` line in `Dockerfile`, the matching entry in `scripts/ci/check-allowlist.sh`, **and** a `!`-re-include in `.dockerignore` (its `*` base excludes everything, including dot-dirs like `.well-known/`). All must change together; CI enforces the allowlist, and trust-critical served paths are CODEOWNERS-gated.
 - **Versioned `vN.jsonld` files are immutable once published.** Fix typos by shipping a new version. Artifact Registry has `immutable_tags = true`; re-pushing an existing image tag is rejected.
 - **No `:latest`, no branch deploy, no `workflow_dispatch` deploy.** Only `git tag vX.Y.Z && git push origin vX.Y.Z` deploys, and the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC layer.
 - **Spike is committed source of truth, not served.** `docs/`, `spike/`, and tooling are in `IGNORED_PREFIXES` — they live in the repo for transparency and history but never ship in the Docker image.

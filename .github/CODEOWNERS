@@ -1,0 +1,29 @@
+# CODEOWNERS — trust-critical paths for credential-badges.
+#
+# DOCUMENT-ONLY gate (v1). This file records who must review changes to the
+# paths below. It is intentionally NOT yet backed by branch-protection
+# required-reviewers — a named team with >=2 required reviewers is deferred to
+# productionization (deployment plan P1bis-09; "v1 has James as owner"). The
+# cheap companion control is disabling force-push to the default branch.
+#
+# Scoped to Rung 3 (did:web resolves). Later rungs extend this to
+# issuer/profile.jsonld (Rung 4), context/v0.jsonld, the status-list JSON and
+# tools/flip-status-bit.ts (Rung 8).
+
+# The did:web DID document and its deterministic regenerator — this publishes
+# the issuer signing key. A wrong or drifted key here silently breaks OB 3.0
+# verification for every credential, so changes get a deliberate review. The
+# whole /.well-known/** is gated (not just did.json) so any future sibling
+# served on this forever-public path is reviewed too. did-pin.test.ts holds the
+# pinned key constant (the actual invariant), so it is gated alongside.
+/.well-known/**                @workshop-maybe
+/tools/gen-did-json.ts         @workshop-maybe
+/tools/did-pin.test.ts         @workshop-maybe
+
+# Served-file allowlist controls. Adding a public, forever-served path must be
+# a deliberate reviewed act — these four files are the allowlist surface
+# (Dockerfile COPY, build-context re-includes, nginx location, CI gate).
+/Dockerfile                    @workshop-maybe
+/.dockerignore                 @workshop-maybe
+/nginx/default.conf.template   @workshop-maybe
+/scripts/ci/check-allowlist.sh @workshop-maybe
