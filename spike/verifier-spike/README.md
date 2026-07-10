@@ -79,6 +79,21 @@ npm run verify      # self-loopback (digitalbazaar)
 # spruce and walt-id verifiers have their own subdirectories under verifiers/
 ```
 
+### did:web resolution smoke test (`verifiers/spruce`, `resolve` bin)
+
+A second binary alongside `spruce-verify` resolves a `did:web` DID through the
+**same** ssi `AnyDidMethod` resolver the credential verifier uses, and asserts the
+resolved verification method's fragment and `publicKeyMultibase`. Unlike
+`spruce-verify` (which needs a full signed credential), this checks did:web
+resolution on its own — the cheap "does production still resolve correctly" probe.
+Used to close Rung 3's R6 against the live host:
+
+```
+cd spike/verifier-spike/verifiers/spruce
+cargo run --bin resolve -- did:web:credentials.andamio.io
+# → outcome=PASS: resolves did:web:credentials.andamio.io → #key-2026-07 pinning KMS v1
+```
+
 ## Cleanup
 
 When the spike closes:
