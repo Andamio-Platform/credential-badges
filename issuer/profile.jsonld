@@ -1,11 +1,12 @@
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v0.jsonld"
   ],
-  "id": "https://credentials.andamio.io/issuer",
-  "type": ["Profile"],
+  "id": "did:web:credentials.andamio.io",
+  "type": ["Profile", "AttestationHost"],
   "name": "Andamio",
   "url": "https://credentials.andamio.io",
-  "description": "Andamio is an on-chain credential protocol on Cardano. Andamio credentials anchor course and project attestations in a recipient's on-chain Access Token global state; the Open Badges 3.0 / W3C VC 2.0 JSON-LD shape is a portable view of that anchor so non-Cardano verifiers can read it. This is the hosted issuer profile that the `issuer.url` field in those credentials dereferences to. Pre-stable: spike credentials (e.g. the OB 3.0 james and njuguna samples) identify their issuer by a throwaway did:key and reference this profile only as an informational URL; production credentials will move to did:web:credentials.andamio.io or a per-organization issuer DID."
+  "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
 }

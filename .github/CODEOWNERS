@@ -6,9 +6,9 @@
 # productionization (deployment plan P1bis-09; "v1 has James as owner"). The
 # cheap companion control is disabling force-push to the default branch.
 #
-# Scoped to Rung 3 (did:web resolves). Later rungs extend this to
-# issuer/profile.jsonld (Rung 4), context/v0.jsonld, the status-list JSON and
-# tools/flip-status-bit.ts (Rung 8).
+# Scoped to Rungs 3-4 (did:web resolves; issuer Profile = AttestationHost).
+# Later rungs extend this to the status-list JSON and tools/flip-status-bit.ts
+# (Rung 8).
 
 # The did:web DID document and its deterministic regenerator — this publishes
 # the issuer signing key. A wrong or drifted key here silently breaks OB 3.0
@@ -19,6 +19,17 @@
 /.well-known/**                @workshop-maybe
 /tools/gen-did-json.ts         @workshop-maybe
 /tools/did-pin.test.ts         @workshop-maybe
+
+# The hosted OB 3.0 issuer Profile and the served JSON-LD context (Rung 4). The
+# Profile declares the issuer as ["Profile","AttestationHost"] and names the
+# did:web subject; the context DEFINES the AttestationHost extension term the
+# Profile references. A wrong id, a dropped type, or an undefined term silently
+# breaks strict-verifier expansion for every credential, so changes get a
+# deliberate review. tools/issuer-profile.test.ts pins the shape invariant, so
+# it is gated alongside.
+/issuer/profile.jsonld         @workshop-maybe
+/context/v0.jsonld             @workshop-maybe
+/tools/issuer-profile.test.ts  @workshop-maybe
 
 # Served-file allowlist controls. Adding a public, forever-served path must be
 # a deliberate reviewed act — these four files are the allowlist surface

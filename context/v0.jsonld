@@ -6,6 +6,9 @@
     "andamio": "https://credentials.andamio.io/ns/v0#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
 
+    "AttestationHost": "andamio:AttestationHost",
+    "OnChainCredentialAnchor": "andamio:OnChainCredentialAnchor",
+
     "onChainAnchor": {
       "@id": "andamio:onChainAnchor",
       "@context": {
