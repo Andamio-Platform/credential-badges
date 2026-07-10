@@ -50,8 +50,9 @@ Because the encoding is deterministic, a badge **round-trips back to the chain**
 `make verify` (which runs [`generator/decode.py`](../generator/decode.py)) reads the
 rings off the image and confirms they match the credential's real on-chain hashes.
 The image checks itself — no server, no trust in Andamio required for this step.
-This is what makes a credential badge different from every "verified" PNG that is
-really just a link to a database.
+Most "verified" badges pair a picture with a *separate* record it points at, whether
+a hosted database or an on-chain token whose image is only attached metadata. Here
+the geometry itself is the proof, decodable straight back to the chain.
 
 ### 3. The Open Badges 3.0 form — the portable standard *(live: format · in dev: signature)*
 
