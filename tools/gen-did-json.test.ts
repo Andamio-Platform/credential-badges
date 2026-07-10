@@ -85,3 +85,24 @@ test("base58 preserves leading zero bytes (encoder tail guard)", () => {
   assert.ok(encoded.startsWith("11"), `expected two '1' prefixes, got ${encoded}`);
   assert.deepEqual(base58Decode(encoded), withLeadingZeros);
 });
+
+// Negative paths of the decode/encode guards. multibaseToRawPublicKey backs the
+// key-pin invariant (did-pin.test.ts), so its rejection branches must hold —
+// otherwise a malformed pin could slip through instead of failing loudly.
+test("multibaseToRawPublicKey rejects a non-'z' (non-base58btc) multibase", () => {
+  assert.throws(() => multibaseToRawPublicKey("f6Mkabc"), /base58btc multibase/);
+});
+
+test("multibaseToRawPublicKey rejects a non-0xed01 (non-Ed25519) multicodec", () => {
+  // A valid 'z' base58btc string whose 34 decoded bytes are NOT 0xed01-prefixed.
+  const notEd25519 = "z" + base58Encode(new Uint8Array([0xec, 0x01, ...new Array(32).fill(7)]));
+  assert.throws(() => multibaseToRawPublicKey(notEd25519), /not a 0xed01/);
+});
+
+test("base58Decode rejects characters outside the base58 alphabet", () => {
+  assert.throws(() => base58Decode("0OIl"), /invalid base58 character/);
+});
+
+test("rawPublicKeyToMultibase rejects a wrong-length key", () => {
+  assert.throws(() => rawPublicKeyToMultibase(new Uint8Array(31)), /expected 32-byte/);
+});

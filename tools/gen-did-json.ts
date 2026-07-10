@@ -149,7 +149,7 @@ export function serializeDidDocument(doc: unknown): string {
   return JSON.stringify(doc, null, 2) + "\n";
 }
 
-const KMS_GET_PUBKEY_ARGS = [
+export const KMS_GET_PUBKEY_ARGS = [
   "kms", "keys", "versions", "get-public-key", "1",
   "--location", "us-central1",
   "--keyring", "credential-badges-issuer",

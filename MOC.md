@@ -101,7 +101,7 @@ Pre-flight verifier spike — confirms the target verifier set actually handles 
 
 ## Conventions
 
-- **Allowlist or it doesn't ship.** To serve a new path, add an explicit `COPY` line in `Dockerfile` **and** the matching entry in `scripts/ci/check-allowlist.sh`. Both must change together; CI enforces both.
+- **Allowlist or it doesn't ship.** To serve a new path, add an explicit `COPY` line in `Dockerfile`, the matching entry in `scripts/ci/check-allowlist.sh`, **and** a `!`-re-include in `.dockerignore` (its `*` base excludes everything, including dot-dirs like `.well-known/`). All must change together; CI enforces the allowlist, and trust-critical served paths are CODEOWNERS-gated.
 - **Versioned `vN.jsonld` files are immutable once published.** Fix typos by shipping a new version. Artifact Registry has `immutable_tags = true`; re-pushing an existing image tag is rejected.
 - **No `:latest`, no branch deploy, no `workflow_dispatch` deploy.** Only `git tag vX.Y.Z && git push origin vX.Y.Z` deploys, and the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC layer.
 - **Spike is committed source of truth, not served.** `docs/`, `spike/`, and tooling are in `IGNORED_PREFIXES` — they live in the repo for transparency and history but never ship in the Docker image.

@@ -5,8 +5,12 @@
 // silently rotated, this test goes RED — a loud CI failure instead of a silent
 // verification break for every credential.
 //
-// Default: decode-only, hermetic (no network). Opt-in live check: set
-// KMS_LIVE_PIN=1 with an authed gcloud to additionally re-fetch KMS version 1.
+// Scope of the CI check: this is a SELF-CONSISTENCY guard. In CI it proves the
+// committed did.json decodes to the pinned constant (PINNED_RAW_HEX) — it does
+// NOT re-read live KMS (the CI/CD SA has no cloudkms.publicKeyViewer grant; that
+// grant + a scheduled live reconciliation land at Rung 8, per plan KTD-2). So CI
+// catches repo-internal drift (a bad edit to did.json), not a live key rotation.
+// Opt-in live check: set KMS_LIVE_PIN=1 with an authed gcloud to re-fetch v1.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -17,6 +21,7 @@ import { fileURLToPath } from "node:url";
 import {
   DID,
   VERIFICATION_METHOD_ID,
+  KMS_GET_PUBKEY_ARGS,
   multibaseToRawPublicKey,
   rawPublicKeyToMultibase,
   spkiPemToRawPublicKey,
@@ -74,16 +79,6 @@ test("the invariant catches a drifted / rotated key (guard bites)", () => {
 });
 
 test("live KMS re-fetch matches the committed key", { skip: !process.env.KMS_LIVE_PIN }, () => {
-  const pem = execFileSync(
-    "gcloud",
-    [
-      "kms", "keys", "versions", "get-public-key", "1",
-      "--location", "us-central1",
-      "--keyring", "credential-badges-issuer",
-      "--key", "vc-sign-ed25519",
-      "--project", "andamio-credentials",
-    ],
-    { encoding: "utf8" },
-  );
+  const pem = execFileSync("gcloud", KMS_GET_PUBKEY_ARGS, { encoding: "utf8" });
   assert.equal(hex(spkiPemToRawPublicKey(pem)), PINNED_RAW_HEX);
 });

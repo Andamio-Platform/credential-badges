@@ -20,10 +20,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: did.json regenerator + key-pin invariant (drift guard)
-        # Hermetic — decode-only; the committed did.json must match KMS
-        # vc-sign-ed25519 v1. No install (tools/ is dependency-free), no
-        # network (live KMS check is env-gated on KMS_LIVE_PIN and skips here).
+      - name: did.json regenerator + key-pin invariant (self-consistency guard)
+        # Hermetic self-consistency check: the committed did.json must decode to
+        # the pinned key constant. Catches a bad edit to did.json — NOT a live
+        # KMS rotation (the live-KMS re-fetch is env-gated on KMS_LIVE_PIN and
+        # skips here; its cloudkms.publicKeyViewer grant + scheduled reconcile
+        # land at Rung 8, per plan KTD-2). No install — tools/ is dependency-free.
         run: node --experimental-strip-types --test tools/*.test.ts
 
   docker-build:
