@@ -43,6 +43,23 @@ server {
         try_files /issuer/profile.jsonld =404;
     }
 
+    # did:web DID document. did:web:credentials.andamio.io resolves here; strict
+    # OB 3.0 / DID-Core verifiers dereference it to fetch the issuer's signing
+    # key. Exact-match so the type is set explicitly: application/did+ld+json is
+    # DID-Core-correct for a JSON-LD DID document (the resolver is the arbiter —
+    # application/json is the proven-safe fallback). Unlike immutable contexts
+    # this doc is MUTABLE on key rotation, so it is cached but NOT immutable, and
+    # with a shorter TTL. The key is only published here, never used to sign.
+    location = /.well-known/did.json {
+        # The `.json` extension maps to application/json via stock mime.types,
+        # which would override `default_type`. An empty `types {}` block clears
+        # the extension map for THIS location so `default_type` actually applies.
+        types { }
+        default_type application/did+ld+json;
+        add_header Cache-Control "public, max-age=3600";
+        try_files $uri =404;
+    }
+
     # Badge imagery — static-first with on-demand render fallback (#33, KTD-4).
     #
     # `^~` makes this a prefix match that OWNS /badges/ and short-circuits the
