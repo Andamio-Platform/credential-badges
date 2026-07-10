@@ -76,4 +76,5 @@ jobs:
           }
           assert_ct /context/v0.jsonld   application/ld+json
           assert_ct /issuer              application/ld+json
+          assert_ct /.well-known/did.json application/did+ld+json
           assert_ct /badges/_placeholder.svg image/svg+xml
