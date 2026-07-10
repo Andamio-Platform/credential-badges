@@ -14,6 +14,8 @@ https://credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg
 
 The badge is not just a picture. Its two rings encode the credential's on-chain identity (outer ring = the course policy id, inner ring = the SLT credential hash), so the geometry round-trips back to the chain. **The art *is* the proof.** Run `make verify` to decode a badge and check it against its on-chain hashes.
 
+> **New here? Read [How Credential Badges Work](docs/how-credential-badges-work.md)** — a five-minute, layer-by-layer explainer (the image, the Proof-Ring encoding, the Open Badges 3.0 form, and the on-chain anchor). This README is the developer entry point; that doc is the concept.
+
 ---
 
 ## For developers, start here

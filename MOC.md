@@ -3,6 +3,8 @@
 Map of content for the `credential-badges` stack. One line per component.
 Start here when you open the repo for the first time.
 
+**Want the concept, not the file map?** [`docs/how-credential-badges-work.md`](docs/how-credential-badges-work.md) is the five-minute, layer-by-layer explainer (image → Proof-Ring → OB 3.0 → on-chain anchor).
+
 ## Served at `https://credentials.andamio.io`
 
 | Path | File | Mutable? | Purpose |
