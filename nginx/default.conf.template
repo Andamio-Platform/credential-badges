@@ -112,12 +112,7 @@ server {
         try_files $uri =404;
     }
 
-    # Minimal landing page at "/" — returns 200 so health probes succeed
-    # and humans hitting the root get a pointer instead of a bare 404.
-    location = / {
-        add_header Content-Type text/plain;
-        return 200 "Andamio credential contexts\n\nPublished JSON-LD contexts:\n  /context/v0.jsonld\n\nHosted issuer profile:\n  /issuer\n\nBadge imagery:\n  /badges/\n\nSee https://github.com/Andamio-Platform/credential-badges\n";
-    }
+
 
     location / {
         try_files $uri $uri/ =404;

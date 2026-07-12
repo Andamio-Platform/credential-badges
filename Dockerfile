@@ -40,7 +40,9 @@ COPY issuer/    /usr/share/nginx/html/issuer/
 COPY badges/    /usr/share/nginx/html/badges/
 # did:web DID document — a forever-public endpoint (did:web:credentials.andamio.io).
 COPY .well-known/ /usr/share/nginx/html/.well-known/
+COPY public/    /usr/share/nginx/html/
 COPY README.md  /usr/share/nginx/html/README.md
+
 
 EXPOSE 8080
 
