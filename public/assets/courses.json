@@ -1,0 +1,374 @@
+[
+  {
+    "course_id": "203e63f457e0b8088073ec20959c4e0cc188cf90425d4f29ff3f817f",
+    "slt_hash": "77547ab066d5fe38038879b785551f6efae17ba38a0d6dc8475cb015e848b42b",
+    "course_title": "Join Cardano XP",
+    "module_title": "I can find a bug in the Cardano XP app."
+  },
+  {
+    "course_id": "31d8c4a67671c0d6b580eb5fcd78f92f6fa82d47fcbb052954e6faf5",
+    "slt_hash": "b08b39ac874d68fcec7f98a399d343c5895e17d52921863804cef386a5a1f9ca",
+    "course_title": "dRep Community Platform Membership course",
+    "module_title": "I can inventory my coding and project skills"
+  },
+  {
+    "course_id": "3ed1bca6a9301a12a6787b22ffcac5a84867f8b2c4210dbf75347d65",
+    "slt_hash": "6f10a84189150674775cf11769a13d98291495ca54a9166a79bba82df80a491e",
+    "course_title": "Getting Started at Gimbalabs",
+    "module_title": "Gimbalabs Open Spaces: Weekly Meeting"
+  },
+  {
+    "course_id": "3ed1bca6a9301a12a6787b22ffcac5a84867f8b2c4210dbf75347d65",
+    "slt_hash": "b6a7f7ed20864bf906233983c09e33c7f6c86a68606b746cf5cc718beae6d753",
+    "course_title": "Getting Started at Gimbalabs",
+    "module_title": "Project Proposals"
+  },
+  {
+    "course_id": "54fa96cc5bcc8773ad68ede116111620c14d433b9b34a146621318a0",
+    "slt_hash": "a97cdd6a6eb1cbcfdb9488cb60263c5987d7fbc031375aa5d91820e04b2f8d55",
+    "course_title": "Plutus Project-Based Learning 2025",
+    "module_title": "Getting Started"
+  },
+  {
+    "course_id": "5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc",
+    "slt_hash": "5d11d02a950378761adb7dac808e54a511e550a0af9e8bf3ffb49209ba7f6856",
+    "course_title": "FCB Fan Engagement",
+    "module_title": "Cycle 1 - Introduction & Community Onboarding"
+  },
+  {
+    "course_id": "5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc",
+    "slt_hash": "7ac2eec149f56ca8c2cabae8ee7026f40061b8361579b04bee37ce5900dea544",
+    "course_title": "FCB Fan Engagement",
+    "module_title": "Cycle 3 - Applied Contribution Skills"
+  },
+  {
+    "course_id": "5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc",
+    "slt_hash": "97022394eedcbd2f73c91f741be38d5104c1fee28edddf0d7ca4d49a6e5e26e4",
+    "course_title": "FCB Fan Engagement",
+    "module_title": "Cycle 2 - Participation & Engagement Foundations"
+  },
+  {
+    "course_id": "5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc",
+    "slt_hash": "e16de1e0ac2f087f5f9461dec3ab33a8bf59cd50a5cb4b406e3af3a9dd588693",
+    "course_title": "FCB Fan Engagement",
+    "module_title": "Cycle 4 - Leadership & Advanced Contribution "
+  },
+  {
+    "course_id": "60dd60e9cc91bcc90026adbed328912e7f33f3222b7a8b4af5ff2957",
+    "slt_hash": "e99f504b888d4b88a8b0f4a0fedd434f49e22e6ebe599714b16b9270b43957c1",
+    "course_title": "Maintainer Retainer Onboarding",
+    "module_title": "I have signed a Maintainer Retainer Contract with Intersect"
+  },
+  {
+    "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
+    "slt_hash": "0642e7c31df6e8980c81f4954b2cea8eb12dba28004b236802a5db3ecc8ba5a7",
+    "course_title": "Run GovTool Locally (Minikube + K8s)",
+    "module_title": "Deploy and configure the Outcomes Pillar alongside Core and Proposal"
+  },
+  {
+    "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
+    "slt_hash": "434204080dcbf90704f0efcf62c6dac6271a30dc403bd99f91429f889c79b806",
+    "course_title": "Run GovTool Locally (Minikube + K8s)",
+    "module_title": "Deploy the Proposal Pillar into the existing local cluster"
+  },
+  {
+    "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
+    "slt_hash": "9fa3cdce9eaa801270d42154dcb12b64448bfab826971f1d0e74f9d0e87cc3e9",
+    "course_title": "Run GovTool Locally (Minikube + K8s)",
+    "module_title": "Prepare a local environment for GovTool development (Docker, Minikube, kubectl i"
+  },
+  {
+    "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
+    "slt_hash": "d6fea38ce96e619892fc392d53f4fd8978a4d9ef4351865780e07207c89ded85",
+    "course_title": "Run GovTool Locally (Minikube + K8s)",
+    "module_title": "Configure Core GovTool env variables and secrets"
+  },
+  {
+    "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
+    "slt_hash": "f35049791ea858176292a6c1104ab0d67cc2a1bd338cce9b3e997a1498991c58",
+    "course_title": "Run GovTool Locally (Minikube + K8s)",
+    "module_title": "Generate a self-signed certificate, create a Kubernetes TLS secret"
+  },
+  {
+    "course_id": "6d6038a79aaca16b90a96640aedad2da205a07d23656b2e3bc691c20",
+    "slt_hash": "4eff2d764c0c3412ae099647633e04d7fba6f9b36a2ba3eba9580bfaac029c71",
+    "course_title": "Asteria Project Membership",
+    "module_title": "Vouch for Each Other"
+  },
+  {
+    "course_id": "73848176c857761ab64f217253e03adeebc94edc31e33f09f229da9e",
+    "slt_hash": "862513c0a278c735278e2cb4bfae37d05181d3c01c99786b6470b5a972808b00",
+    "course_title": "Gamechanger dApp connector",
+    "module_title": "Introduction"
+  },
+  {
+    "course_id": "75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f",
+    "slt_hash": "6892a486121e9aebff6210a8c9f14d3721ca2e9baa822fd1fbd5940357e68564",
+    "course_title": "Building on Cardano in 2026",
+    "module_title": "I can set up my Aiken development environment."
+  },
+  {
+    "course_id": "75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f",
+    "slt_hash": "69aa62f54fe3ab78fa758e1a3dcace344d530a119fb25eeb92b2da42600857ec",
+    "course_title": "Building on Cardano in 2026",
+    "module_title": "I can explain what a blockchain is in simple terms to someone with no technical "
+  },
+  {
+    "course_id": "75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f",
+    "slt_hash": "ac954a66cfeefb4e05043a15cfb557010006753e1135a27c1b4922b08e7b0809",
+    "course_title": "Building on Cardano in 2026",
+    "module_title": "I can write an always succeed spending validator."
+  },
+  {
+    "course_id": "75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f",
+    "slt_hash": "d4e7758052e420059688cd4d9419e692e6b8845d93347ec9fd0db0835ed01ce8",
+    "course_title": "Building on Cardano in 2026",
+    "module_title": "I have a Cardano Browser wallet extension installed on my computer."
+  },
+  {
+    "course_id": "9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756",
+    "slt_hash": "469e8c68228dfdad287c42045195066f25fedb576783523661421043c9dcaef3",
+    "course_title": "Business Lead Generation",
+    "module_title": "I can describe Sociouss key product off"
+  },
+  {
+    "course_id": "9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756",
+    "slt_hash": "47553c2ca9e790f27dc903957e69a23a73b0993977ec01a228ae77ac26870b71",
+    "course_title": "Business Lead Generation",
+    "module_title": "I can identify and describe NMKRs key p"
+  },
+  {
+    "course_id": "9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756",
+    "slt_hash": "726f8db1b04e68c7866efba944cea74f643b245c131ed3c4df30bfc6aa9b66b7",
+    "course_title": "Business Lead Generation",
+    "module_title": "I will understand what Andamio is and its core offering"
+  },
+  {
+    "course_id": "9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756",
+    "slt_hash": "858627ea8f08d730a2759eb883dd4c06a4a1a5a56296a5dee13f358b0e77f82d",
+    "course_title": "Business Lead Generation",
+    "module_title": "Lead Generation Agreement"
+  },
+  {
+    "course_id": "9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756",
+    "slt_hash": "96944b7ea709d8fc296a150ee1c021ef13457e7584f8743df7f4ef7cac85d39b",
+    "course_title": "Business Lead Generation",
+    "module_title": "I can define the role and responsibilities of the lead generator"
+  },
+  {
+    "course_id": "9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756",
+    "slt_hash": "bc10089403e1c91bd04527a1e4204994f49da186c61bc1fb2d38aee1e537b793",
+    "course_title": "Business Lead Generation",
+    "module_title": "I can describe Palmyra's key product offerings to Producers and Buyers"
+  },
+  {
+    "course_id": "ab5d9217bbbac409ffbe7c8c65d9b358932245079a7f8547a28bc755",
+    "slt_hash": "1b37e6b411bc614e9da67943124219053eafa717793e5424f4a33765e42328a3",
+    "course_title": "Getting Started with Andamio",
+    "module_title": "Mint Access Token and Commit to Assignment"
+  },
+  {
+    "course_id": "ada11f76e38403a5a664c02f875991d0a29a457f6d7505aeab69a7fe",
+    "slt_hash": "0130753eef48a28dc127027a4a2af8b419b8ccd2358a318692536f5500ae2e03",
+    "course_title": "Andamio Platform Development",
+    "module_title": "Make Your First PR"
+  },
+  {
+    "course_id": "ada11f76e38403a5a664c02f875991d0a29a457f6d7505aeab69a7fe",
+    "slt_hash": "22c0b38a5c5a62a28b4c8bd220d2d998e95a4195f017e4973035a71d760b225f",
+    "course_title": "Andamio Platform Development",
+    "module_title": "Andamio: Network + Platform"
+  },
+  {
+    "course_id": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
+    "slt_hash": "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",
+    "course_title": "Andamio Issuer",
+    "module_title": "About Andamio Issuer"
+  },
+  {
+    "course_id": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+    "slt_hash": "9e5f0ac5c890da59a0d9e6fe1300f4a2656cdbb41116e1f2eb0cefa2b61e25cd",
+    "course_title": "Cardano Go Project-Based Learning",
+    "module_title": "Querying the Blockchain"
+  },
+  {
+    "course_id": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+    "slt_hash": "ad673eb4b972b059228064c6350f20f2bf55863d381f4b9f07e3219a948f3553",
+    "course_title": "Cardano Go Project-Based Learning",
+    "module_title": "Intro to Go"
+  },
+  {
+    "course_id": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+    "slt_hash": "ad8ffb5985f7b6e71a08e4e1554a2720ba19d135136e821eac8f53d4a09bb3c8",
+    "course_title": "Cardano Go Project-Based Learning",
+    "module_title": "Applications and Smart Contracts"
+  },
+  {
+    "course_id": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+    "slt_hash": "af144049c56a518763ba0bd0267d0b5b8fc631902d73c3e35eae57580ef5a6d7",
+    "course_title": "Cardano Go Project-Based Learning",
+    "module_title": "Building Simple Transactions"
+  },
+  {
+    "course_id": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+    "slt_hash": "c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e",
+    "course_title": "Cardano Go Project-Based Learning",
+    "module_title": "Interacting with the Cardano Node"
+  },
+  {
+    "course_id": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+    "slt_hash": "d5ca195c2202f7555b79e20abb078f4a41aea7d1235875a84c8a852b6a5b03f8",
+    "course_title": "Cardano Go Project-Based Learning",
+    "module_title": "Reacting to Chain Events"
+  },
+  {
+    "course_id": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+    "slt_hash": "e2695912c641c81596823e3785c964bf9e8a821be5300619cb52213596a2d3b7",
+    "course_title": "Cardano Go Project-Based Learning",
+    "module_title": "Prerequisites + Tools of Cardano Go Development"
+  },
+  {
+    "course_id": "bafebb4ccc3158e97764e02e0cf639f208d47264fed15211f745796e",
+    "slt_hash": "847765b8760bc26b4bcc60c46513769da342ea359637104895a84edec8f578eb",
+    "course_title": "Andamio Pioneers",
+    "module_title": "Building Apps with Andamio"
+  },
+  {
+    "course_id": "bafebb4ccc3158e97764e02e0cf639f208d47264fed15211f745796e",
+    "slt_hash": "d0622a82548dba56c3b51da9b7200d58ced97664cc3e7f7cfa9ed9ba5a3372d6",
+    "course_title": "Andamio Pioneers",
+    "module_title": "What is Andamio?"
+  },
+  {
+    "course_id": "bafebb4ccc3158e97764e02e0cf639f208d47264fed15211f745796e",
+    "slt_hash": "fd20f16c1d563ffc94707a002a9b209f8d32d09ddee711a20a663eac195d97bf",
+    "course_title": "Andamio Pioneers",
+    "module_title": "What Can I Do with Andamio?"
+  },
+  {
+    "course_id": "c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376",
+    "slt_hash": "1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096",
+    "course_title": "Build on Andamio",
+    "module_title": "Projects End-to-End"
+  },
+  {
+    "course_id": "c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376",
+    "slt_hash": "275e8bf887aeb11a0fa8bf956b1c426c99e01cac82d0f2505b66ca3beeb47153",
+    "course_title": "Build on Andamio",
+    "module_title": "Foundations"
+  },
+  {
+    "course_id": "c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376",
+    "slt_hash": "49cd2a10f3b521313a662533c7e1f5645177409a0c13794bcd81b89ba75faf6c",
+    "course_title": "Build on Andamio",
+    "module_title": "Identity"
+  },
+  {
+    "course_id": "c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376",
+    "slt_hash": "5446ea44b3daf792b68581609ab12ae0a885594f43d85359577300b5f45ecaab",
+    "course_title": "Build on Andamio",
+    "module_title": "Build Something Real"
+  },
+  {
+    "course_id": "c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376",
+    "slt_hash": "8c90cfd474eb39b257d437bb0046ef5f36afcdacc276b95e367a27631a83ff72",
+    "course_title": "Build on Andamio",
+    "module_title": "The Transaction State Machine"
+  },
+  {
+    "course_id": "c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376",
+    "slt_hash": "f565c8aec5888509733aa72de9152e53eecf0c33948d87f9da70560a9e65122d",
+    "course_title": "Build on Andamio",
+    "module_title": "Courses End-to-End"
+  },
+  {
+    "course_id": "c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376",
+    "slt_hash": "fc6e469e9bb08d09826dc78922a4d9ae05458c8ecca707d73b0a8f320f5c6ee4",
+    "course_title": "Build on Andamio",
+    "module_title": "Reading Andamio"
+  },
+  {
+    "course_id": "c478794581fb14b7e0ddaf1e4dbdd5fb99bd899a4b005f73f952dfa3",
+    "slt_hash": "fa236eac29da1de4f5d10b8882f29c78c3ab758609b7a201e47aa452b26cacf7",
+    "course_title": "Course Content Creator",
+    "module_title": "Content Writer Apprentice"
+  },
+  {
+    "course_id": "d14a67c73129ff76994495727d88fc32999de5cafb2e8c022d56e796",
+    "slt_hash": "47832facf0733285764f08b01bb820e35beec016f3f658a6c1abbffb182870ac",
+    "course_title": "Mesh Project Based Learning",
+    "module_title": "Working with the Browser Wallet"
+  },
+  {
+    "course_id": "dd29e3da6227720a8600a41c95e4f40e74785e2831da036ac95843ff",
+    "slt_hash": "25af4e47f34476494eed8be2af40643c0f8b19ac4804ed12c3dbf42ef07f6ad4",
+    "course_title": "Midnight Project-Based Learning",
+    "module_title": "Compact for Cardano Developers"
+  },
+  {
+    "course_id": "dd29e3da6227720a8600a41c95e4f40e74785e2831da036ac95843ff",
+    "slt_hash": "6225c253f09d359ba3de7119cee4c393e05fa3609081e444a36c3746fa0622aa",
+    "course_title": "Midnight Project-Based Learning",
+    "module_title": "Token Economics and Application Design"
+  },
+  {
+    "course_id": "dd29e3da6227720a8600a41c95e4f40e74785e2831da036ac95843ff",
+    "slt_hash": "9125935c77db7eb50b6521b69abb4264ee2bbdc083227429e7c68b5abdc48325",
+    "course_title": "Midnight Project-Based Learning",
+    "module_title": "Your First Midnight DApp"
+  },
+  {
+    "course_id": "dd29e3da6227720a8600a41c95e4f40e74785e2831da036ac95843ff",
+    "slt_hash": "9ed53aec7b0d1e71429494a14d316fc365b093613f0b4055d2da8f4fe8372500",
+    "course_title": "Midnight Project-Based Learning",
+    "module_title": "Midnight Architecture Through Cardano Eyes"
+  },
+  {
+    "course_id": "dd29e3da6227720a8600a41c95e4f40e74785e2831da036ac95843ff",
+    "slt_hash": "af357d9bd8eb73ace652d544cc49f910adcf9a06c1272c9b17b9ff4695505bdf",
+    "course_title": "Midnight Project-Based Learning",
+    "module_title": "When Midnight, When Cardano, When Both?"
+  },
+  {
+    "course_id": "dd29e3da6227720a8600a41c95e4f40e74785e2831da036ac95843ff",
+    "slt_hash": "d8ff31486ff54a9810367fb0c4533f4c3a256625746885277a1c716cb0965ff1",
+    "course_title": "Midnight Project-Based Learning",
+    "module_title": "The Privacy Model in Practice"
+  },
+  {
+    "course_id": "e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d",
+    "slt_hash": "2874c6d8e39846f566b80382643a5939d1b6298ffef1ed770bb222d302062852",
+    "course_title": "Aiken Project-Based Learning",
+    "module_title": "Writing smart contracts with validation logic"
+  },
+  {
+    "course_id": "e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d",
+    "slt_hash": "6892a486121e9aebff6210a8c9f14d3721ca2e9baa822fd1fbd5940357e68564",
+    "course_title": "Aiken Project-Based Learning",
+    "module_title": "Getting Started with Aiken"
+  },
+  {
+    "course_id": "e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d",
+    "slt_hash": "6ab6a3f00261585c3f1794ad0d14019bc668b2071c2255a259a323ed0761d8a2",
+    "course_title": "Aiken Project-Based Learning",
+    "module_title": "Running Tests with Mock Transaction"
+  },
+  {
+    "course_id": "e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d",
+    "slt_hash": "ac954a66cfeefb4e05043a15cfb557010006753e1135a27c1b4922b08e7b0809",
+    "course_title": "Aiken Project-Based Learning",
+    "module_title": "Writing Your First Smart Contract"
+  },
+  {
+    "course_id": "e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d",
+    "slt_hash": "ffccc1ab4e570e1e788d237efaf333ce81f7bfbe078f13fab48b99d70e68ce76",
+    "course_title": "Aiken Project-Based Learning",
+    "module_title": "Writing Smart Contracts with Validation Logic on Inputs"
+  },
+  {
+    "course_id": "ec068a70332c246eb3de63d43578a7927c9fead95c402da507cc8cbf",
+    "slt_hash": "d5bb56975b21b637ab6d45e17af348a8cb7b78254f78405396b012b5b83c47a9",
+    "course_title": "Join ODIN Season of Collaboration 2025",
+    "module_title": "I understand the high level goals of the Season of Collaboration 2025"
+  }
+]

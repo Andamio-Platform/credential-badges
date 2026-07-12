@@ -1,0 +1,32 @@
+:root {
+  --bg-deep: #060913;
+  --bg-surface: rgba(18, 26, 45, 0.4);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #FFFFFF;
+  --text-muted: #8E9BAE;
+  --accent: #EE6C3A;
+  --accent-hover: #F6A07A;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow: hidden;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(238, 108, 58, 0.08), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(91, 184, 212, 0.08), transparent 25%);
+}
+
+.mono-input {
+  font-family: 'Spline Sans Mono', monospace !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.5px;
+}
