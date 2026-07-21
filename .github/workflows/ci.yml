@@ -35,9 +35,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: Signer-spike hardening tests (issue #54) — hermetic; fetch is
-          mocked, no KMS, no npm install (the tested modules are
-          dependency-free)
+      - name: "Signer-spike hardening tests (issue #54) — hermetic: fetch is mocked, no KMS, no npm install (the tested modules are dependency-free)"
         run: node --experimental-strip-types --test spike/signer-spike/*.test.ts
 
   docker-build:
