@@ -1,0 +1,40 @@
+# Rung-8 hardening — full pipeline re-run (loopback/ephemeral mode, all hardening active)
+# Date: 2026-07-21 · branch feat/rung8-signer-hardening · live Andamioscan + live did:web, no KMS
+
+$ npm run check-anchor
+
+> signer-spike@0.0.1 check-anchor
+> node --experimental-strip-types check-anchor.ts
+
+ANCHOR GATE PASSED
+  alias:        james
+  courseId:     ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df
+  sltHash:      e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db
+  slt texts:    3 (blake2b-256 over Plutus CBOR == sltHash)
+  claimTxHash:  7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03
+  slot:         190131814
+  blockTime:    2026-06-17T12:08:25Z
+  courseOwner:  james
+  badge:        https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg (200)
+  wrote:        /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-hardening/spike/signer-spike/out/anchor.json
+
+$ npm run sign:local
+
+> signer-spike@0.0.1 sign:local
+> node --experimental-strip-types sign.ts --signer local
+
+anchor gate PASSED: ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db claimed by james in tx 7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03 (slot 190131814; 3 SLT texts hash-verified)
+signer seam invocations: 1
+LOOPBACK SIGN+VERIFY OK (ephemeral key, custom-signer seam validated)
+wrote /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-hardening/spike/signer-spike/out/credential-local.json
+
+$ npm run verify   # committed artifact, live did:web resolution through the hardened loader
+
+> signer-spike@0.0.1 verify
+> node --experimental-strip-types verify-loopback.ts
+
+digitalbazaar loopback verification (live did:web resolution)
+  credential:  urn:andamio:credential:mainnet:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db:gjames
+  vm:          did:web:credentials.andamio.io#key-2026-07
+  cryptosuite: eddsa-rdfc-2022
+  verified:    YES

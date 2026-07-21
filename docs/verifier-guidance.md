@@ -59,6 +59,17 @@ The **[status list](https://www.w3.org/TR/vc-bitstring-status-list/)** is a conv
 3. **Chase the anchor.** Take `policyId` and `claimTxHash` from the `evidence` and look them up on a public Cardano explorer, or on [andamioscan.io](https://andamioscan.io). Confirm the mint exists and matches the credential. Because the `policyId` is the course id, it also tells you which course, and which owner, issued the credential. This step needs no trust in Andamio at all.
 4. **Check status, if you want to.** The `credentialStatus` entry points to a hosted status list. A set bit flags the signing key version, per the two-layer model above.
 
+## Why is the proof dated to the on-chain claim time?
+
+The `proof.created` timestamp is a stated convention, not a wall-clock reading. Andamio dates each proof to the block time of the on-chain claim transaction, the same instant recorded in `validFrom`. That block time is derived deterministically from the transaction's slot on Cardano, so it is a fact of the ledger, not of Andamio's server.
+
+The convention buys byte-stability. Signing is deterministic end to end: the same on-chain record always produces the same bytes, and re-signing an unchanged credential reproduces the identical document, signature included. Anyone can regenerate a credential from the chain and compare it byte for byte against a copy they were handed.
+
+Two consequences for verifiers:
+
+- `proof.created` states when the credential was earned on-chain, not when Andamio's key produced the signature. The signing happened at or after that time.
+- `proof.created` can predate the signing key's publication in the DID document. That is expected under this convention and is not a sign of tampering. Key validity is checked against the DID document and the status list, not against `proof.created`.
+
 ## What does a verification result mean?
 
 - **Anchored, signature valid.** Verified. The on-chain record exists and the signature checks out against the published key.

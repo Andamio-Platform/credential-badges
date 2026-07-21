@@ -1,4 +1,6 @@
 // Rung 6 · Signer: Data Integrity proof, cryptosuite eddsa-rdfc-2022.
+// Rung 8 hardening (issue #54, findings 1, 2): narrowed fallback catch,
+// single-signer-invocation assertion, atomic artifact write, live checks live.
 //
 // Pipeline (all inside @digitalbazaar/data-integrity — this file only supplies
 // the raw Ed25519 sign function):
@@ -14,9 +16,21 @@
 //   --signer kms     Production. Exactly ONE `gcloud kms asymmetric-sign` call
 //                    (Cloud KMS Ed25519 = PureEdDSA over raw bytes: data, not
 //                    digest). Hard-gated: checkAnchor() runs in-process first —
-//                    any anchor failure exits before any KMS operation. Also
-//                    re-pins the KMS public key against the LIVE did.json
-//                    before signing.
+//                    any anchor failure exits before any KMS operation. The
+//                    context cache is cleared at the start of the run, and the
+//                    KMS public key is re-pinned against the LIVE did.json
+//                    (never a cached copy) before signing.
+//
+// Invariants enforced before ANY artifact reaches disk (finding 1):
+//   - vc.issue errors are NOT blindly swallowed: only the known urn-id
+//     data-model TypeError (see issue-error.ts) may route to the jsigs
+//     fallback; everything else throws and aborts the run.
+//   - The signer seam must have been invoked EXACTLY ONCE (kms mode: exactly
+//     one `gcloud kms asymmetric-sign` call). A double-invocation — e.g. a
+//     post-signer throw inside vc.issue followed by a fallback re-sign —
+//     fails the run.
+//   - The artifact is written atomically (temp file + rename), so a failed
+//     assertion or a mid-write crash can never leave a partial artifact.
 //
 // Output (kms mode): ../signed-credential.json (committed artifact) with
 // `proof` wrapped in array form (1EdTech OB3 Plain-JSON schema requires
@@ -34,10 +48,12 @@ import * as vc from "@digitalbazaar/vc";
 import jsigs from "jsonld-signatures";
 
 import { checkAnchor } from "./check-anchor.ts";
+import { isKnownUrnIdDataModelError } from "./issue-error.ts";
 import { mapCredential } from "./map-credential.ts";
 import {
   makeDocumentLoader,
   fetchLiveDidDocument,
+  clearContextCache,
   ISSUER_DID,
 } from "./document-loader.ts";
 import {
@@ -72,13 +88,17 @@ interface RawSigner {
   sign(input: { data: Uint8Array }): Promise<Uint8Array>;
 }
 
+// Counts every invocation of the raw-signer seam (both modes). kmsCalls
+// additionally counts actual `gcloud kms asymmetric-sign` executions.
+let signerInvocations = 0;
 let kmsCalls = 0;
 
-function makeKmsSigner(): RawSigner {
+export function makeKmsSigner(): RawSigner {
   return {
     id: VERIFICATION_METHOD_ID,
     algorithm: "Ed25519",
     async sign({ data }: { data: Uint8Array }): Promise<Uint8Array> {
+      signerInvocations += 1;
       const inFile = path.join(OUT, "kms-sign-input.bin");
       const sigFile = path.join(OUT, "kms-sign-output.sig");
       await fs.writeFile(inFile, Buffer.from(data));
@@ -128,6 +148,7 @@ function makeLocalSigner(): { signer: RawSigner; overrides: Record<string, any> 
       async sign({ data }: { data: Uint8Array }): Promise<Uint8Array> {
         // node:crypto ed25519 sign over raw bytes = PureEdDSA, the exact
         // semantics Cloud KMS applies to the `data` field.
+        signerInvocations += 1;
         return new Uint8Array(edSign(null, Buffer.from(data), privateKey));
       },
     },
@@ -138,6 +159,8 @@ function makeLocalSigner(): { signer: RawSigner; overrides: Record<string, any> 
 async function assertKmsKeyPinnedToLiveDid(): Promise<void> {
   const pem = execFileSync("gcloud", KMS_GET_PUBKEY_ARGS, { encoding: "utf8" });
   const kmsMultibase = rawPublicKeyToMultibase(spkiPemToRawPublicKey(pem));
+  // fetchLiveDidDocument NEVER reads the disk cache (finding 2): this pin is
+  // against the network's current did.json on every run.
   const didDoc = await fetchLiveDidDocument();
   const vm = (didDoc.verificationMethod ?? []).find(
     (m: any) => m.id === VERIFICATION_METHOD_ID,
@@ -155,7 +178,7 @@ async function assertKmsKeyPinnedToLiveDid(): Promise<void> {
   console.log(`key pin OK: KMS v1 == live did.json ${VERIFICATION_METHOD_ID} (${kmsMultibase})`);
 }
 
-async function issueWith(
+export async function issueWith(
   credential: any,
   signer: RawSigner,
   documentLoader: any,
@@ -168,9 +191,16 @@ async function issueWith(
   });
   try {
     return await vc.issue({ credential, suite, documentLoader });
-  } catch {
-    // vc.issue applies strict data-model checks that can reject urn: ids on
-    // some versions; jsigs.sign produces the identical proof (rung-1 pattern).
+  } catch (e) {
+    // NARROW catch (finding 1): only the known urn-id data-model TypeError
+    // from vc.issue's _checkCredential may fall back to jsigs.sign (which
+    // produces the identical proof without the data-model re-check; rung-1
+    // pattern). Any other error — a real data-model violation, a loader
+    // refusal, a signer failure, a post-signer throw — aborts the run.
+    if (!isKnownUrnIdDataModelError(e)) throw e;
+    console.log(
+      `vc.issue rejected urn ids (known data-model incompatibility) — using jsigs.sign fallback: ${(e as Error).message}`,
+    );
     const { AssertionProofPurpose } = (jsigs as any).purposes;
     return await (jsigs as any).sign(structuredClone(credential), {
       suite,
@@ -180,7 +210,7 @@ async function issueWith(
   }
 }
 
-async function verifyWith(signed: any, documentLoader: any): Promise<void> {
+export async function verifyWith(signed: any, documentLoader: any): Promise<void> {
   const suite = new DataIntegrityProof({ cryptosuite: eddsaRdfc2022 });
   const r: any = await vc.verifyCredential({
     credential: signed,
@@ -193,6 +223,31 @@ async function verifyWith(signed: any, documentLoader: any): Promise<void> {
   }
 }
 
+// The single-invocation invariant, asserted BEFORE any artifact write. In kms
+// mode this is the `kmsCalls === 1` guarantee from issue #54 finding 1; in
+// loopback mode the same seam counter proves the identical property.
+function assertSignedExactlyOnce(mode: "local" | "kms"): void {
+  if (signerInvocations !== 1) {
+    throw new Error(
+      `signer seam invoked ${signerInvocations} times, expected exactly 1 — refusing to write an artifact`,
+    );
+  }
+  if (mode === "kms" && kmsCalls !== 1) {
+    throw new Error(
+      `gcloud kms asymmetric-sign executed ${kmsCalls} times, expected exactly 1 — refusing to write an artifact`,
+    );
+  }
+}
+
+// Atomic write: the artifact appears at `file` only via rename of a fully
+// written temp file. A crash or thrown assertion can never leave a partial
+// artifact, and the previous artifact (if any) survives any failure.
+async function writeArtifactAtomically(file: string, contents: string): Promise<void> {
+  const tmp = `${file}.tmp-${process.pid}`;
+  await fs.writeFile(tmp, contents);
+  await fs.rename(tmp, file);
+}
+
 async function main() {
   const mode = process.argv[process.argv.indexOf("--signer") + 1];
   if (mode !== "local" && mode !== "kms") {
@@ -200,11 +255,18 @@ async function main() {
     process.exit(2);
   }
 
+  // kms runs start from a provably empty context cache (finding 2): every
+  // document canonicalized or verified against comes fresh off the network.
+  if (mode === "kms") {
+    await clearContextCache();
+    console.log("context cache cleared — all documents fetched fresh this run");
+  }
+
   // THE GATE. Signing is unreachable unless the live on-chain anchor check
   // passes — zero KMS calls on a failed anchor read.
   const anchor = await checkAnchor();
   console.log(
-    `anchor gate PASSED: ${anchor.courseId}.${anchor.sltHash} claimed by ${anchor.alias} in tx ${anchor.claimTxHash} (slot ${anchor.slot})`,
+    `anchor gate PASSED: ${anchor.courseId}.${anchor.sltHash} claimed by ${anchor.alias} in tx ${anchor.claimTxHash} (slot ${anchor.slot}; ${anchor.slts.length} SLT texts hash-verified)`,
   );
 
   const credential = mapCredential(anchor);
@@ -218,9 +280,11 @@ async function main() {
     // The committed artifact is only ever produced by kms mode.
     credential.issuer = { ...credential.issuer, id: signer.id.split("#")[0] };
     const signed = await issueWith(credential, signer, loader, anchor.blockTime);
+    console.log(`signer seam invocations: ${signerInvocations}`);
     await verifyWith(signed, loader);
+    assertSignedExactlyOnce("local");
     const outFile = path.join(OUT, "credential-local.json");
-    await fs.writeFile(outFile, JSON.stringify(signed, null, 2) + "\n");
+    await writeArtifactAtomically(outFile, JSON.stringify(signed, null, 2) + "\n");
     console.log("LOOPBACK SIGN+VERIFY OK (ephemeral key, custom-signer seam validated)");
     console.log(`wrote ${outFile}`);
     return;
@@ -233,19 +297,27 @@ async function main() {
   const signed = await issueWith(credential, signer, loader, anchor.blockTime);
   console.log(`KMS asymmetric-sign calls: ${kmsCalls}`);
   await verifyWith(signed, loader);
+  assertSignedExactlyOnce("kms");
 
   // 1EdTech OB3 Plain-JSON schema requires proof in array form.
   if (!Array.isArray(signed.proof)) signed.proof = [signed.proof];
 
   const outFile = path.join(HERE, "signed-credential.json");
-  await fs.writeFile(outFile, JSON.stringify(signed, null, 2) + "\n");
+  await writeArtifactAtomically(outFile, JSON.stringify(signed, null, 2) + "\n");
   console.log("KMS SIGN + LIVE-DID VERIFY OK");
   console.log(`proof.verificationMethod = ${signed.proof[0].verificationMethod}`);
   console.log(`proof.proofValue         = ${signed.proof[0].proofValue}`);
   console.log(`wrote ${outFile}`);
 }
 
-main().catch((e) => {
-  console.error(String(e?.stack ?? e));
-  process.exit(1);
-});
+// Guarded (Rung 8) so resign-check.ts can import the signer seam without
+// triggering a signing run.
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+) {
+  main().catch((e) => {
+    console.error(String(e?.stack ?? e));
+    process.exit(1);
+  });
+}

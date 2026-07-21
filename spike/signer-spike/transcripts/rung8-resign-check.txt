@@ -1,0 +1,17 @@
+# Rung-8 byte-stability proof — ONE deterministic KMS re-sign of the committed artifact
+# Date: 2026-07-21 · branch feat/rung8-signer-hardening · gcloud as james@andamio.io
+# Input: the committed signed-credential.json content (minus proof), re-signed at its committed proof.created.
+# Nothing written; the committed artifact is unchanged.
+
+$ npm run resign-check
+
+> signer-spike@0.0.1 resign-check
+> node --experimental-strip-types resign-check.ts
+
+anchor gate PASSED: ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db (tx 7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03)
+KMS asymmetric-sign calls: 1
+proofValue (committed): z4f9DshtzoX18uXorNi7UxSnn9Niyf6zsuAAKdtmELEhAhwWWhQggHZCakHX3fo1owGjE2VHfbkSxYRRxyKB42rPH
+proofValue (re-signed): z4f9DshtzoX18uXorNi7UxSnn9Niyf6zsuAAKdtmELEhAhwWWhQggHZCakHX3fo1owGjE2VHfbkSxYRRxyKB42rPH
+proofValue byte-identical: YES
+full artifact byte-identical: YES
+BYTE-STABILITY PROVEN: deterministic KMS re-sign reproduced the committed artifact exactly

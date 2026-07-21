@@ -28,6 +28,16 @@ jobs:
         # land at Rung 8, per plan KTD-2). No install — tools/ is dependency-free.
         run: node --experimental-strip-types --test tools/*.test.ts
 
+  signer-spike-hardening:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: "Signer-spike hardening tests (issue #54) — hermetic: fetch is mocked, no KMS, no npm install (the tested modules are dependency-free)"
+        run: node --experimental-strip-types --test spike/signer-spike/*.test.ts
+
   docker-build:
     runs-on: ubuntu-latest
     steps:

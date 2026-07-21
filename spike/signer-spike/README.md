@@ -33,19 +33,31 @@ Signing is **unreachable** unless a live Andamioscan read proves the anchor.
 failed anchor read exits with **zero KMS operations**. The gate asserts, against
 `https://andamioscan.io` live:
 
-1. `/api/v2/events/credential-claims/claim/{tx}` resolves, and its
+1. `/api/v2/events/credential-claims/claim/{tx}` resolves (per-tx resolution —
+   only classifier-confirmed claims live at that path), and its
    `(course_id, credentials[])` byte-equals the pinned `(courseId, sltHash)`,
    and its `alias` byte-equals the pinned recipient.
 2. `/api/v2/transactions` indexes the tx as `StudentCourseCredentialClaim` at
-   the pinned slot.
+   the pinned slot — located by **binary search over the slot-descending
+   index** (O(log pages)), so the check stays valid however deep the tx sinks
+   as mainnet history grows (issue #54, finding 5).
 3. `/api/v2/courses/{courseId}/details` lists the sltHash among the course's
-   modules.
+   modules, the module's SLT texts are non-empty, and
+   **Blake2b-256 over their Plutus Data CBOR encoding equals the pinned
+   sltHash** (the derivation of `slt_hash` from SLT text, matching the
+   on-chain validator and the andamio CLI's `course credential verify-hash`) —
+   the text that gets signed into `criteria.narrative` is exactly what the
+   chain commits to (issue #54, finding 3).
 4. `/api/v2/users/{alias}/courses/completed` contains the course.
 5. block_time derived from the slot equals the pinned block_time.
 6. The production badge SVG for `<courseId>.<sltHash>` returns HTTP 200.
 
-`transcripts/anchor-gate.txt` shows the gate passing on the real subject and
-refusing a tampered slt_hash.
+`checkAnchor()` is **sealed**: it takes no parameters (the old test-only
+subject override is gone — issue #54, finding 4, code half), and the `Anchor`
+it returns is the single object `mapCredential` maps from. Refusal paths are
+covered hermetically in `check-anchor.test.ts` (mocked `fetch`); the original
+`transcripts/anchor-gate.txt` shows the Rung-6 gate passing on the real
+subject and refusing a tampered slt_hash.
 
 ## Signing pipeline (`sign.ts`)
 
@@ -75,6 +87,23 @@ else), and it refuses to canonicalize if the live
 `https://credentials.andamio.io/context/v0.jsonld` drifts from the committed
 `context/v0.jsonld`.
 
+Rung-8 hardening (issue #54, findings 1 + 2):
+
+- The LIVE guarantees are actually live: `did.json` is fetched from the
+  network on **every** read (key pin, in-sign resolution, post-sign verify),
+  and the context-drift guard compares the **network** copy against the
+  committed context — a stale or poisoned `out/ctx-cache/` entry can never
+  satisfy either (proven in `document-loader.test.ts`). A `--signer kms` run
+  additionally clears the context cache at start, so even the immutable
+  W3C/OB3 contexts are fetched fresh.
+- The `vc.issue` fallback is narrowed to the one known urn-id data-model
+  `TypeError` (`issue-error.ts`; on the pinned dependency set it is dead
+  code — verified empirically). Any other error aborts the run.
+- The signer seam must be invoked **exactly once** (kms mode: exactly one
+  `gcloud kms asymmetric-sign` call), asserted before any artifact write, and
+  the artifact is written atomically (temp file + rename) — a failed assert
+  can never leave a partial artifact.
+
 ## Repro commands
 
 ```
@@ -88,6 +117,9 @@ npm run sign:kms         # gate + key-pin check + ONE KMS sign + live-did verify
                          #   -> writes ./signed-credential.json
 npm run verify           # standalone digitalbazaar verify of the committed artifact
                          #   (resolves production did:web live)
+npm run test             # Rung-8 hardening tests — hermetic (mocked fetch, no KMS)
+npm run resign-check     # ONE deterministic KMS re-sign of the committed artifact;
+                         #   proves byte-stability, writes nothing
 
 # spruce (independent verifier #1):
 cd ../verifier-spike/verifiers/spruce
