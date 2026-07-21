@@ -184,6 +184,12 @@ propagates within the same one-hour window.
    no longer contains `#key-2026-07`; a verifier run against the flagship
    credential now **fails DID resolution of its verification method** — that
    failure is the kill-switch working.
+5. **Flush and redeploy the issuer-service instances.** Every rotation
+   (routine or compromise) requires it: the issuer's drift check — live
+   did.json pin, committed context, status list, active-key freshness — runs
+   **only at boot**, so a running instance keeps signing against its
+   boot-pinned view (old key, old status list, warm signed-artifact cache)
+   until its container is replaced.
 
 ## Phase 4 — Re-issuance under the replacement key
 

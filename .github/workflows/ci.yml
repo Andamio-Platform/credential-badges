@@ -51,6 +51,35 @@ jobs:
           npm ci
           npm run test:expansion-pin
 
+  issuer-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: "Issuer-service test suite (Rung 8.4) — hermetic: Andamioscan responses are recorded fixtures, contexts are vendored + integrity-pinned, signing runs through the ephemeral Ed25519 seam (no KMS, no network). Covers the full request path: gate -> map -> sign -> loopback verify, cache single-sign invariant, tampered-subject refusals, startup drift-check fail-closed paths."
+        working-directory: issuer-service
+        run: |
+          npm ci
+          npm test
+      - name: Build issuer image (no push) — proves issuer-service/Dockerfile
+        run: docker build -f issuer-service/Dockerfile -t credential-badges-issuer:ci .
+      - name: "Container smoke — ephemeral signer mode: boots without KMS, /healthz serves, malformed params 400 with no upstream call, non-/credentials routes 404"
+        run: |
+          docker run -d --name cbi -p 8081:8080 -e SIGNER_MODE=ephemeral credential-badges-issuer:ci
+          sleep 2
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/healthz)
+          echo "/healthz -> $code (expected 200)"
+          test "$code" = "200"
+          code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8081/credentials/mainnet/nothex/alsonothex/james")
+          echo "malformed params -> $code (expected 400)"
+          test "$code" = "400"
+          code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8081/.well-known/did.json")
+          echo "/.well-known/did.json -> $code (expected 404: did.json belongs to the static host)"
+          test "$code" = "404"
+          docker rm -f cbi
+
   docker-build:
     runs-on: ubuntu-latest
     steps:

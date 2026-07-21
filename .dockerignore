@@ -2,11 +2,15 @@
 # (it COPYs explicit paths, never `.`), but this keeps the build context
 # minimal and is a second line of defense against accidental disclosure.
 #
-# Two images build from this same root context:
+# Three images build from this same root context:
 #   - the static host (`Dockerfile`)        -> context/ issuer/ badges/ .well-known/ nginx/ README.md
 #   - the on-demand render (`service/Dockerfile`) -> service/ generator/ badges/
-# so service/ and generator/ are re-included for the render build. Both are
-# public source; each Dockerfile still COPYs only its explicit paths.
+#   - the OB3 issuer (`issuer-service/Dockerfile`) -> issuer-service/ context/
+#     .well-known/ status/ generator/credentials.json tools/gen-did-json.ts
+# so service/, generator/, issuer-service/ and the one tools/ file are
+# re-included for those builds. All are public source; each Dockerfile still
+# COPYs only its explicit paths. issuer-service/node_modules stays excluded —
+# the image runs its own `npm ci` from the lockfile.
 *
 !context/
 !context/**
@@ -27,3 +31,8 @@
 !generator/**
 !public/
 !public/**
+!issuer-service/
+!issuer-service/**
+issuer-service/node_modules
+issuer-service/node_modules/**
+!tools/gen-did-json.ts
