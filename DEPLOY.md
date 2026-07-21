@@ -117,7 +117,7 @@ verify `/healthz` (200) **and** a live-rendered badge returns `image/svg+xml`
 
 ## Served-file allowlist (load-bearing)
 
-The `Dockerfile` uses **explicit `COPY` of allowlisted paths only** (`context/`, `issuer/`, `badges/`, `.well-known/`, `README.md`) — never `COPY .`. `scripts/ci/check-allowlist.sh` fails CI if any repo file outside the allowlist would end up served. This prevents a future draft/notes file from leaking to a forever-public URL. To serve a new path, add an explicit `COPY` line to the `Dockerfile`, the `ALLOWED` array in the check script, **and** a `!`-re-include in `.dockerignore` (its `*` base excludes everything, including dot-dirs like `.well-known/`) — a deliberate, reviewed act, and CODEOWNERS-gated.
+The `Dockerfile` uses **explicit `COPY` of allowlisted paths only** (`context/`, `issuer/`, `badges/`, `status/`, `.well-known/`, `README.md`) — never `COPY .`. `scripts/ci/check-allowlist.sh` fails CI if any repo file outside the allowlist would end up served. This prevents a future draft/notes file from leaking to a forever-public URL. To serve a new path, add an explicit `COPY` line to the `Dockerfile`, the `ALLOWED` array in the check script, **and** a `!`-re-include in `.dockerignore` (its `*` base excludes everything, including dot-dirs like `.well-known/`) — a deliberate, reviewed act, and CODEOWNERS-gated.
 
 ## Versioning & permanence
 

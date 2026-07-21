@@ -72,7 +72,7 @@
       "AttestationHost"
     ],
     "name": "Andamio",
-    "url": "https://credentials.andamio.io/issuer",
+    "url": "https://credentials.andamio.io",
     "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
   },
   "validFrom": "2026-06-17T12:08:25Z",
@@ -95,6 +95,7 @@
       }
     }
   },
+  "courseOwner": "urn:andamio:mainnet:course-owner:gjames",
   "evidence": [
     {
       "id": "https://andamioscan.io/api/v2/events/credential-claims/claim/7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03",
@@ -103,17 +104,19 @@
         "Evidence"
       ],
       "name": "Cardano on-chain anchor",
-      "onChainAnchor": {
-        "network": "mainnet",
-        "policyId": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
-        "claimTxHash": "7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03"
-      },
-      "onChainAttestation": {
-        "policyId": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
-        "sltHash": "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db"
-      }
+      "network": "mainnet",
+      "policyId": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
+      "asset": "gjames",
+      "claimTxHash": "7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03"
     }
   ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
   "proof": [
     {
       "type": "DataIntegrityProof",
@@ -121,7 +124,7 @@
       "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
       "cryptosuite": "eddsa-rdfc-2022",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z4f9DshtzoX18uXorNi7UxSnn9Niyf6zsuAAKdtmELEhAhwWWhQggHZCakHX3fo1owGjE2VHfbkSxYRRxyKB42rPH"
+      "proofValue": "z5hsxeJrVFpLaE4wFt5e2rM78xzg81vPKfiUucaAd2PfdBobVEypNYkpk133yXTEjNBC3vU1cuWt6WSctD2W1Fiaw"
     }
   ]
 }

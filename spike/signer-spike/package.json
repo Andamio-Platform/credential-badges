@@ -9,6 +9,7 @@
     "map": "node --experimental-strip-types map-credential.ts",
     "sign:local": "node --experimental-strip-types sign.ts --signer local",
     "sign:kms": "node --experimental-strip-types sign.ts --signer kms",
+    "sign:status": "node --experimental-strip-types sign-status-list.ts",
     "verify": "node --experimental-strip-types verify-loopback.ts",
     "resign-check": "node --experimental-strip-types resign-check.ts",
     "test": "node --experimental-strip-types --test *.test.ts"

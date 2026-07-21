@@ -6,9 +6,10 @@
 # productionization (deployment plan P1bis-09; "v1 has James as owner"). The
 # cheap companion control is disabling force-push to the default branch.
 #
-# Scoped to Rungs 3-4 (did:web resolves; issuer Profile = AttestationHost).
-# Later rungs extend this to the status-list JSON and tools/flip-status-bit.ts
-# (Rung 8).
+# Scoped to Rungs 3-4 (did:web resolves; issuer Profile = AttestationHost),
+# extended at Rung 8.3 with the served status-list JSON (per the plan's
+# "later rungs extend this to the status-list JSON"). tools/flip-status-bit.ts
+# joins when it lands.
 
 # The did:web DID document and its deterministic regenerator — this publishes
 # the issuer signing key. A wrong or drifted key here silently breaks OB 3.0
@@ -30,6 +31,16 @@
 /issuer/profile.jsonld         @workshop-maybe
 /context/v0.jsonld             @workshop-maybe
 /tools/issuer-profile.test.ts  @workshop-maybe
+
+# The served key-epoch BitstringStatusList credential and its builder/tests
+# (Rung 8.3). A wrong bit here flags every credential signed under a key
+# version as suspended in third-party verifier UIs; a wrong encodedList
+# silently breaks status checks — changes get a deliberate review. The whole
+# /status/** is gated so any future sibling on this forever-public path is
+# reviewed too.
+/status/**                             @workshop-maybe
+/spike/signer-spike/status-list.ts     @workshop-maybe
+/spike/signer-spike/status-list.test.ts @workshop-maybe
 
 # Served-file allowlist controls. Adding a public, forever-served path must be
 # a deliberate reviewed act — these four files are the allowlist surface

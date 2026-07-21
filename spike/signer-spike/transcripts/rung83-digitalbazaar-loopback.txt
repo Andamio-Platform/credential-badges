@@ -1,0 +1,12 @@
+
+> signer-spike@0.0.1 verify
+> node --experimental-strip-types verify-loopback.ts
+
+context-drift guard: committed context/v0.jsonld is an ADDITIVE superset of live https://credentials.andamio.io/context/v0.jsonld — serving COMMITTED bytes (CONTEXT_AHEAD_OF_LIVE_OK=1, pre-deploy transitional state; signature reproducible by third parties only after the deploy)
+context-drift guard: committed context/v0.jsonld is an ADDITIVE superset of live https://credentials.andamio.io/context/v0.jsonld — serving COMMITTED bytes (CONTEXT_AHEAD_OF_LIVE_OK=1, pre-deploy transitional state; signature reproducible by third parties only after the deploy)
+checkStatus: using COMMITTED status/key-epoch-2026-07.json for https://credentials.andamio.io/status/key-epoch-2026-07.json (pre-deploy override; live re-check happens post-tag)
+digitalbazaar loopback verification (live did:web resolution)
+  credential:  urn:andamio:credential:mainnet:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db:gjames
+  vm:          did:web:credentials.andamio.io#key-2026-07
+  cryptosuite: eddsa-rdfc-2022
+  verified:    YES

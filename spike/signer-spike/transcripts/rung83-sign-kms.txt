@@ -1,0 +1,15 @@
+
+> signer-spike@0.0.1 sign:kms
+> node --experimental-strip-types sign.ts --signer kms
+
+context cache cleared — all documents fetched fresh this run
+anchor gate PASSED: ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db claimed by james in tx 7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03 (slot 190131814; 3 SLT texts hash-verified)
+key pin OK: KMS v1 == live did.json did:web:credentials.andamio.io#key-2026-07 (z6Mkhnh1woBUSSQHjknh8jvjKax5hNAEZ37LEfWfnC2FYjt7)
+context-drift guard: committed context/v0.jsonld is an ADDITIVE superset of live https://credentials.andamio.io/context/v0.jsonld — serving COMMITTED bytes (CONTEXT_AHEAD_OF_LIVE_OK=1, pre-deploy transitional state; signature reproducible by third parties only after the deploy)
+context-drift guard: committed context/v0.jsonld is an ADDITIVE superset of live https://credentials.andamio.io/context/v0.jsonld — serving COMMITTED bytes (CONTEXT_AHEAD_OF_LIVE_OK=1, pre-deploy transitional state; signature reproducible by third parties only after the deploy)
+KMS asymmetric-sign calls: 1
+checkStatus: using COMMITTED status/key-epoch-2026-07.json for https://credentials.andamio.io/status/key-epoch-2026-07.json (pre-deploy override; live re-check happens post-tag)
+KMS SIGN + LIVE-DID VERIFY OK
+proof.verificationMethod = did:web:credentials.andamio.io#key-2026-07
+proof.proofValue         = z5hsxeJrVFpLaE4wFt5e2rM78xzg81vPKfiUucaAd2PfdBobVEypNYkpk133yXTEjNBC3vU1cuWt6WSctD2W1Fiaw
+wrote /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-crypto/spike/signer-spike/signed-credential.json

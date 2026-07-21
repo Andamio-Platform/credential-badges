@@ -15,6 +15,7 @@ import {
   makeDocumentLoader,
   fetchLiveDidDocument,
   clearContextCache,
+  isAdditiveSuperset,
   DID_JSON_URL,
   ANDAMIO_CONTEXT_URL,
   ISSUER_DID,
@@ -139,6 +140,66 @@ test("clearContextCache removes the on-disk cache directory", async () => {
   await poisonCache(DID_JSON_URL, POISONED_DID_DOC);
   await clearContextCache();
   await assert.rejects(() => fs.access(CTX_CACHE));
+});
+
+// ---- Rung 8.3: the CONTEXT_AHEAD_OF_LIVE_OK transitional gate ----
+
+// A stand-in "live" context that is the committed one MINUS one added term —
+// i.e. the exact pre-deploy state after an additive context PR.
+async function liveSubsetOfCommitted(): Promise<any> {
+  const repo = JSON.parse(await fs.readFile(REPO_CONTEXT_FILE, "utf8"));
+  const live = structuredClone(repo);
+  const keys = Object.keys(live["@context"]);
+  delete live["@context"][keys[keys.length - 1]];
+  return live;
+}
+
+test("without the env var, an additively-behind live context still REFUSES (default unchanged)", async () => {
+  delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
+  mockFetch({ [ANDAMIO_CONTEXT_URL]: await liveSubsetOfCommitted() });
+  const loader = makeDocumentLoader();
+  await assert.rejects(
+    () => loader(ANDAMIO_CONTEXT_URL),
+    /drifted from committed context\/v0\.jsonld/,
+  );
+});
+
+test("with CONTEXT_AHEAD_OF_LIVE_OK=1, an additive superset serves the COMMITTED bytes", async () => {
+  process.env.CONTEXT_AHEAD_OF_LIVE_OK = "1";
+  try {
+    mockFetch({ [ANDAMIO_CONTEXT_URL]: await liveSubsetOfCommitted() });
+    const loader = makeDocumentLoader();
+    const { document } = await loader(ANDAMIO_CONTEXT_URL);
+    const repo = JSON.parse(await fs.readFile(REPO_CONTEXT_FILE, "utf8"));
+    assert.deepEqual(document, repo, "must canonicalize against the committed (deploy-bound) context");
+  } finally {
+    delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
+  }
+});
+
+test("with CONTEXT_AHEAD_OF_LIVE_OK=1, a NON-additive divergence still refuses", async () => {
+  process.env.CONTEXT_AHEAD_OF_LIVE_OK = "1";
+  try {
+    const live = await liveSubsetOfCommitted();
+    live["@context"]["andamio"] = "https://evil.example.com/ns#"; // mutated live term
+    mockFetch({ [ANDAMIO_CONTEXT_URL]: live });
+    const loader = makeDocumentLoader();
+    await assert.rejects(
+      () => loader(ANDAMIO_CONTEXT_URL),
+      /drifted from committed context\/v0\.jsonld/,
+      "a live term the committed context does not carry byte-identically must refuse",
+    );
+  } finally {
+    delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
+  }
+});
+
+test("isAdditiveSuperset: adds-only passes; mutation or removal fails", () => {
+  assert.equal(isAdditiveSuperset({ a: 1, b: { c: 2, d: 3 } }, { a: 1, b: { c: 2 } }), true);
+  assert.equal(isAdditiveSuperset({ a: 1 }, { a: 2 }), false); // mutated value
+  assert.equal(isAdditiveSuperset({ a: 1 }, { a: 1, b: 2 }), false); // committed removed a key
+  assert.equal(isAdditiveSuperset({ a: [1, 2] }, { a: [1, 2] }), true);
+  assert.equal(isAdditiveSuperset({ a: [1, 2, 3] }, { a: [1, 2] }), false); // arrays compare exactly
 });
 
 test("loader still refuses anything outside the allowlist", async () => {

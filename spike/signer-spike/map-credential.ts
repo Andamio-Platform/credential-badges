@@ -9,27 +9,37 @@
 // verifier expanding against the live context reproduces the exact signed
 // dataset.
 //
-// Documented deviations from the rung-1 spike sample (see README):
-//  - No top-level `courseOwner` / `assessor`: the LIVE production context does
-//    not register those terms yet (the plan's P1bis-04 context update has not
-//    shipped to the static host). Emitting them would either abort safe-mode
-//    canonicalization or leave them silently uncovered by the signature.
-//    Rung 8 ships the context update, then the mapper adds the fields.
-//  - The anchor rides inside `evidence` (typed ["OnChainCredentialAnchor",
-//    "Evidence"] per the plan: array form including base Evidence) as the
-//    nested `onChainAnchor` / `onChainAttestation` blocks — the two scoped
-//    terms the live context defines. `policyId` IS the course id (Andamio V2:
-//    a course's id is its mint policy); `sltHash` is carried by
-//    `onChainAttestation`, whose scoped context defines it.
-//  - No `credentialStatus`: the production status list is not served yet
-//    (https://credentials.andamio.io/status/* is 404). Rung 8 hosts
-//    /status/key-epoch-2026-07.json (bit 0 = key-2026-07) and adds the entry.
+// Rung 8.3 — FINAL production shape. The Rung-6 deviations are resolved:
+//  - `evidence` carries the plan's Decision-2 FLAT anchor dialect at the entry
+//    top level: `network`, `policyId`, `asset`, `claimTxHash` ("no other field
+//    name is correct"). The context/v0.jsonld update registers those terms
+//    top-level; the Rung-6 nested `onChainAnchor` / `onChainAttestation`
+//    blocks are superseded (their scoped terms stay in the context — it is
+//    additive-only under @protected + the immutable cache header).
+//    `policyId` IS the course id (Andamio V2: a course's id is its mint
+//    policy). `asset` is the recipient's Access Token global-state asset
+//    (`studentStateAsset`) — the on-chain object the claim tx writes the
+//    credential into. Course V2 mints no per-credential native asset (the
+//    claim burns the course-state token and updates the recipient's global
+//    state), so the student-state asset is the honest fill for the plan's
+//    anchor field set; it matches `credentialSubject.id`'s derivation.
+//  - Top-level `courseOwner` (P1bis-04, Decision-2 implication 3): pseudonymous
+//    URN over the course owner's Access Token global-state asset, same
+//    ASCII-"g"+alias derivation as the recipient. `assessor` (implication 4)
+//    is OMITTED — the on-chain record for this credential yields no assessor
+//    (the claim event carries alias/course/credentials only), and the plan
+//    says omit, never blank-fill.
+//  - `credentialStatus` (Decision 3): BitstringStatusListEntry, statusPurpose
+//    "suspension", statusListIndex = the signing key version's registry
+//    position (bit 0 = key-2026-07), pointing at the served
+//    /status/key-epoch-2026-07.json.
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { checkAnchor, type Anchor } from "./check-anchor.ts";
+import { statusListEntry } from "./status-list.ts";
 
 export const PRODUCTION_CONTEXTS = [
   "https://www.w3.org/ns/credentials/v2",
@@ -47,10 +57,16 @@ export function mapCredential(anchor: Anchor): any {
     claimTxHash,
     blockTime,
     studentStateAsset,
+    courseOwner,
     courseTitle,
     moduleTitle,
     slts,
   } = anchor;
+
+  // Access Token global-state asset for the course owner: ASCII "g" + alias —
+  // the same on-chain derivation as the recipient's studentStateAsset
+  // ("gjames" for alias "james"). Pseudonym, never a human name.
+  const courseOwnerStateAsset = `g${courseOwner}`;
 
   return {
     "@context": [...PRODUCTION_CONTEXTS],
@@ -89,22 +105,26 @@ export function mapCredential(anchor: Anchor): any {
         },
       },
     },
+    // Decision-2 implication 3: the course-owner reference, sibling of
+    // credentialSubject (attestation context is never jammed inside it).
+    // implication 4 (`assessor`) is omitted: the on-chain record for this
+    // credential names no assessor.
+    courseOwner: `urn:andamio:${network}:course-owner:${courseOwnerStateAsset}`,
     evidence: [
       {
         id: `https://andamioscan.io/api/v2/events/credential-claims/claim/${claimTxHash}`,
         type: ["OnChainCredentialAnchor", "Evidence"],
         name: "Cardano on-chain anchor",
-        onChainAnchor: {
-          network,
-          policyId: courseId,
-          claimTxHash,
-        },
-        onChainAttestation: {
-          policyId: courseId,
-          sltHash,
-        },
+        network,
+        policyId: courseId,
+        asset: studentStateAsset,
+        claimTxHash,
       },
     ],
+    // Decision 3: key-epoch suspension signal. The chain stays authoritative
+    // for per-credential state; this bit says only "signing key version
+    // fresh / not fresh".
+    credentialStatus: statusListEntry(),
   };
 }
 

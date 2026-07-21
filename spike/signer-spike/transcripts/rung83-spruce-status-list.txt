@@ -1,0 +1,4 @@
+# spruce (spruceid/ssi) verify — 2026-07-21T18:36:09Z
+sample: ../../../../status/key-epoch-2026-07.json
+
+outcome=VALID errors=0 warnings=0

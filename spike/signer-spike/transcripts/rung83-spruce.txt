@@ -1,0 +1,4 @@
+# spruce (spruceid/ssi) verify — 2026-07-21T18:35:42Z
+sample: ../../../signer-spike/signed-credential.json
+
+outcome=VALID errors=0 warnings=0

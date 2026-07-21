@@ -15,6 +15,7 @@ import { DataIntegrityProof } from "@digitalbazaar/data-integrity";
 import { cryptosuite as eddsaRdfc2022 } from "@digitalbazaar/eddsa-rdfc-2022-cryptosuite";
 import * as vc from "@digitalbazaar/vc";
 
+import { makeCheckStatus, type StatusListSource } from "./check-status.ts";
 import { makeDocumentLoader } from "./document-loader.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -23,11 +24,21 @@ async function main() {
   const file = path.join(HERE, "signed-credential.json");
   const credential = JSON.parse(await fs.readFile(file, "utf8"));
 
+  // Status source: "committed" (default, pre-deploy — reads the repo's
+  // status/ file; documented override, see check-status.ts) or "live"
+  // (post-deploy re-check): npm run verify -- --status live
+  const statusArgIdx = process.argv.indexOf("--status");
+  const statusSource: StatusListSource =
+    statusArgIdx !== -1 && process.argv[statusArgIdx + 1] === "live"
+      ? "live"
+      : "committed";
+
   const suite = new DataIntegrityProof({ cryptosuite: eddsaRdfc2022 });
   const r: any = await vc.verifyCredential({
     credential,
     suite,
     documentLoader: makeDocumentLoader(),
+    checkStatus: makeCheckStatus(statusSource),
   });
 
   const proof = Array.isArray(credential.proof) ? credential.proof[0] : credential.proof;

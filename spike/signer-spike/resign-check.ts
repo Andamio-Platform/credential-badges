@@ -25,6 +25,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { checkAnchor } from "./check-anchor.ts";
+import { makeCheckStatus } from "./check-status.ts";
 import {
   makeDocumentLoader,
   clearContextCache,
@@ -74,7 +75,7 @@ async function main() {
     committedProof.created,
   );
   console.log(`KMS asymmetric-sign calls: ${kmsSignCalls}`);
-  await verifyWith(signed, loader);
+  await verifyWith(signed, loader, makeCheckStatus());
 
   if (!Array.isArray(signed.proof)) signed.proof = [signed.proof];
   const resignedBytes = JSON.stringify(signed, null, 2) + "\n";
