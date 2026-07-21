@@ -19,6 +19,7 @@ import {
   KEY_VERSION_POSITIONS,
   STATUS_LIST_BIT_LENGTH,
   STATUS_LIST_URL,
+  SUSPENDED_KEY_VERSION_POSITIONS,
   buildStatusListCredential,
   decodeStatusList,
   encodeStatusList,
@@ -36,7 +37,34 @@ test("registry: key-2026-07 owns bit 0 and is the active key version", () => {
   assert.equal(ACTIVE_KEY_STATUS_INDEX, 0);
 });
 
-test("unsigned credential: W3C shape, suspension purpose, 131,072 all-zero bits", () => {
+test("suspension state: every declared position is a registered key version (Rung 8.6)", () => {
+  // SUSPENDED_KEY_VERSION_POSITIONS is the committed kill-switch state; it may
+  // only ever name registered key-version positions (the 0..63 region), sorted
+  // and without duplicates — the shape tools/flip-status-bit.ts emits.
+  const registered = new Set(Object.values(KEY_VERSION_POSITIONS));
+  for (const pos of SUSPENDED_KEY_VERSION_POSITIONS) {
+    assert.ok(registered.has(pos), `position ${pos} is not a registered key version`);
+    assert.ok(pos >= 0 && pos < 64, `position ${pos} outside the key-version region`);
+  }
+  const sorted = [...SUSPENDED_KEY_VERSION_POSITIONS].sort((a, b) => a - b);
+  assert.deepEqual([...SUSPENDED_KEY_VERSION_POSITIONS], sorted, "must be sorted");
+  assert.equal(
+    new Set(SUSPENDED_KEY_VERSION_POSITIONS).size,
+    SUSPENDED_KEY_VERSION_POSITIONS.length,
+    "no duplicates",
+  );
+});
+
+/** The bitstring SUSPENDED_KEY_VERSION_POSITIONS declares (MSB-first). */
+function declaredBits(): Uint8Array {
+  const expected = new Uint8Array(STATUS_LIST_BIT_LENGTH / 8);
+  for (const pos of SUSPENDED_KEY_VERSION_POSITIONS) {
+    expected[pos >>> 3] |= 0b1000_0000 >>> (pos & 0b111);
+  }
+  return expected;
+}
+
+test("unsigned credential: W3C shape, suspension purpose, default bits = declared kill-switch state", () => {
   const cred = buildStatusListCredential(ISSUER_DID);
   assert.deepEqual(cred["@context"], ["https://www.w3.org/ns/credentials/v2"]);
   assert.equal(cred.id, STATUS_LIST_URL);
@@ -46,10 +74,12 @@ test("unsigned credential: W3C shape, suspension purpose, 131,072 all-zero bits"
   assert.equal(cred.credentialSubject.type, "BitstringStatusList");
   assert.equal(cred.credentialSubject.statusPurpose, "suspension");
 
+  // The default build emits exactly what SUSPENDED_KEY_VERSION_POSITIONS
+  // declares (today: empty — all 131,072 bits zero). After a kill-switch flip
+  // PR moves the constant, this same assertion pins the flipped state.
   const bits = decodeStatusList(cred.credentialSubject.encodedList);
   assert.equal(bits.length * 8, STATUS_LIST_BIT_LENGTH, "W3C minimum 131,072 bits");
-  assert.ok(bits.every((b) => b === 0), "fresh list must be all zeros");
-  assert.equal(statusBitAt(bits, ACTIVE_KEY_STATUS_INDEX), 0, "key-2026-07 not suspended");
+  assert.deepEqual(bits, declaredBits(), "default bits must equal the declared suspension state");
 });
 
 test("encodedList is multibase base64url-no-pad ('u' prefix), deterministic", () => {
@@ -152,7 +182,13 @@ test("committed status/key-epoch-2026-07.json: signed, fresh, and rebuilds byte-
   unsigned.credentialSubject = { ...unsigned.credentialSubject, encodedList: rebuiltEncoded };
   assert.deepEqual(unsigned, rebuilt);
 
-  // And the served list says the active key version is NOT suspended.
+  // And the served list agrees with the declared kill-switch state for the
+  // active key version (today: 0, not suspended — SUSPENDED_KEY_VERSION_POSITIONS
+  // is empty; a flip PR moves the constant, the re-signed file, and the sha
+  // pin together, and this assertion holds through it).
   const bits = decodeStatusList(committedEncoded);
-  assert.equal(statusBitAt(bits, ACTIVE_KEY_STATUS_INDEX), 0);
+  assert.equal(
+    statusBitAt(bits, ACTIVE_KEY_STATUS_INDEX),
+    SUSPENDED_KEY_VERSION_POSITIONS.includes(ACTIVE_KEY_STATUS_INDEX) ? 1 : 0,
+  );
 });

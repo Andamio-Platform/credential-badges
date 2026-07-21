@@ -97,8 +97,8 @@ Everything below is **v1.1**, not yet built. It turns the badge from
 - [ ] 5 explicit states with designed copy: anchored+signature-valid, anchored+signature-unavailable, not-found, revoked-signal, indeterminate
 - [ ] Multi-party process visible in rendered output: courseOwner pseudonym, assessor pseudonym, on-chain anchor with explorer link
 - [ ] First emitted 131,072-bit BitstringStatusList on the static host (W3C minimum; positions 0–63 reserved for key versions)
-- [ ] `tools/flip-status-bit.ts` CLI (key-version + incident-id; CODEOWNERS-gated)
-- [ ] `docs/runbooks/status-flip.md`
+- [x] `tools/flip-status-bit.ts` CLI (Rung 8.6 — key-epoch + bit-index + purpose; prepares the flip, never signs; CODEOWNERS-gated)
+- [x] `docs/runbooks/key-compromise.md` (Rung 8.6 — subsumes the planned `status-flip.md`: trigger criteria, flip containment, cross-verifier read, DID-doc response, re-issuance)
 - [ ] `docs/verifier-guidance.md` finalized with worked example on real preprod credential
 
 ## Phase 4 — Hygiene + design-not-built (Unit 6)
