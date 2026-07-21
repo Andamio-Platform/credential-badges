@@ -35,6 +35,27 @@ node --experimental-strip-types tools/gen-did-json.ts --from-kms > .well-known/d
 cat key.pem | node --experimental-strip-types tools/gen-did-json.ts
 ```
 
+## `bake-signed-vc.ts` — bake / extract a signed VC in a badge SVG
+
+Swaps the single `<openbadges:credential>` element the generator emits (the
+unsigned `verify=""` hook) for a **signed** OB3 credential, per OB 3.0
+section 5.3.2.1: our proof is an embedded Data Integrity proof
+(`eddsa-rdfc-2022`), so the `verify` attribute is **omitted** and the
+credential JSON goes in the CDATA body (`verify=` is only for VC-JWT compact
+JWS). The signed VC is immutable input — inserted byte-for-byte, never
+reformatted (a mutation would break the signature); everything outside the
+element (visual layers, the `<metadata>` presentation block) is preserved
+byte-identically. `extract` reverses the bake exactly.
+
+```sh
+node --experimental-strip-types tools/bake-signed-vc.ts bake <badge.svg> <signed-vc.json> <out.svg>
+node --experimental-strip-types tools/bake-signed-vc.ts extract <badge.svg> [out.json]
+```
+
+Transcripts for the first baked badge (Rung 7) live in `transcripts/`.
+**`make badges` re-emits the unsigned hook** — regenerating over a baked badge
+un-bakes it; `bake-signed-vc.test.ts` (below) goes red if that ever happens.
+
 ## Tests
 
 ```sh
@@ -49,3 +70,8 @@ cd tools && npm test        # == node --experimental-strip-types --test *.test.t
   version 1. A wrong or rotated committed key is a **red test**, not a silent
   verification break. Decode-only by default; set `KMS_LIVE_PIN=1` (with an
   authed gcloud) to additionally re-fetch and compare against live KMS.
+- **`bake-signed-vc.test.ts`** — the **baked-badge invariant**: the committed
+  badge SVG for the signed subject credential must embed
+  `spike/signer-spike/signed-credential.json` byte-for-byte (proof block and
+  anchor identifiers asserted field-by-field), in the OB3 embedded-proof form.
+  Plus hermetic bake/extract round-trip units. No network.
