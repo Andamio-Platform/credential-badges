@@ -126,11 +126,24 @@ test("restore un-flips: flip -> restore round-trips to the committed unsigned do
   assert.equal(restored.before, 1);
   assert.equal(restored.after, 0);
   const { proof: _p, ...committedUnsigned } = JSON.parse(COMMITTED.toString("utf8"));
-  // Same platform => same deterministic gzip encoding: byte-identical payload.
+  // The committed artifact was gzipped on macOS and CI re-encodes on Linux;
+  // the gzip HEADER's OS byte differs across platforms (the repo-wide
+  // committed-artifact convention, see status-list.test.ts). So compare the
+  // DECODED bitstring bit-for-bit and every other field byte-for-byte.
+  const restoredUnsigned: any = restored.unsigned;
+  assert.deepEqual(
+    decodeStatusList(restoredUnsigned.credentialSubject.encodedList),
+    decodeStatusList(committedUnsigned.credentialSubject.encodedList),
+    "restore must reproduce the committed bitstring bit-for-bit",
+  );
+  restoredUnsigned.credentialSubject = {
+    ...restoredUnsigned.credentialSubject,
+    encodedList: committedUnsigned.credentialSubject.encodedList,
+  };
   assert.equal(
-    serializePayload(restored.unsigned),
+    serializePayload(restoredUnsigned),
     serializePayload(committedUnsigned),
-    "restore must reproduce the committed unsigned document exactly",
+    "every other field must round-trip byte-identically",
   );
 });
 
