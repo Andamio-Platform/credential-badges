@@ -1,0 +1,30 @@
+{
+  "name": "signer-spike",
+  "version": "0.0.1",
+  "description": "Rung 6: one cryptographically signed OB3 VC for a real mainnet Andamio credential — KMS Ed25519, hard-gated on a live on-chain anchor check.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "check-anchor": "node --experimental-strip-types check-anchor.ts",
+    "map": "node --experimental-strip-types map-credential.ts",
+    "sign:local": "node --experimental-strip-types sign.ts --signer local",
+    "sign:kms": "node --experimental-strip-types sign.ts --signer kms",
+    "verify": "node --experimental-strip-types verify-loopback.ts"
+  },
+  "dependencies": {
+    "@digitalbazaar/data-integrity": "^2.5.0",
+    "@digitalbazaar/eddsa-rdfc-2022-cryptosuite": "^1.1.0",
+    "@digitalbazaar/vc": "^7.1.0",
+    "jsonld": "^8.3.2",
+    "jsonld-signatures": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {
+    "undici": "^6.27.0"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id" : "cb4872e7-fda5-4e42-b961-5e6c717989dd",
+  "generated" : "2026-07-21T17:25:40",
+  "generator" : "OB30Inspector",
+  "input" : {
+    "name" : "signed-credential.json",
+    "type" : "JSON"
+  },
+  "summary" : {
+    "outcome" : "ERROR",
+    "fatals" : 0,
+    "errors" : 1,
+    "warnings" : 0,
+    "exceptions" : 0,
+    "notRun" : 0,
+    "totalRun" : 13
+  },
+  "specification" : {
+    "pid" : "ob30.pid",
+    "shortName" : "ob",
+    "version" : "3.0",
+    "title" : "Open Badges 3.0"
+  },
+  "fatals" : [ ],
+  "errors" : [ {
+    "message" : "Key document not found at did:web:credentials.andamio.io#key-2026-07. URI: https://credentials.andamio.io/did.json doesn't return a valid document. Reason: java.io.FileNotFoundException: https://credentials.andamio.io/did.json ",
+    "location" : {
+      "resource" : "signed-credential.json"
+    },
+    "generator" : "EmbeddedProofProbe",
+    "detailsMessage" : null
+  } ],
+  "warnings" : [ ],
+  "exceptions" : [ ],
+  "notRun" : [ ]
+}
