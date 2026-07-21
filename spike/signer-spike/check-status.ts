@@ -75,6 +75,14 @@ export function makeCheckStatus(source: StatusListSource = "committed") {
       }
       const bits = decodeStatusList(subject.encodedList);
       const index = Number.parseInt(status.statusListIndex, 10);
+      if (!Number.isInteger(index)) {
+        // parseInt on a malformed statusListIndex yields NaN, which passes a
+        // </>= range guard (NaN comparisons are all false) and would silently
+        // read bit 0 — refuse loudly instead.
+        throw new Error(
+          `statusListIndex is not an integer: ${JSON.stringify(status.statusListIndex)}`,
+        );
+      }
       if (statusBitAt(bits, index) === 1) {
         throw new Error(
           `credential SUSPENDED at statusListIndex ${index} (signing key version not fresh — chain remains authoritative)`,

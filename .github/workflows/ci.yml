@@ -38,6 +38,19 @@ jobs:
       - name: "Signer-spike hardening tests (issue #54) — hermetic: fetch is mocked, no KMS, no npm install (the tested modules are dependency-free)"
         run: node --experimental-strip-types --test spike/signer-spike/*.test.ts
 
+  expansion-pin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: "Signed-artifact expansion pin — canonicalizes the committed signed artifacts (signed-credential.json, status/key-epoch-2026-07.json) under the COMMITTED context/v0.jsonld and pins the RDF dataset hash, so no context PR can silently change what the committed proofs were computed over. Needs the spike's jsonld dep (npm ci — not in the hermetic job); network touches only the version-pinned immutable W3C/OB3 contexts."
+        working-directory: spike/signer-spike
+        run: |
+          npm ci
+          npm run test:expansion-pin
+
   docker-build:
     runs-on: ubuntu-latest
     steps:
@@ -60,8 +73,14 @@ jobs:
           assert_ct /did.json            application/did+ld+json
           # Key-epoch status list (Rung 8.3): a JSON-LD VC served as
           # application/ld+json — the .json extension must not drag it back
-          # to application/json (the location's `types {}` clear).
+          # to application/json. The `^~ /status/` prefix location covers the
+          # whole tree so the NEXT key-epoch file inherits these headers
+          # automatically; a nonexistent status path must 404 inside the
+          # location (no fallthrough to another handler).
           assert_ct /status/key-epoch-2026-07.json application/ld+json
+          status_404=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/status/no-such-epoch.json)
+          echo "/status/no-such-epoch.json -> $status_404 (expected 404)"
+          test "$status_404" = "404"
           assert_ct /badges/_placeholder.svg image/svg+xml
           assert_ct /design/             text/html
           assert_ct /                    text/plain

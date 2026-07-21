@@ -8,6 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
@@ -87,7 +88,35 @@ test("statusListEntry: the subject credential's credentialStatus shape (Decision
   });
 });
 
+test("statusBitAt refuses a non-integer index (NaN from a malformed statusListIndex)", () => {
+  const bits = new Uint8Array(16);
+  assert.throws(() => statusBitAt(bits, Number.NaN), /not an integer/);
+  assert.throws(() => statusBitAt(bits, 0.5), /not an integer/);
+  assert.throws(() => statusBitAt(bits, Number.parseInt("banana", 10)), /not an integer/);
+});
+
 // ---- The committed served artifact ----
+
+// EXACT BYTES of the served, SIGNED status-list file. The decoded-bitstring
+// comparison below is the cross-OS BUILD check (the gzip header's OS byte
+// varies by platform), but on its own it would let a rebuilt-but-not-re-signed
+// file pass CI carrying a cryptographically dead proof. This pin closes that
+// hole: any change to the committed file's bytes — proof included — fails
+// loudly. UPDATE THIS PIN ON EVERY LEGITIMATE RE-SIGN of
+// status/key-epoch-2026-07.json (sign-status-list.ts), and only then.
+const COMMITTED_STATUS_FILE_SHA256 =
+  "6c127ed2ac96e4851dbe414f7b5364de8108c03d5c9d56a2066498f0f2f5dabf";
+
+test("committed status/key-epoch-2026-07.json: exact file bytes are pinned (stale-proof guard)", () => {
+  const digest = createHash("sha256")
+    .update(readFileSync(COMMITTED_STATUS_FILE))
+    .digest("hex");
+  assert.equal(
+    digest,
+    COMMITTED_STATUS_FILE_SHA256,
+    "the committed status-list bytes changed — if this was a legitimate re-sign, update the pin; if not, the served proof no longer matches the signed document",
+  );
+});
 
 test("committed status/key-epoch-2026-07.json: signed, fresh, and rebuilds byte-identically", () => {
   const committed = JSON.parse(readFileSync(COMMITTED_STATUS_FILE, "utf8"));

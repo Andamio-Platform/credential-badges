@@ -93,18 +93,39 @@ export async function clearContextCache(): Promise<void> {
 // fetch + drift check below. Never populated from disk.
 let checkedLiveContext: any = null;
 
-// True when `committed` contains every key of `live` with a deep-equal value
-// and only ADDS keys — the Rung-4 "Option A" additive-evolution shape for the
-// pre-stable v0 context. Exported for the hermetic tests.
+// True ONLY when `committed` differs from `live` by adding NEW top-level term
+// keys inside "@context" — the Rung-4 "Option A" additive-evolution shape for
+// the pre-stable v0 context. Everything else must be byte-identical:
+//
+//   - every key OUTSIDE "@context" must match exactly (no adds, no removals),
+//   - every key live's "@context" already defines must be deep-equal in the
+//     committed one — adding a key INSIDE an existing term's definition (e.g.
+//     an "@type" on a term that had none) changes how EXISTING documents
+//     expand, which is a mutation, not an addition. The earlier any-depth
+//     recursion accepted exactly that; this version refuses it.
+//
+// Exported for the hermetic tests.
 export function isAdditiveSuperset(committed: any, live: any): boolean {
-  if (
-    typeof live !== "object" || live === null || Array.isArray(live) ||
-    typeof committed !== "object" || committed === null || Array.isArray(committed)
-  ) {
-    return JSON.stringify(committed) === JSON.stringify(live);
+  const isPlainObject = (v: any) =>
+    typeof v === "object" && v !== null && !Array.isArray(v);
+  if (!isPlainObject(committed) || !isPlainObject(live)) return false;
+
+  // Outside "@context": byte-identical, both directions.
+  const allKeys = new Set([...Object.keys(committed), ...Object.keys(live)]);
+  for (const k of allKeys) {
+    if (k === "@context") continue;
+    if (!(k in committed) || !(k in live)) return false;
+    if (JSON.stringify(committed[k]) !== JSON.stringify(live[k])) return false;
   }
-  return Object.keys(live).every(
-    (k) => k in committed && isAdditiveSuperset(committed[k], live[k]),
+
+  const cc = committed["@context"];
+  const lc = live["@context"];
+  if (!isPlainObject(cc) || !isPlainObject(lc)) return false;
+
+  // Every live term must exist in committed with a deep-equal definition;
+  // committed may only ADD new term keys at this one level.
+  return Object.keys(lc).every(
+    (k) => k in cc && JSON.stringify(cc[k]) === JSON.stringify(lc[k]),
   );
 }
 

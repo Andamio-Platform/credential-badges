@@ -132,8 +132,12 @@ npm run test             # Rung-8 hardening tests — hermetic (mocked fetch, no
 npm run resign-check     # ONE deterministic KMS re-sign of the committed artifact;
                          #   proves byte-stability, writes nothing
 
-# Until the deploy ships the updated context, prefix signing/verify runs with
-# CONTEXT_AHEAD_OF_LIVE_OK=1 (see Decisions #6 below).
+# CONTEXT_AHEAD_OF_LIVE_OK=1 is a PER-DEPLOY-WINDOW flag, not standing
+# workflow: it exists only for the window between committing an additive
+# context change and the deploy that publishes it, and signing/verify runs
+# are prefixed with it ONLY inside that window (see Decisions #6 below).
+# Once the live context matches the committed one, run without it — the
+# strict-equality drift guard is the normal posture.
 
 # spruce (independent verifier #1):
 cd ../verifier-spike/verifiers/spruce
@@ -207,14 +211,31 @@ Rung 6/8.2 (the previous artifact, for the record):
    committed `context/v0.jsonld` is an additive superset of the live one until
    the next deploy ships it. Signing/verifying locally therefore ran with
    `CONTEXT_AHEAD_OF_LIVE_OK=1`, which the document loader honors ONLY when
-   the committed context is a strict additive superset of the live fetch (any
-   other divergence still refuses; without the env var the strict equality
-   gate is unchanged). Until the deploy, third parties expanding against the
-   LIVE context cannot reproduce the signature — the 1EdTech
-   `EmbeddedProofProbe` failure below is exactly that, expected until deploy.
-   Likewise `checkStatus` reads the COMMITTED `status/` file (the exact bytes
-   the deploy will serve) because the status URL is 404 until deploy; the live
-   re-check happens post-tag.
+   the committed context differs from the live fetch by nothing but NEW
+   top-level term keys inside `"@context"` — an added key INSIDE an existing
+   term's definition changes how existing documents expand and refuses like
+   any other divergence (review follow-up ADV-2 tightened this; the earlier
+   check accepted additions at any depth). Without the env var the strict
+   equality gate is unchanged. This is a PER-DEPLOY-WINDOW flag, not standing
+   workflow: set it only between committing an additive context change and
+   the deploy that publishes it, then drop it. Until the deploy, third
+   parties expanding against the LIVE context cannot reproduce the signature —
+   the 1EdTech `EmbeddedProofProbe` failure below is exactly that, expected
+   until deploy. Likewise `checkStatus` reads the COMMITTED `status/` file
+   (the exact bytes the deploy will serve) because the status URL is 404
+   until deploy; the live re-check happens post-tag.
+
+   What "additive" does and does not guarantee (review follow-up ADV-4): the
+   context change is **expansion-invariant for all SIGNED artifacts** —
+   mechanically verified by `expansion-pin.dep-test.ts` (CI job
+   `expansion-pin`), which expands the committed `signed-credential.json` and
+   `status/key-epoch-2026-07.json` under the committed context and pins the
+   canonical RDF dataset hash, so no future context PR can silently change
+   what the committed proofs were computed over. It is NOT expansion-invariant
+   for the 58 v1.0 UNSIGNED badges: their embedded credentials gain one
+   previously-dropped triple (`network`, now registered and picked up via the
+   compact-IRI key path). Harmless — no proofs exist on them, so there is no
+   signature to break.
 
 ## Ladder state
 

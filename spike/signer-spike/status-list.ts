@@ -79,6 +79,12 @@ export function decodeStatusList(encodedList: string): Uint8Array {
 
 /** Read one bit. W3C: bit position 0 is the MOST-significant bit of byte 0. */
 export function statusBitAt(bits: Uint8Array, index: number): 0 | 1 {
+  // Number.isInteger refuses NaN and fractions — a NaN from a malformed
+  // statusListIndex would sail through the range comparisons below (every
+  // NaN comparison is false) and silently read bit 0.
+  if (!Number.isInteger(index)) {
+    throw new Error(`status-list index is not an integer: ${index}`);
+  }
   if (index < 0 || index >= bits.length * 8) {
     throw new Error(`status-list index out of range: ${index}`);
   }

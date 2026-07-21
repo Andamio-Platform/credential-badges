@@ -81,20 +81,27 @@ server {
         try_files /.well-known/did.json =404;
     }
 
-    # Key-epoch BitstringStatusList credential (Rung 8.3, deployment plan
-    # Decision 3). Subject credentials point at this URL from their
-    # credentialStatus entry; verifiers dereference it to read the
+    # Key-epoch BitstringStatusList credentials (Rung 8.3, deployment plan
+    # Decision 3). Subject credentials point into /status/ from their
+    # credentialStatus entry; verifiers dereference the URL to read the
     # key-version suspension bit. The W3C Bitstring Status List spec
     # prescribes no single media type ("might be any media type registered
     # for the purpose of expressing a verifiable credential") and lists
-    # application/ld+json among the acceptable forms — the file IS a JSON-LD
-    # VC, so serve exactly that. Exact-match location: the stock mime.types
-    # maps the .json extension to application/json, which would override
-    # default_type, so the Rung-3-style empty `types {}` block clears the
-    # extension map for THIS location. MUTABLE on a compromised-key bit flip
-    # — the whole point is that the flip propagates — so cached briefly and
-    # NOT immutable (same TTL as did.json).
-    location = /status/key-epoch-2026-07.json {
+    # application/ld+json among the acceptable forms — the files ARE JSON-LD
+    # VCs, so serve exactly that. Prefix match (`^~` so the generic .json
+    # handling and regex locations never shadow it) covering the WHOLE
+    # /status/ tree: the next key-epoch file inherits these headers
+    # automatically instead of needing a new exact-match block (which would
+    # silently serve application/json until someone remembered). The stock
+    # mime.types maps the .json extension to application/json, which would
+    # override default_type, so the Rung-3-style empty `types {}` block
+    # clears the extension map for this location. Status lists are MUTABLE
+    # on a compromised-key bit flip — the whole point is that the flip
+    # propagates — so cached briefly and NOT immutable (same TTL as
+    # did.json). Serving stays allowlist-gated per file: only files COPY'd
+    # by the Dockerfile + passed by scripts/ci/check-allowlist.sh exist on
+    # disk, so a wider location adds no serving surface.
+    location ^~ /status/ {
         types { }
         default_type application/ld+json;
         add_header Cache-Control "public, max-age=3600";
