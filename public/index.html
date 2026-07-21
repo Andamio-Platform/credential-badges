@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Andamio | Visualize your Credentials</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Spline+Sans+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+
+<body>
+  <div class="layout">
+    <!-- Left Panel: Controls -->
+    <aside class="sidebar">
+      <header class="sidebar-header">
+        <div class="header-titles">
+          <div class="logo">
+            <img src="assets/logo.png" alt="Andamio Logo">
+          </div>
+          <p class="subtitle">Credential Designer</p>
+        </div>
+        <button id="mobileMenuBtn" class="hamburger" aria-label="Toggle Menu">
+          <span></span>
+          <span></span>
+        </button>
+      </header>
+
+
+      <form id="controls" class="glass-panel">
+        <div class="input-group">
+          <label for="courseTitle">Course Title</label>
+          <input type="text" id="courseTitle" value="Andamio for Developers">
+        </div>
+
+        <div class="input-group">
+          <label for="moduleTitle">Module Title</label>
+          <input type="text" id="moduleTitle" value="Transactions">
+        </div>
+
+        <div style="display: flex; gap: 1.5rem; align-items: center;">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="input-group">
+              <label for="courseId">Course Policy ID (56 Hex)</label>
+              <input type="text" id="courseId" value="6348bba0f9b7d7e0353715ece5946f3b61de433d314e84dad313a677"
+                class="mono-input">
+            </div>
+            <div class="input-group">
+              <label for="sltHash">SLT Hash (64 Hex)</label>
+              <input type="text" id="sltHash" value="a891203913065a08e2c87ea57b808bb0f6efa4e57f36bc1412f7c2cdd846a045"
+                class="mono-input">
+            </div>
+          </div>
+          <button type="button" id="randomCourseBtn" class="action-btn"
+            style="margin: 0; flex-shrink: 0;"
+            title="Load Random Credential">🎲</button>
+        </div>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label for="palette">Theme Palette</label>
+            <select id="palette">
+              <!-- Populated by app.js -->
+            </select>
+          </div>
+
+          <div class="toggle-group">
+            <label class="switch-wrap">
+              <span class="label-text">Light</span>
+              <input type="checkbox" id="lightInterior">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+        </div>
+
+        <div style="margin-top: 0.5rem;">
+          <button type="button" id="downloadPdfBtn" class="download-btn"><span>Print as PDF</span></button>
+        </div>
+      </form>
+
+
+
+      <footer>
+        <p><em>The art is the proof.</em><br>Each credential's hashes are encoded in the geometry of the concentric rings.</p>
+      </footer>
+    </aside>
+
+    <!-- Right Panel: Live Preview -->
+    <main class="preview-area">
+      <div class="preview-container">
+        <div id="svgContainer" class="svg-wrapper">
+          <!-- SVG injected here -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app/generator.js"></script>
+  <script src="app/app.js"></script>
+</body>
+
+</html>

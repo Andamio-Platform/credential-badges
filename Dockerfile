@@ -7,7 +7,9 @@
 #
 # Currently allowlisted: context/ (the deliverable), issuer/ (the hosted
 # OB 3.0 issuer Profile), badges/ (presentation-layer badge imagery),
-# .well-known/ (the did:web DID document), and README.md.
+# .well-known/ (the did:web DID document), public/ (the interactive
+# credential designer, served under /design/ — never merged into the web
+# root, so it can never shadow a trust path), and README.md.
 # When schemas/ land and are confirmed public, add an explicit COPY line
 # here AND update scripts/ci/check-allowlist.sh.
 
@@ -40,6 +42,11 @@ COPY issuer/    /usr/share/nginx/html/issuer/
 COPY badges/    /usr/share/nginx/html/badges/
 # did:web DID document — a forever-public endpoint (did:web:credentials.andamio.io).
 COPY .well-known/ /usr/share/nginx/html/.well-known/
+# Interactive credential designer (#37, PR #50) — its own subtree, NOT the
+# web root: the root belongs to the did:web trust surface, and a root-merge
+# would let a future public/ file silently shadow .well-known/, issuer/, or
+# context/.
+COPY public/    /usr/share/nginx/html/design/
 COPY README.md  /usr/share/nginx/html/README.md
 
 EXPOSE 8080

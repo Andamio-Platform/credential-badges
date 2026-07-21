@@ -112,11 +112,20 @@ server {
         try_files $uri =404;
     }
 
+    # Interactive credential designer (#37, PR #50) — served from its own
+    # /design/ subtree so the web root stays a pure trust surface. The
+    # no-slash form must 301 to the slash form: index.html loads its assets
+    # via relative paths (app/, styles/, assets/), which resolve against "/"
+    # if the page is served at /design without the trailing slash.
+    location = /design {
+        return 301 /design/;
+    }
+
     # Minimal landing page at "/" — returns 200 so health probes succeed
     # and humans hitting the root get a pointer instead of a bare 404.
     location = / {
         add_header Content-Type text/plain;
-        return 200 "Andamio credential contexts\n\nPublished JSON-LD contexts:\n  /context/v0.jsonld\n\nHosted issuer profile:\n  /issuer\n\nBadge imagery:\n  /badges/\n\nSee https://github.com/Andamio-Platform/credential-badges\n";
+        return 200 "Andamio credential contexts\n\nPublished JSON-LD contexts:\n  /context/v0.jsonld\n\nHosted issuer profile:\n  /issuer\n\nBadge imagery:\n  /badges/\n\nCredential designer:\n  /design/\n\nSee https://github.com/Andamio-Platform/credential-badges\n";
     }
 
     location / {

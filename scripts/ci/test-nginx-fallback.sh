@@ -52,8 +52,14 @@ server {
     return 200 \"<svg xmlns='http://www.w3.org/2000/svg'>$SENTINEL</svg>\";
   }
 }
-EOF
-nginx -s reload"
+EOF"
+# Reload with retry: an immediate `nginx -s reload` races the master's
+# startup (no /run/nginx.pid yet) and flakes on cold CI runners.
+for i in $(seq 1 20); do
+  docker exec "$STUB" nginx -s reload >/dev/null 2>&1 && break
+  [ "$i" = 20 ] && { echo "FAIL: stub nginx did not come up"; docker logs "$STUB"; exit 1; }
+  sleep 0.5
+done
 
 # Real static host, with the render fallback pointed at the stub.
 docker run -d --name "$APP" --network "$NET" \
