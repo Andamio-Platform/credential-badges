@@ -133,20 +133,28 @@ jobs:
             --platform managed \
             --quiet
 
-      # The startup drift check runs inside the container BEFORE the listener
-      # opens, so a healthy /healthz here already proves: KMS key == live
-      # did.json pin, live context == committed context, key version in
-      # registry. The credential probe exercises the full live path on the
-      # known subject credential (the spike/signer-spike subject).
-      - name: Verify /healthz + a live signed credential
+      # NO external /healthz probe here: Google's front end intercepts
+      # /healthz on run.app URLs and answers 404 from the edge — the request
+      # never reaches the container (proven 2026-07-21: zero request logs for
+      # /healthz while /, /health, and /credentials/* all log). Health is
+      # already enforced upstream of this step twice over: the in-container
+      # startup probe gates revision readiness on /healthz, and the startup
+      # drift check runs BEFORE the listener opens — so a successful rollout
+      # proves KMS key == live did.json pin, live context == committed
+      # context, and key version fresh in the live status list. The
+      # credential probe below is the real end-to-end verification (anchor
+      # gate → KMS sign → serve) and works from anywhere, including through
+      # the LB after the cutover routes /credentials/*.
+      - name: Verify a live signed credential
         run: |
           URL=$(gcloud run services describe "${GCP_SERVICE}" --region "${GCP_REGION}" --project "${GCP_PROJECT}" --format='value(status.url)')
           echo "service URL: ${URL}"
-          code=$(curl -s -o /dev/null -w '%{http_code}' "${URL}/healthz")
-          echo "/healthz -> ${code}"
-          test "${code}" = "200"
           CRED="/credentials/mainnet/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df/e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db/james"
           # GET (the service is GET-only; HEAD is 405 by design).
+          code=$(curl -s -o /tmp/cred.json -w '%{http_code}' "${URL}${CRED}")
           ct=$(curl -s -o /dev/null -w '%{content_type}' "${URL}${CRED}")
-          echo "${CRED} Content-Type: ${ct} (expected application/ld+json)"
+          echo "${CRED} -> ${code} ${ct} (expected 200 application/ld+json)"
+          test "${code}" = "200"
           test "${ct}" = "application/ld+json"
+          # The proof block must be present and name the production key.
+          python3 -c "import json; p=json.load(open('/tmp/cred.json'))['proof'][0]; assert p['cryptosuite']=='eddsa-rdfc-2022' and p['verificationMethod']=='did:web:credentials.andamio.io#key-2026-07', p; print('proof OK:', p['cryptosuite'], p['verificationMethod'])"
