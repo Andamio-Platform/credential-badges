@@ -47,6 +47,7 @@ jobs:
           assert_ct /context/v0.jsonld   application/ld+json
           assert_ct /issuer              application/ld+json
           assert_ct /.well-known/did.json application/did+ld+json
+          assert_ct /did.json            application/did+ld+json
           assert_ct /badges/_placeholder.svg image/svg+xml
           assert_ct /design/             text/html
           assert_ct /                    text/plain
@@ -57,6 +58,13 @@ jobs:
           loc=$(curl -sI http://localhost:8080/design | tr -d '\r' | awk -F': ' 'tolower($1)=="location"{print $2}')
           echo "/design Location: $loc (expected /design/)"
           test "$loc" = "/design/"
+          # /did.json is a resolver-deviation alias (issue #54 item 8) that must
+          # serve the SAME bytes as the canonical /.well-known/did.json — the
+          # nginx location try_files the canonical file, so any divergence means
+          # the alias drifted.
+          curl -sf http://localhost:8080/.well-known/did.json -o canonical.json
+          curl -sf http://localhost:8080/did.json -o alias.json
+          cmp canonical.json alias.json && echo "/did.json is byte-identical to /.well-known/did.json"
           docker rm -f cb
       - name: Test on-demand render fallback (#33, U5) — static-first + @render proxy
         run: IMAGE=credential-badges:ci bash scripts/ci/test-nginx-fallback.sh

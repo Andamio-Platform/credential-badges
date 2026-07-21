@@ -66,6 +66,21 @@ server {
         try_files $uri =404;
     }
 
+    # Bare-domain alias for the DID document. The did:web spec says a bare-domain
+    # DID resolves at /.well-known/did.json, but some resolvers deviate and fetch
+    # /did.json instead — the 1EdTech validator's resolver does exactly this (its
+    # one failing probe of 13 against our signed credential; issue #54 item 8).
+    # Serving the alias makes resolution robust to that deviation. The spec path
+    # above stays canonical; this location serves the SAME file via try_files, so
+    # there is one source of truth on disk — no second copy, no drift. Headers
+    # mirror the canonical block exactly.
+    location = /did.json {
+        types { }
+        default_type application/did+ld+json;
+        add_header Cache-Control "public, max-age=3600";
+        try_files /.well-known/did.json =404;
+    }
+
     # Badge imagery — static-first with on-demand render fallback (#33, KTD-4).
     #
     # `^~` makes this a prefix match that OWNS /badges/ and short-circuits the
