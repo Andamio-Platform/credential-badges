@@ -1,0 +1,28 @@
+{
+  "name": "credential-badges-issuer",
+  "version": "0.0.1",
+  "description": "Rung 8.4: the production issuer service — serves a signed OB3 Verifiable Credential for any registered badge on demand, hard-gated on a live on-chain anchor check. Inherits the hardened spike/signer-spike logic (issues #54, #58, #59).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node --experimental-strip-types src/main.ts",
+    "start:ephemeral": "SIGNER_MODE=ephemeral node --experimental-strip-types src/main.ts",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@digitalbazaar/data-integrity": "^2.5.0",
+    "@digitalbazaar/eddsa-rdfc-2022-cryptosuite": "^1.1.0",
+    "@digitalbazaar/vc": "^7.1.0",
+    "jsonld": "^8.3.2",
+    "jsonld-signatures": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {
+    "undici": "^6.27.0"
+  }
+}

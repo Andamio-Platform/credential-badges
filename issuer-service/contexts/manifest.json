@@ -1,0 +1,33 @@
+{
+  "_provenance": {
+    "note": "Vendored, version-pinned JSON-LD contexts for the closed document loader. Fetched 2026-07-21. These URLs are immutable published context versions; the loader integrity-checks the vendored bytes against this manifest at startup.",
+    "recordedAt": "2026-07-21"
+  },
+  "contexts": {
+    "https://www.w3.org/ns/credentials/v2": {
+      "file": "credentials-v2.json",
+      "sha256": "59955ced6697d61e03f2b2556febe5308ab16842846f5b586d7f1f7adec92734",
+      "bytes": 10131
+    },
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json": {
+      "file": "ob-v3p0-context-3.0.3.json",
+      "sha256": "3d34f4d4ef1bce691106e63798beb5e7b862ba841423f5ee1e53ab7ddf3bca84",
+      "bytes": 14565
+    },
+    "https://w3id.org/security/multikey/v1": {
+      "file": "multikey-v1.json",
+      "sha256": "ba2c182de2d92f7e47184bcca8fcf0beaee6d3986c527bf664c195bbc7c58597",
+      "bytes": 1010
+    },
+    "https://w3id.org/security/data-integrity/v2": {
+      "file": "data-integrity-v2.json",
+      "sha256": "67f21e6e33a6c14e5ccfd2fc7865f7474fb71a04af7e94136cb399dfac8ae8f4",
+      "bytes": 2609
+    },
+    "https://www.w3.org/ns/did/v1": {
+      "file": "did-v1.json",
+      "sha256": "4f3eae5568c9c5f036a082088f9e192019ee06faa78973c87ff91d5421b88dad",
+      "bytes": 1474
+    }
+  }
+}
