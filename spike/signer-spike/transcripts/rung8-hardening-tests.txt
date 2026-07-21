@@ -1,0 +1,42 @@
+# Rung-8 hardening — hermetic test run (mocked fetch, no network, no KMS)
+# Date: 2026-07-21 · node --experimental-strip-types --test *.test.ts
+
+✔ checkAnchor is SEALED: takes no parameters (no caller-supplied subject override) (0.9345ms)
+✔ gate passes on a faithful deep index, and byte-pins the hash-verified SLT texts (11.23675ms)
+✔ binary search finds a tx buried 9,000 rows deep in O(log pages) requests, not a linear scan (0.844084ms)
+✔ REFUSES when the claim tx is absent from the transactions index (1.305167ms)
+✔ REFUSES when the indexed slot does not match the pinned slot (0.453834ms)
+✔ REFUSES when the tx is indexed under a different event type (0.347375ms)
+✔ REFUSES a tampered claim event alias (0.099042ms)
+✔ REFUSES a claim event whose credentials do not include the pinned slt_hash (0.079708ms)
+✔ REFUSES tampered SLT text: hash(slts) != slt_hash (finding 3) (0.449958ms)
+✔ REFUSES an EMPTY slts array — never signs an empty narrative (finding 3) (0.612ms)
+✔ REFUSES when the module is missing from course details (0.340708ms)
+✔ REFUSES when the recipient's completed courses do not include the course (0.419542ms)
+✔ a poisoned cache entry cannot satisfy the key pin: fetchLiveDidDocument returns the NETWORK doc (13.440833ms)
+✔ every call to fetchLiveDidDocument hits the network — a rotation is visible in-process (0.664042ms)
+✔ document loader resolves the issuer verificationMethod from the NETWORK, not a poisoned cache (0.969541ms)
+✔ context-drift guard reads the NETWORK: a clean-looking cache entry cannot mask a drifted live context (1.1825ms)
+✔ clearContextCache removes the on-disk cache directory (0.892375ms)
+✔ loader still refuses anything outside the allowlist (0.6495ms)
+✔ matches the known urn-id TypeError from _validateUriId (0.361209ms)
+✔ does NOT match the same message on a plain Error (wrong class) (0.065666ms)
+✔ does NOT match a URI TypeError about a non-urn id (0.05025ms)
+✔ does NOT match real data-model violations that must abort the run (0.060125ms)
+✔ blake2b256: empty input (0.708ms)
+✔ blake2b256: 'abc' (0.596625ms)
+✔ blake2b256: multi-block input (bytes 0..255, exercises the compress loop) (0.17775ms)
+✔ encodeSltList: short strings use definite-length byte strings inside 0x9f...0xff (0.123292ms)
+✔ encodeSltList: >64-byte strings use Plutus chunked encoding (0x5f + 64-byte chunks + 0xff) (0.078541ms)
+✔ computeSltHash: empty list has a defined hash (the gate must still refuse to sign it) (0.112208ms)
+✔ computeSltHash: chunked-path vector (0.117708ms)
+✔ computeSltHash: real mainnet subject module derives the pinned slt_hash (0.141917ms)
+✔ computeSltHash: any tampering with the SLT text changes the hash (0.172125ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 88.460542

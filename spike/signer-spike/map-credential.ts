@@ -60,7 +60,10 @@ export function mapCredential(anchor: Anchor): any {
       id: ISSUER_DID,
       type: ["Profile", "AttestationHost"],
       name: "Andamio",
-      url: "https://credentials.andamio.io/issuer",
+      // Aligned with the hosted issuer profile (issue #54, finding 6): the
+      // live https://credentials.andamio.io/issuer document states
+      // url: "https://credentials.andamio.io".
+      url: "https://credentials.andamio.io",
       description:
         "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means.",
     },
