@@ -1,0 +1,23 @@
+# Rung 7 round-trip proof — 2026-07-21T17:44:03Z
+# badge: badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg
+# signed VC: spike/signer-spike/signed-credential.json
+
+$ node --experimental-strip-types tools/bake-signed-vc.ts extract badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg /tmp/extracted.json
+extracted 3523 bytes -> /tmp/extracted.json
+
+$ cmp spike/signer-spike/signed-credential.json /tmp/extracted.json && echo byte-identical
+byte-identical
+
+$ shasum -a 256 spike/signer-spike/signed-credential.json /tmp/extracted.json
+5f640faf1b446fc542b5974d7feff2a0359e17d269865f65259e194f0deb493d  spike/signer-spike/signed-credential.json
+5f640faf1b446fc542b5974d7feff2a0359e17d269865f65259e194f0deb493d  /tmp/extracted.json
+
+# provenance of the base SVG: committed badge (pre-bake, git HEAD d4ba16c) is
+# byte-identical to generator output — python3 generator/build.py <outdir>; cmp -> OK
+
+$ xmllint --noout badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg && echo well-formed
+well-formed
+
+$ python3 -c 'xml.etree parse; print root tag + dimensions'
+tag: {http://www.w3.org/2000/svg}svg
+viewBox: 0 0 1024 1024 | width: 1024 | height: 1024
