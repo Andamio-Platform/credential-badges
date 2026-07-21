@@ -21,10 +21,21 @@
 //      is the authoritative reference for this boot — drift is not silently
 //      accepted, the reference is the lockstep CI artifact. A loud warning is
 //      logged so operators see the unreachable-static-host condition.
+//      FALLBACK IS FOR UNREACHABILITY ONLY (tier-2 review F3): a network
+//      error or 5xx means the host cannot answer; an HTTP 4xx means the host
+//      ANSWERED and the artifact is not being served — that is drift (a
+//      botched static deploy would 404 did:web resolution for every verifier
+//      while this service happily signed). 4xx => DriftError, refuse to boot,
+//      no retry, no fallback.
 //   4. COMMITTED-CONTEXT LIVENESS: the live context/v0.jsonld must equal the
 //      bundled committed context (signing under a drifted context produces
-//      signatures third parties cannot reproduce). Same bounded retry + same
-//      bundled fallback semantics.
+//      signatures third parties cannot reproduce). Same bounded retry, same
+//      bundled fallback semantics, same 4xx-is-drift classification.
+//   5. STATUS-LIST LIVENESS + ACTIVE-KEY FRESHNESS (tier-2 review F2): the
+//      third lockstep artifact. The live status/key-epoch list must equal the
+//      bundled committed copy (same retry / fallback / 4xx-is-drift
+//      classification), AND the active key version's own status bit must be 0
+//      (fresh) — a suspended signing key must never boot a signer.
 //
 // The check returns the VERIFIED did.json document, which becomes the closed
 // document loader's boot-pinned did:web resolution for the life of the
@@ -40,7 +51,11 @@ import {
 } from "./config.ts";
 import {
   ACTIVE_KEY_VERSION,
+  ACTIVE_KEY_STATUS_INDEX,
   KEY_VERSION_POSITIONS,
+  STATUS_LIST_URL,
+  decodeStatusList,
+  statusBitAt,
 } from "./status-list.ts";
 import { loadCommittedAndamioContext } from "./document-loader.ts";
 
@@ -48,6 +63,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 // Dockerfile bakes the repo's committed .well-known/did.json at the same
 // relative location as in the repo checkout.
 const BUNDLED_DID_FILE = path.join(HERE, "..", "..", ".well-known", "did.json");
+// The committed key-epoch status list — the same bytes the static host serves.
+const BUNDLED_STATUS_FILE = path.join(
+  HERE, "..", "..", "status", "key-epoch-2026-07.json",
+);
 
 export const RETRY_DELAYS_MS = [200, 1_000, 5_000, 15_000, 30_000];
 
@@ -65,9 +84,19 @@ export interface DriftCheckDeps {
   /** Test seams for the bundled reference artifacts. */
   bundledDidDocument?: any;
   bundledAndamioContext?: any;
+  bundledStatusListCredential?: any;
   log?: (msg: string) => void;
 }
 
+// Fetch classification (tier-2 review F3):
+//   2xx            -> parsed JSON (mismatch handling is the caller's).
+//   4xx            -> DriftError, immediately: the host ANSWERED and is not
+//                     serving the lockstep artifact. That is a broken static
+//                     deploy, not unreachability — never retried, never
+//                     masked by the bundled fallback.
+//   5xx / network  -> the host cannot answer; retry on the bounded schedule,
+//                     then null (caller falls back to the bundled artifact
+//                     with a loud warning).
 async function fetchJsonWithRetry(
   url: string,
   fetchImpl: typeof fetch,
@@ -79,9 +108,15 @@ async function fetchJsonWithRetry(
       const res = await fetchImpl(url, {
         headers: { accept: "application/ld+json, application/json" },
       });
+      if (res.status >= 400 && res.status < 500) {
+        throw new DriftError(
+          `startup drift check: GET ${url} -> HTTP ${res.status} — the static host is answering but NOT serving this lockstep artifact (a verifier resolving it gets the same ${res.status}). Refusing to start.`,
+        );
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (e) {
+      if (e instanceof DriftError) throw e;
       if (i === delays.length) {
         log(`startup drift check: GET ${url} failed after ${i + 1} attempts: ${(e as Error).message}`);
         return null;
@@ -159,6 +194,40 @@ export async function runStartupDriftCheck(deps: DriftCheckDeps): Promise<{
   } else {
     log(
       `startup drift check WARNING: live ${ANDAMIO_CONTEXT_URL} unreachable — canonicalizing against the bundled committed context (the bytes the static host deploys).`,
+    );
+  }
+
+  // 5. Status-list liveness + active-key freshness (tier-2 review F2): the
+  // third lockstep artifact. Live must equal the bundled committed copy, and
+  // the ACTIVE key version's own status bit must read 0 (fresh) — booting a
+  // signer whose key epoch is suspended would emit credentials that every
+  // status-honoring verifier immediately reports suspended.
+  const bundledStatus =
+    deps.bundledStatusListCredential ?? JSON.parse(readFileSync(BUNDLED_STATUS_FILE, "utf8"));
+  const liveStatus = await fetchJsonWithRetry(STATUS_LIST_URL, fetchImpl, delays, log);
+  let statusReference: any;
+  if (liveStatus !== null) {
+    if (JSON.stringify(liveStatus) !== JSON.stringify(bundledStatus)) {
+      throw new DriftError(
+        `live ${STATUS_LIST_URL} drifted from the bundled committed status list — refusing to serve signing endpoints (the emitted credentialStatus would point at a list this build does not know)`,
+      );
+    }
+    statusReference = liveStatus;
+  } else {
+    statusReference = bundledStatus;
+    log(
+      `startup drift check WARNING: live ${STATUS_LIST_URL} unreachable — checking active-key freshness against the BUNDLED committed status list (lockstep CI artifact). Investigate the static host.`,
+    );
+  }
+  const encodedList = statusReference?.credentialSubject?.encodedList;
+  if (typeof encodedList !== "string") {
+    throw new DriftError(
+      `status list ${STATUS_LIST_URL} carries no credentialSubject.encodedList — refusing to serve signing endpoints`,
+    );
+  }
+  if (statusBitAt(decodeStatusList(encodedList), ACTIVE_KEY_STATUS_INDEX) !== 0) {
+    throw new DriftError(
+      `active key version ${ACTIVE_KEY_VERSION} is SUSPENDED (status bit ${ACTIVE_KEY_STATUS_INDEX} = 1 in ${STATUS_LIST_URL}) — refusing to serve signing endpoints (see docs/runbooks/key-compromise.md)`,
     );
   }
 

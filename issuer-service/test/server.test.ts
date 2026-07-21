@@ -33,10 +33,13 @@ interface Harness {
 async function startHarness(opts: {
   fixtureOpts?: FixtureFetchOpts;
   signerOverride?: RawSigner;
+  /** Wrap the harness signer (e.g. to gate when it may return). */
+  wrapSigner?: (base: RawSigner) => RawSigner;
 } = {}): Promise<Harness> {
   const ephemeral = makeEphemeralSigner();
   let signCalls = 0;
-  const baseSigner = opts.signerOverride ?? ephemeral.signer;
+  const inner = opts.signerOverride ?? ephemeral.signer;
+  const baseSigner = opts.wrapSigner ? opts.wrapSigner(inner) : inner;
   const countedSigner: RawSigner = {
     id: baseSigner.id,
     algorithm: baseSigner.algorithm,
@@ -142,6 +145,68 @@ test("cache prevents double-signing: a re-request serves byte-identical bytes wi
     const body2 = await res2.text();
     assert.equal(body2, body1, "cached artifact must be byte-identical");
     assert.equal(h.signCalls(), 1, "a re-request must not re-invoke the signer");
+  } finally {
+    await h.close();
+  }
+});
+
+test("singleflight: K concurrent cold requests for one coordinate produce exactly ONE gate+sign run", async () => {
+  // The signer is gated so the one flight provably stays open until every
+  // concurrent request has attached to it — no timing luck involved.
+  let releaseSign!: () => void;
+  const signGate = new Promise<void>((r) => (releaseSign = r));
+  const h = await startHarness({
+    wrapSigner: (base) => ({
+      ...base,
+      sign: async (input) => {
+        await signGate;
+        return base.sign(input);
+      },
+    }),
+  });
+  try {
+    const K = 5;
+    const pending = Array.from({ length: K }, () => fetch(h.url(GOOD_PATH)));
+    await new Promise((r) => setTimeout(r, 100)); // let all K handlers attach
+    releaseSign();
+    const responses = await Promise.all(pending);
+    const bodies = await Promise.all(responses.map((r) => r.text()));
+    for (const r of responses) assert.equal(r.status, 200);
+    for (const b of bodies) assert.equal(b, bodies[0], "all waiters must receive byte-identical artifacts");
+    assert.equal(h.signCalls(), 1, `${K} concurrent first requests must collapse onto one signer call`);
+    // The gate ran once too: exactly one global-state read happened.
+    const stateReads = h.scanCalls.filter((u) => u.endsWith(`/api/v2/users/${SUBJECT.alias}/state`));
+    assert.equal(stateReads.length, 1, "concurrent requests must not stampede the anchor gate");
+  } finally {
+    await h.close();
+  }
+});
+
+test("singleflight shares a failure with its waiters and is not sticky afterwards", async () => {
+  let releaseSign!: () => void;
+  const signGate = new Promise<void>((r) => (releaseSign = r));
+  const failing: RawSigner = {
+    id: "did:example:failing#key-1",
+    algorithm: "Ed25519",
+    sign: async () => {
+      await signGate;
+      throw new SigningError("KMS asymmetricSign -> HTTP 500");
+    },
+  };
+  const h = await startHarness({ signerOverride: failing });
+  try {
+    const pA = fetch(h.url(GOOD_PATH));
+    const pB = fetch(h.url(GOOD_PATH));
+    await new Promise((r) => setTimeout(r, 100)); // both attach to the one flight
+    releaseSign();
+    const [a, b] = await Promise.all([pA, pB]);
+    assert.equal(a.status, 502);
+    assert.equal(b.status, 502);
+    assert.equal(h.signCalls(), 1, "concurrent waiters share the failed flight's single signer call");
+    // A later request starts a NEW flight (the failed one was evicted).
+    const retry = await fetch(h.url(GOOD_PATH));
+    assert.equal(retry.status, 502);
+    assert.equal(h.signCalls(), 2, "a settled failed flight must not be served to later requests");
   } finally {
     await h.close();
   }
@@ -269,6 +334,29 @@ test("signing backend failure -> 502, no partial artifact, nothing cached", asyn
     // same way — still no partial artifact.
     const retry = await fetch(h.url(GOOD_PATH));
     assert.equal(retry.status, 502);
+  } finally {
+    await h.close();
+  }
+});
+
+test("signer returns a signature that fails the post-sign loopback verify -> 502 signing-unavailable (not 500), nothing cached", async () => {
+  // The signer "succeeds" but returns garbage: a well-formed 64-byte value
+  // that is not a valid Ed25519 signature over the proof input. The loopback
+  // verify is what catches it — a broken signing backend, 502 not 500.
+  const garbage: RawSigner = {
+    id: "did:example:garbage#key-1",
+    algorithm: "Ed25519",
+    sign: async () => new Uint8Array(64),
+  };
+  const h = await startHarness({ signerOverride: garbage });
+  try {
+    const res = await fetch(h.url(GOOD_PATH));
+    assert.equal(res.status, 502);
+    assert.equal((await res.json()).error, "signing-unavailable");
+    // Nothing was cached: a retry re-runs the pipeline (and fails again).
+    const retry = await fetch(h.url(GOOD_PATH));
+    assert.equal(retry.status, 502);
+    assert.equal(h.signCalls(), 2);
   } finally {
     await h.close();
   }

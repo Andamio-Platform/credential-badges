@@ -43,7 +43,7 @@ byte-identical.
 | 404    | `unknown-badge`       | not in the repo badge registry (`generator/credentials.json`) |
 | 404    | `unknown-claim`       | the chain has nothing at this coordinate (not in the recipient's global-state credential map / no claim event) |
 | 422    | `anchor-mismatch`     | chain data exists but **conflicts** — e.g. SLT text no longer hashes to the on-chain commitment; the body says why |
-| 502    | `signing-unavailable` | KMS failure — never a partial artifact |
+| 502    | `signing-unavailable` | KMS failure, or a signer-returned proof that fails the post-sign loopback verify — never a partial artifact |
 | 503    | `upstream-unavailable`| Andamioscan / badge host unreachable — never surfaced as a refusal |
 
 `GET /healthz` is the Cloud Run liveness endpoint. Nothing else is served:
@@ -65,17 +65,24 @@ static host (the LB routes only `/credentials/*` here).
   re-derived from chain reads.
 - **Fail-closed startup drift check** (plan Decision 4 / P1-06): before the
   listener opens, the service proves its KMS key version's public key is the
-  one published in the **live** `did.json` (bounded retry; the bundled
-  lockstep CI copy is the reference only when the static host is unreachable),
-  that the live Andamio context equals the committed bytes, and that the
-  active key version has a bit position in the key-version registry. Any
-  mismatch kills the boot — drift is a loud startup failure, never a silently
-  broken signature.
+  one published in the **live** `did.json`, that the live Andamio context and
+  the live key-epoch status list equal the committed bytes, that the active
+  key version has a bit position in the key-version registry, and that the
+  active key's own status bit reads **fresh**. Bounded retry; the bundled
+  lockstep CI copies are the reference only when the static host is
+  **unreachable** (network error / 5xx) — an HTTP **4xx is drift**, not
+  unreachability: the host answering without the artifact is a broken static
+  deploy and refuses the boot. Any mismatch kills the boot — drift is a loud
+  startup failure, never a silently broken signature. The check is
+  **boot-only**: rotation requires flushing/redeploying issuer instances
+  (see `docs/runbooks/key-compromise.md`).
 - **Cache-no-double-sign**: signed artifacts are cached keyed by
   `(network, courseId, sltHash, recipientAsset, keyVersion)` — a re-request
   serves byte-identical bytes with **zero** KMS calls. Per issuance, the
   signer seam is asserted to have been invoked **exactly once** before the
-  artifact is cached or served (finding 1). An optional second-level
+  artifact is cached or served (finding 1). Cache misses are
+  **singleflighted per cache key**: K concurrent first requests for the same
+  coordinate collapse onto one gate + sign run. An optional second-level
   `ArtifactStore` seam (GCS-shaped) exists for cross-instance persistence;
   no GCS client ships in this build.
 - **Closed document loader**: the W3C/OB3/security contexts are vendored and
@@ -86,6 +93,32 @@ static host (the LB routes only `/credentials/*` here).
   (including its status bit) before it leaves the process.
 - **Registered badges only**: requests outside `generator/credentials.json`
   are refused before any chain read.
+
+## Rate limiting & abuse
+
+**There is no service-level rate limiting, by design.** Enforcement lives at
+the load-balancer / Cloud Armor layer, not in this process; the Cloud Run
+ingress must be **internal-and-cloud-load-balancing** so the LB path is the
+only path (the ops PR B delta). What the service itself does bound:
+
+- **Miss-flood cost against Andamioscan**: every uncached request runs the
+  anchor gate's live reads. A flood of requests for coordinates that do not
+  exist on chain (guaranteed cache misses) turns into Andamioscan load — the
+  registry check bounds it to registered badges, but the recipient segment is
+  unbounded. Mitigation is the LB layer plus the tracked follow-ups below.
+- **Cold-start discovery-scan cost**: an uncached recipient whose claim is
+  not in the warm locator cache triggers the newest-first discovery scan of
+  the transactions index — O(index pages) against Andamioscan in the worst
+  case, per cold coordinate.
+- **KMS spend**: bounded by **singleflight per cache key** (implemented) — K
+  concurrent first requests for one coordinate produce exactly one gate + one
+  KMS sign — and by the signed-artifact cache (a warm hit costs zero KMS
+  calls and zero chain reads).
+
+Tracked mitigations beyond this build: the second-level artifact store (the
+GCS-shaped `ArtifactStore` seam, so cache warmth survives restarts and spans
+instances) and a filtered claims endpoint on Andamioscan (replacing the
+discovery scan with one indexed query).
 
 ## Signing seam
 

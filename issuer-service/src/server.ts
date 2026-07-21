@@ -5,6 +5,8 @@
 //   validate params (400, zero upstream calls)
 //     -> badge registry (404 before any chain read)
 //     -> signed-artifact cache (a hit serves bytes with ZERO signer calls)
+//     -> singleflight per cache key (concurrent first requests for the same
+//        coordinate collapse onto ONE gate+sign run)
 //     -> anchor gate (404 unknown-claim / 422 anchor-mismatch, zero KMS ops)
 //     -> map (final dialect) -> sign (exactly once, asserted)
 //     -> post-sign loopback verify (incl. status bit)
@@ -19,7 +21,9 @@
 //   422 anchor-mismatch       (chain data CONFLICTS with the coordinate; the
 //                              body says why — e.g. SLT text no longer hashes
 //                              to the on-chain commitment)
-//   502 signing-unavailable   (KMS/signing failure — never a partial artifact)
+//   502 signing-unavailable   (KMS/signing failure, including a signer-
+//                              returned proof that fails the post-sign
+//                              loopback verify — never a partial artifact)
 //   503 upstream-unavailable  (Andamioscan / badge host unreachable)
 //
 // The service registers NO other public route (plan Unit 4: everything
@@ -89,6 +93,13 @@ function sendCredential(res: http.ServerResponse, artifact: string): void {
 export function createRequestHandler(deps: AppDeps) {
   const log = deps.log ?? ((m: string) => console.error(m));
   const locatorCache = new Map<string, { txHash: string; slot: number }>();
+  // Singleflight per cache key (tier-2 review F4): K concurrent first
+  // requests for the same coordinate collapse onto ONE gate + sign run —
+  // without it, a cold-cache stampede costs K KMS signs and K discovery
+  // scans. Entries are removed as soon as the flight settles; a rejected
+  // flight is shared with its waiters (each maps the error independently)
+  // and the next request starts fresh.
+  const inflight = new Map<string, Promise<string>>();
   const documentLoader = makeDocumentLoader({
     didDocument: deps.didDocument,
     overrides: deps.signerOverrides ?? {},
@@ -176,7 +187,7 @@ export function createRequestHandler(deps: AppDeps) {
       log(`artifact cache read failed for ${cacheKey}: ${(e as Error).message}`);
     }
 
-    try {
+    const produceArtifact = async (): Promise<string> => {
       // THE GATE. Signing is unreachable unless the live on-chain anchor
       // check passes — zero KMS calls on any refusal.
       const anchor = await checkAnchor(
@@ -214,8 +225,17 @@ export function createRequestHandler(deps: AppDeps) {
         );
       }
 
-      // Never serve what does not verify (includes the status bit).
-      await verifyWith(signed, documentLoader, checkStatus);
+      // Never serve what does not verify (includes the status bit). A KMS-
+      // returned signature that fails the loopback verify is a broken signing
+      // backend, not an internal bug — classified as SigningError so the
+      // caller sees 502 signing-unavailable (tier-2 review F7).
+      try {
+        await verifyWith(signed, documentLoader, checkStatus);
+      } catch (e) {
+        throw new SigningError(
+          `post-sign loopback verification of the signer-returned proof failed: ${(e as Error).message}`,
+        );
+      }
 
       // 1EdTech OB3 Plain-JSON schema requires proof in array form.
       if (!Array.isArray(signed.proof)) signed.proof = [signed.proof];
@@ -226,7 +246,19 @@ export function createRequestHandler(deps: AppDeps) {
       } catch (e) {
         log(`artifact cache write failed for ${cacheKey}: ${(e as Error).message}`);
       }
-      sendCredential(res, artifact);
+      return artifact;
+    };
+
+    try {
+      let flight = inflight.get(cacheKey);
+      if (!flight) {
+        flight = produceArtifact();
+        inflight.set(cacheKey, flight);
+        // Clear the entry when the flight settles; swallow here — every
+        // waiter (including this request) handles the rejection itself.
+        flight.catch(() => {}).finally(() => inflight.delete(cacheKey));
+      }
+      sendCredential(res, await flight);
     } catch (e) {
       if (e instanceof GateRefusal) {
         sendJson(res, e.kind === "unknown-claim" ? 404 : 422, {

@@ -37,6 +37,15 @@ name: deploy-issuer
 #        ISSUER_WIF_PROVIDER     the sign-lane WIF provider resource name (3)
 #        ISSUER_CICD_SA          the issuer-lane deploy SA email (3)
 #        ISSUER_KMS_KEY_VERSION  full CryptoKeyVersion resource name (1)/(5)
+#
+# SECOND-ORDER TRAP — ISSUER_KMS_KEY_VERSION GATES BUT DOES NOT CONFIGURE:
+# the ops-gate step below refuses to run while the variable is unset, but the
+# deploy step is deliberately IMAGE-ONLY — the service's runtime env (incl.
+# KMS_KEY_VERSION_NAME), its SA, and scaling are owned by the private-ops
+# Terraform. Changing this repo variable does NOT change which key the
+# running service signs with; only the Terraform delta does. Keep the two in
+# sync manually or the gate will pass while the runtime signs under the old
+# key version (the boot drift check is the backstop that catches the skew).
 
 on:
   push:

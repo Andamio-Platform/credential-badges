@@ -48,6 +48,10 @@ async function main(): Promise<void> {
     const { didDocument, didSource } = await runStartupDriftCheck({
       verificationMethodId: VERIFICATION_METHOD_ID,
       getOwnPublicKeyMultibase: () => signer.getPublicKeyMultibase(),
+      // The same committed bytes the post-sign status check serves against —
+      // the drift check proves the LIVE list equals them and that the active
+      // key's own bit is fresh.
+      bundledStatusListCredential: statusListCredential,
     });
     console.error(
       `startup drift check PASSED (did.json source: ${didSource}; key ${VERIFICATION_METHOD_ID})`,

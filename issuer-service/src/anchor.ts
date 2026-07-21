@@ -338,6 +338,17 @@ export async function checkAnchor(s: Subject, deps: GateDeps): Promise<Anchor> {
     );
   if (typeof course.owner !== "string" || course.owner.length === 0)
     refuse("anchor-mismatch", `course ${s.courseId} details carry no owner alias`);
+  // Tier-2 review F6 asked for a registry-vs-chain title cross-check here.
+  // NOT IMPLEMENTABLE: the chain does not commit to titles. Verified live
+  // 2026-07-21 — /api/v2/courses/{id}/details carries only course_address /
+  // course_id / owner / student_state_id / modules[{slt_hash, module:{slts,
+  // prerequisites}, created_by}] / teachers / students / past_students, and
+  // no other Andamioscan course surface exposes a title either. What the
+  // chain DOES commit to about the module's content — the SLT texts behind
+  // slt_hash — is byte-verified above (Blake2b over the Plutus Data CBOR).
+  // course_title / module_title are display metadata whose source of truth is
+  // the CODEOWNERS-gated repo registry (generator/credentials.json), the same
+  // source the badge SVGs render from.
 
   // 5. Recipient's completed courses include this course.
   const completed = await hit(`/api/v2/users/${s.alias}/courses/completed`);
