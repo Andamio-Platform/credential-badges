@@ -10,6 +10,7 @@ Start here when you open the repo for the first time.
 | `/context/v0.jsonld` | `context/v0.jsonld` | no (versioned, `immutable` cache) | Pre-stable JSON-LD context for Andamio's OB 3.0 extension terms (`AttestationHost`, `OnChainCredentialAnchor`, `onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). `AttestationHost` (Rung 4) is what the issuer `Profile` references; edits propagate in ≤24h despite the `immutable` header (harmless — nothing references it in a signed credential yet). |
 | `/issuer` | `issuer/profile.jsonld` | yes (cached, not `immutable`) | Hosted OB 3.0 issuer `Profile`, typed `["Profile","AttestationHost"]` with `id` = `did:web:credentials.andamio.io` (Rung 4 — Profile, `did.json`, and future `issuer.id` name one subject; `url` stays the homepage). Strict verifiers dereference `issuer.url` here; nginx exact-match serves the extensionless path as `application/ld+json`. **Nothing signs against it yet.** `tools/issuer-profile.test.ts` pins the shape. |
 | `/.well-known/did.json` | `.well-known/did.json` | yes (cached, not `immutable`; mutable on key rotation) | `did:web:credentials.andamio.io` DID document. Publishes the issuer signing key (`#key-2026-07`, pinned to KMS `vc-sign-ed25519` v1). Served exact-match as `application/did+ld+json`. **The key is only published here, nothing signs yet** (OB 3.0 signing is a later rung). Regenerate with `tools/gen-did-json.ts`; the key-pin invariant test guards drift. |
+| `/status/key-epoch-2026-07.json` | `status/key-epoch-2026-07.json` | yes (`max-age=3600`; mutable on a kill-switch flip) | Signed key-epoch `BitstringStatusList` credential (Rung 8.3, plan Decision 3): `statusPurpose: "suspension"`, one bit per signing key version, bit 0 = `#key-2026-07`. Built by `spike/signer-spike/status-list.ts`, signed via `sign-status-list.ts`, sha-pinned in CI. Flipping a bit = the key-compromise kill-switch — see [`docs/runbooks/key-compromise.md`](docs/runbooks/key-compromise.md). |
 | `/badges/*.svg` (+ `.png`) | `badges/` | yes (cached, not `immutable`) | Presentation-layer badge imagery referenced by `achievement.image`. Never identity-bearing — the on-chain anchor is the credential's identity. **Build output — see [Badge generator](#badge-generator); regenerate with `make badges`.** |
 | `/` | nginx config | n/a | Tiny 200 landing page (keeps health probes trivial; pointer for humans). |
 
@@ -60,6 +61,13 @@ Infra (out of repo): GCS cache bucket, render runtime SA (`credential-badges-ren
 | `generator/credentials.json` | Data snapshot — one row per credential (course_id, slt_hash, titles). |
 
 Not served (build tooling) — excluded from the Docker allowlist.
+
+## Runbooks
+
+| File | Role |
+|---|---|
+| `docs/runbooks/key-compromise.md` | **Signing-key compromise kill-switch** (Rung 8.6; production-signing precondition). Trigger criteria, status-bit-flip containment via `tools/flip-status-bit.ts` (prepares, never signs) + hardened re-sign, required cross-verifier read of the flipped live list, DID-method removal + additive key replacement, re-issuance, false-alarm stand-down. |
+| `docs/runbooks/gateway-key.md` | Gateway `X-API-Key` provisioning + rotation + compromise response (Secret Manager, network-scoped keys, dedicated service key). |
 
 ## Planning
 
