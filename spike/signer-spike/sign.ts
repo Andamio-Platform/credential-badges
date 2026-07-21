@@ -48,6 +48,7 @@ import * as vc from "@digitalbazaar/vc";
 import jsigs from "jsonld-signatures";
 
 import { checkAnchor } from "./check-anchor.ts";
+import { makeCheckStatus } from "./check-status.ts";
 import { isKnownUrnIdDataModelError } from "./issue-error.ts";
 import { mapCredential } from "./map-credential.ts";
 import {
@@ -156,7 +157,9 @@ function makeLocalSigner(): { signer: RawSigner; overrides: Record<string, any> 
   };
 }
 
-async function assertKmsKeyPinnedToLiveDid(): Promise<void> {
+// Exported for sign-status-list.ts (Rung 8.3), which runs the same pin before
+// its one KMS call.
+export async function assertKmsKeyPinnedToLiveDid(): Promise<void> {
   const pem = execFileSync("gcloud", KMS_GET_PUBKEY_ARGS, { encoding: "utf8" });
   const kmsMultibase = rawPublicKeyToMultibase(spkiPemToRawPublicKey(pem));
   // fetchLiveDidDocument NEVER reads the disk cache (finding 2): this pin is
@@ -210,12 +213,19 @@ export async function issueWith(
   }
 }
 
-export async function verifyWith(signed: any, documentLoader: any): Promise<void> {
+export async function verifyWith(
+  signed: any,
+  documentLoader: any,
+  checkStatus?: (opts: { credential: any }) => Promise<any>,
+): Promise<void> {
   const suite = new DataIntegrityProof({ cryptosuite: eddsaRdfc2022 });
   const r: any = await vc.verifyCredential({
     credential: signed,
     suite,
     documentLoader,
+    // Required by @digitalbazaar/vc whenever the credential carries
+    // credentialStatus (Rung 8.3: the subject credential now does).
+    ...(checkStatus ? { checkStatus } : {}),
   });
   if (!r.verified) {
     const nested = r.error?.errors?.map((e: any) => e.message).join("; ");
@@ -281,7 +291,7 @@ async function main() {
     credential.issuer = { ...credential.issuer, id: signer.id.split("#")[0] };
     const signed = await issueWith(credential, signer, loader, anchor.blockTime);
     console.log(`signer seam invocations: ${signerInvocations}`);
-    await verifyWith(signed, loader);
+    await verifyWith(signed, loader, makeCheckStatus());
     assertSignedExactlyOnce("local");
     const outFile = path.join(OUT, "credential-local.json");
     await writeArtifactAtomically(outFile, JSON.stringify(signed, null, 2) + "\n");
@@ -296,7 +306,7 @@ async function main() {
   const signer = makeKmsSigner();
   const signed = await issueWith(credential, signer, loader, anchor.blockTime);
   console.log(`KMS asymmetric-sign calls: ${kmsCalls}`);
-  await verifyWith(signed, loader);
+  await verifyWith(signed, loader, makeCheckStatus());
   assertSignedExactlyOnce("kms");
 
   // 1EdTech OB3 Plain-JSON schema requires proof in array form.

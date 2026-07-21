@@ -81,6 +81,33 @@ server {
         try_files /.well-known/did.json =404;
     }
 
+    # Key-epoch BitstringStatusList credentials (Rung 8.3, deployment plan
+    # Decision 3). Subject credentials point into /status/ from their
+    # credentialStatus entry; verifiers dereference the URL to read the
+    # key-version suspension bit. The W3C Bitstring Status List spec
+    # prescribes no single media type ("might be any media type registered
+    # for the purpose of expressing a verifiable credential") and lists
+    # application/ld+json among the acceptable forms — the files ARE JSON-LD
+    # VCs, so serve exactly that. Prefix match (`^~` so the generic .json
+    # handling and regex locations never shadow it) covering the WHOLE
+    # /status/ tree: the next key-epoch file inherits these headers
+    # automatically instead of needing a new exact-match block (which would
+    # silently serve application/json until someone remembered). The stock
+    # mime.types maps the .json extension to application/json, which would
+    # override default_type, so the Rung-3-style empty `types {}` block
+    # clears the extension map for this location. Status lists are MUTABLE
+    # on a compromised-key bit flip — the whole point is that the flip
+    # propagates — so cached briefly and NOT immutable (same TTL as
+    # did.json). Serving stays allowlist-gated per file: only files COPY'd
+    # by the Dockerfile + passed by scripts/ci/check-allowlist.sh exist on
+    # disk, so a wider location adds no serving surface.
+    location ^~ /status/ {
+        types { }
+        default_type application/ld+json;
+        add_header Cache-Control "public, max-age=3600";
+        try_files $uri =404;
+    }
+
     # Badge imagery — static-first with on-demand render fallback (#33, KTD-4).
     #
     # `^~` makes this a prefix match that OWNS /badges/ and short-circuits the
@@ -149,7 +176,7 @@ server {
         # Content-Type on top of the server default_type (octet-stream),
         # producing a malformed double header on the root response.
         default_type text/plain;
-        return 200 "Andamio credential contexts\n\nPublished JSON-LD contexts:\n  /context/v0.jsonld\n\nHosted issuer profile:\n  /issuer\n\nBadge imagery:\n  /badges/\n\nCredential designer:\n  /design/\n\nSee https://github.com/Andamio-Platform/credential-badges\n";
+        return 200 "Andamio credential contexts\n\nPublished JSON-LD contexts:\n  /context/v0.jsonld\n\nHosted issuer profile:\n  /issuer\n\nCredential status list:\n  /status/key-epoch-2026-07.json\n\nBadge imagery:\n  /badges/\n\nCredential designer:\n  /design/\n\nSee https://github.com/Andamio-Platform/credential-badges\n";
     }
 
     location / {

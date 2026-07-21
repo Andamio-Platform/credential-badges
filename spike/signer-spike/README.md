@@ -1,11 +1,18 @@
-# signer-spike (Rung 6)
+# signer-spike (Rung 6, hardened at Rung 8, finalized at Rung 8.3)
 
 One cryptographically signed OB3 Verifiable Credential for a **real mainnet
 Andamio credential**, signed with the **production GCP KMS Ed25519 key**,
 hard-gated on a **live on-chain anchor check**, and verified by independent
 verifiers. The first time a real Andamio credential got a real signature.
 
-The committed artifact is [`signed-credential.json`](./signed-credential.json).
+The committed artifact is [`signed-credential.json`](./signed-credential.json) —
+since Rung 8.3 in its FINAL production shape: the deployment plan's flat
+`evidence` anchor dialect (`network`/`policyId`/`asset`/`claimTxHash`),
+top-level `courseOwner` attribution (assessor omitted — the on-chain record
+names none), and a `credentialStatus` BitstringStatusListEntry pointing at the
+served key-epoch status list ([`status/key-epoch-2026-07.json`](../../status/key-epoch-2026-07.json),
+signed with the same key; `statusPurpose: "suspension"`, one bit per key
+version, bit 0 = `#key-2026-07` = 0).
 
 ## The subject credential (full identifiers, re-derived live from Andamioscan)
 
@@ -113,13 +120,24 @@ npm install
 npm run check-anchor     # anchor gate only; writes out/anchor.json
 npm run map              # gate + unsigned credential; writes out/credential-unsigned.json
 npm run sign:local       # gate + loopback sign/verify with an ephemeral key (no KMS)
+npm run sign:status      # gate + key-pin check + ONE KMS sign of the key-epoch
+                         #   status list -> writes ../../status/key-epoch-2026-07.json
 npm run sign:kms         # gate + key-pin check + ONE KMS sign + live-did verify
                          #   -> writes ./signed-credential.json
 npm run verify           # standalone digitalbazaar verify of the committed artifact
-                         #   (resolves production did:web live)
+                         #   (resolves production did:web live; add `-- --status live`
+                         #   post-deploy to check the LIVE status list instead of the
+                         #   committed file)
 npm run test             # Rung-8 hardening tests — hermetic (mocked fetch, no KMS)
 npm run resign-check     # ONE deterministic KMS re-sign of the committed artifact;
                          #   proves byte-stability, writes nothing
+
+# CONTEXT_AHEAD_OF_LIVE_OK=1 is a PER-DEPLOY-WINDOW flag, not standing
+# workflow: it exists only for the window between committing an additive
+# context change and the deploy that publishes it, and signing/verify runs
+# are prefixed with it ONLY inside that window (see Decisions #6 below).
+# Once the live context matches the committed one, run without it — the
+# strict-equality drift guard is the normal posture.
 
 # spruce (independent verifier #1):
 cd ../verifier-spike/verifiers/spruce
@@ -138,38 +156,50 @@ granted to it — see PR body).
 
 ## Verification results
 
+Rung 8.3 (the current artifact — flat evidence + courseOwner + credentialStatus):
+
+| verifier | result | transcript |
+|----------|--------|------------|
+| spruceid/ssi v0.16 (`spruce-verify`, production did:web resolved live, committed context vendored) | **VALID, errors=0, warnings=0** | `transcripts/rung83-spruce.txt` |
+| spruceid/ssi v0.16 on the STATUS LIST credential (`status/key-epoch-2026-07.json`) | **VALID, errors=0, warnings=0** | `transcripts/rung83-spruce-status-list.txt` |
+| digitalbazaar loopback (`verify-loopback.ts`, live did:web + status check) | **verified: YES** | `transcripts/rung83-digitalbazaar-loopback.txt` |
+| 1EdTech public validator (headless) | 12/13 probes pass; 1 error from `EmbeddedProofProbe` — **expected until deploy**: the validator expands against the LIVE context, which gains the Rung-8.3 terms only when this branch deploys. Re-run post-deploy; expected 13/13. | `transcripts/rung83-1edtech-full.json` |
+
+Rung 6/8.2 (the previous artifact, for the record):
+
 | verifier | result | transcript |
 |----------|--------|------------|
 | spruceid/ssi v0.16 (`spruce-verify`, production did:web resolved live) | **VALID, errors=0, warnings=0** | `transcripts/spruce.txt` |
 | digitalbazaar loopback (`verify-loopback.ts`, live did:web) | **verified: YES** | `transcripts/digitalbazaar-loopback.txt` |
-| 1EdTech public validator (headless) | 12/13 probes pass; 1 error from its did:web resolver fetching the bare-domain DID at `/did.json` instead of the spec's `/.well-known/did.json` (which is live and correct) | `transcripts/1edtech.md`, `transcripts/1edtech-full.json` |
+| 1EdTech public validator (headless) | 12/13 probes pass; 1 error from its did:web resolver fetching the bare-domain DID at `/did.json` instead of the spec's `/.well-known/did.json` (fixed by the `/did.json` alias, PR #57) | `transcripts/1edtech.md`, `transcripts/1edtech-full.json` |
 
 ## Decisions taken (documented deviations)
 
-1. **No `credentialStatus` in this artifact.** The production status list is
-   not served yet (`https://credentials.andamio.io/status/*` is 404). Pointing
-   a production-signed credential at the rung-1 throwaway status list (signed
-   by a throwaway DID on workshop-maybe.github.io) would be semantically wrong
-   for an artifact destined for the live badge. **Rung 8** hosts
-   `/status/key-epoch-2026-07.json` (131,072-bit BitstringStatusList,
-   `statusPurpose: "suspension"`, bit 0 = `key-2026-07`) and adds the entry.
-   All three verifiers here treat `credentialStatus` as optional; the set
-   stays green.
-2. **No top-level `courseOwner` / `assessor` fields.** The LIVE production
-   context does not register those terms yet (the plan's P1bis-04 context
-   update has not shipped to the static host). Emitting them would abort
-   safe-mode canonicalization, or worse, leave them silently uncovered by the
-   signature for any verifier expanding against the live context. Rung 8 ships
-   the context update first, then the mapper adds the fields.
-3. **The anchor rides inside `evidence`** (typed
-   `["OnChainCredentialAnchor", "Evidence"]`, the plan-locked array form) as
-   the nested `onChainAnchor` (`network`, `policyId`, `claimTxHash`) and
-   `onChainAttestation` (`policyId`, `sltHash`) blocks — the two scoped terms
-   the live context actually defines. `policyId` **is** the course id
-   (an Andamio V2 course's id is its mint policy). The rung-1 flat evidence
-   fields (`network`/`policyId`/`asset`/`claimTxHash` at the entry top level)
-   require top-level term registrations that only the throwaway spike context
-   had; flattening in production is Rung 8 context work.
+1. ~~**No `credentialStatus` in this artifact.**~~ **SUPERSEDED at Rung 8.3.**
+   The repo now hosts `/status/key-epoch-2026-07.json` (131,072-bit
+   BitstringStatusList, `statusPurpose: "suspension"`, bit 0 = `key-2026-07`,
+   signed by the production did:web via the hardened path —
+   `sign-status-list.ts`), and the artifact carries the matching
+   `BitstringStatusListEntry` (`statusListIndex: "0"` = the signing key
+   version's registry position; see `status-list.ts`).
+2. ~~**No top-level `courseOwner` / `assessor` fields.**~~ **SUPERSEDED at
+   Rung 8.3.** The P1bis-04 context update registers `courseOwner` and
+   `assessor` in `context/v0.jsonld` (additive; existing terms byte-untouched),
+   and the mapper emits `courseOwner`
+   (`urn:andamio:mainnet:course-owner:gjames`). `assessor` stays omitted for
+   THIS credential because the on-chain record names no assessor — that is the
+   plan's omit-never-blank rule, not a deviation.
+3. ~~**The anchor rides inside `evidence` as nested blocks.**~~ **SUPERSEDED
+   at Rung 8.3.** The context update registers the flat anchor terms
+   (`network`, `policyId`, `asset`, `claimTxHash`) top-level, and the evidence
+   entry now carries the plan's Decision-2 flat dialect ("no other field name
+   is correct"). `policyId` **is** the course id; `asset` is the recipient's
+   Access Token global-state asset (`gjames`) — Course V2 mints no
+   per-credential native asset (the claim burns the course-state token and
+   updates the recipient's global state), so the student-state asset is the
+   honest fill for the plan's anchor field set. The nested
+   `onChainAnchor`/`onChainAttestation` scoped terms remain defined in the
+   context (it evolves additively only) but are no longer emitted.
 4. **`proof` committed in array form** (1EdTech OB3 Plain-JSON schema
    requirement, rung-1 finding #2).
 5. **Direct KMS access instead of SA impersonation.** Impersonating
@@ -177,13 +207,44 @@ granted to it — see PR body).
    denied for `james@andamio.io` (no `iam.serviceAccountTokenCreator`); direct
    `get-public-key` / `asymmetric-sign` succeed. Signing behavior is identical
    (same key version, same PureEdDSA semantics).
+6. **Rung 8.3 pre-deploy transitional state (context ahead of live).** The
+   committed `context/v0.jsonld` is an additive superset of the live one until
+   the next deploy ships it. Signing/verifying locally therefore ran with
+   `CONTEXT_AHEAD_OF_LIVE_OK=1`, which the document loader honors ONLY when
+   the committed context differs from the live fetch by nothing but NEW
+   top-level term keys inside `"@context"` — an added key INSIDE an existing
+   term's definition changes how existing documents expand and refuses like
+   any other divergence (review follow-up ADV-2 tightened this; the earlier
+   check accepted additions at any depth). Without the env var the strict
+   equality gate is unchanged. This is a PER-DEPLOY-WINDOW flag, not standing
+   workflow: set it only between committing an additive context change and
+   the deploy that publishes it, then drop it. Until the deploy, third
+   parties expanding against the LIVE context cannot reproduce the signature —
+   the 1EdTech `EmbeddedProofProbe` failure below is exactly that, expected
+   until deploy. Likewise `checkStatus` reads the COMMITTED `status/` file
+   (the exact bytes the deploy will serve) because the status URL is 404
+   until deploy; the live re-check happens post-tag.
 
-## What Rung 7 does next
+   What "additive" does and does not guarantee (review follow-up ADV-4): the
+   context change is **expansion-invariant for all SIGNED artifacts** —
+   mechanically verified by `expansion-pin.dep-test.ts` (CI job
+   `expansion-pin`), which expands the committed `signed-credential.json` and
+   `status/key-epoch-2026-07.json` under the committed context and pins the
+   canonical RDF dataset hash, so no future context PR can silently change
+   what the committed proofs were computed over. It is NOT expansion-invariant
+   for the 58 v1.0 UNSIGNED badges: their embedded credentials gain one
+   previously-dropped triple (`network`, now registered and picked up via the
+   compact-IRI key path). Harmless — no proofs exist on them, so there is no
+   signature to break.
 
-Bake this signed VC into the `verify=` attribute of the **live badge SVG** —
-`<openbadges:credential verify="...">` on
-`/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg` —
+## Ladder state
+
+Rung 7 baked the signed VC into the **live badge SVG**
+(`/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg`,
+re-baked at Rung 8.3 with the final-shape artifact — `tools/bake-signed-vc.ts`),
 so the picture of the badge carries its own independently verifiable
-credential. (Rung 8 then adds the status list, the context-v0 term update, the
-`/did.json` alias for the 1EdTech resolver, and productionizes the signer as
-the issuer service.)
+credential. Rung 8.1 shipped the `/did.json` alias for the 1EdTech resolver
+(PR #57); Rung 8.2 hardened this signer (PR #58); Rung 8.3 shipped the
+context-v0 term update, the served key-epoch status list, and the final-shape
+re-sign + re-bake. What remains on the ladder: productionizing the signer as
+the issuer service, and `tools/flip-status-bit.ts` + the status-flip runbook.

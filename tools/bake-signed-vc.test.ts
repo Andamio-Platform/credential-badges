@@ -103,7 +103,7 @@ test("embedded VC: proof block matches the signed credential exactly", () => {
   assert.ok(embedded.proof[0].proofValue.startsWith("z"));
 });
 
-test("embedded VC: anchor identifiers match the signed subject exactly", () => {
+test("embedded VC: anchor identifiers match the signed subject exactly (Rung 8.3 flat dialect)", () => {
   const embedded = JSON.parse(extractVc(badgeSvg));
   assert.equal(
     embedded.id,
@@ -113,17 +113,33 @@ test("embedded VC: anchor identifiers match the signed subject exactly", () => {
     embedded.credentialSubject.achievement.id,
     `urn:andamio:course:${COURSE_ID}:${SLT_HASH}`,
   );
+  // Decision-2 FLAT evidence dialect — network/policyId/asset/claimTxHash at
+  // the entry top level; the Rung-6 nested onChainAnchor/onChainAttestation
+  // blocks are superseded and must be gone.
   const evidence = embedded.evidence[0];
-  assert.deepEqual(evidence.onChainAnchor, {
-    network: "mainnet",
-    policyId: COURSE_ID,
-    claimTxHash: CLAIM_TX,
-  });
-  assert.deepEqual(evidence.onChainAttestation, {
-    policyId: COURSE_ID,
-    sltHash: SLT_HASH,
-  });
+  assert.deepEqual(evidence.type, ["OnChainCredentialAnchor", "Evidence"]);
+  assert.equal(evidence.network, "mainnet");
+  assert.equal(evidence.policyId, COURSE_ID);
+  assert.equal(evidence.asset, "gjames");
+  assert.equal(evidence.claimTxHash, CLAIM_TX);
+  assert.ok(!("onChainAnchor" in evidence), "nested onChainAnchor superseded by flat dialect");
+  assert.ok(!("onChainAttestation" in evidence), "nested onChainAttestation superseded by flat dialect");
   assert.equal(embedded.issuer.id, "did:web:credentials.andamio.io");
+  // Multi-party attribution (P1bis-04): courseOwner present, assessor omitted
+  // (the on-chain record names none — omitted, never blank-filled).
+  assert.equal(embedded.courseOwner, "urn:andamio:mainnet:course-owner:gjames");
+  assert.ok(!("assessor" in embedded));
+});
+
+test("embedded VC: credentialStatus is the key-epoch BitstringStatusListEntry (Decision 3)", () => {
+  const embedded = JSON.parse(extractVc(badgeSvg));
+  assert.deepEqual(embedded.credentialStatus, {
+    id: "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    type: "BitstringStatusListEntry",
+    statusPurpose: "suspension",
+    statusListIndex: "0",
+    statusListCredential: "https://credentials.andamio.io/status/key-epoch-2026-07.json",
+  });
 });
 
 /** Split an SVG into [before-element, after-element] around the single

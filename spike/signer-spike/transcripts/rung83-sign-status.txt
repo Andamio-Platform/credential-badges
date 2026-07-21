@@ -1,0 +1,12 @@
+
+> signer-spike@0.0.1 sign:status
+> node --experimental-strip-types sign-status-list.ts
+
+context cache cleared — all documents fetched fresh this run
+anchor gate PASSED: ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db (tx 7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03)
+key pin OK: KMS v1 == live did.json did:web:credentials.andamio.io#key-2026-07 (z6Mkhnh1woBUSSQHjknh8jvjKax5hNAEZ37LEfWfnC2FYjt7)
+KMS asymmetric-sign calls: 1
+KMS SIGN + LIVE-DID VERIFY OK (status list credential)
+proof.verificationMethod = did:web:credentials.andamio.io#key-2026-07
+proof.proofValue         = z61ZhgecHuePSTma5V3vtNvm5C22jGqPUiPFV2ZnBQprA7c5C7zMAhyXf3ZL8q57hukmA7P2x7Z5QWa2oFTYd8L1c
+wrote /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-crypto/status/key-epoch-2026-07.json

@@ -14,6 +14,8 @@
 !issuer/**
 !badges/
 !badges/**
+!status/
+!status/**
 !.well-known/
 !.well-known/**
 !README.md

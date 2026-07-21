@@ -1,0 +1,9 @@
+# Rung 8.3 re-bake + round-trip byte-identity — 2026-07-21T18:36:39Z
+
+baked spike/signer-spike/signed-credential.json into badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg (128394 bytes)
+extracted 3656 bytes -> /tmp/extracted-vc.json
+
+sha256(signed-credential.json)  = 1862852e092cf84bc0244a67a92c67beeb2537e932a9b763adb723714d97e040
+sha256(extracted from badge)    = 1862852e092cf84bc0244a67a92c67beeb2537e932a9b763adb723714d97e040
+ROUND-TRIP BYTE-IDENTITY: extract(bake(badge, vc)) == vc
+sha256(baked badge svg)         = 4bbb65b46b57b13c0975fa3665c23964936f7159d35398cffb03cb249edc463c

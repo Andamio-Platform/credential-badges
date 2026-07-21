@@ -15,6 +15,7 @@ import {
   makeDocumentLoader,
   fetchLiveDidDocument,
   clearContextCache,
+  isAdditiveSuperset,
   DID_JSON_URL,
   ANDAMIO_CONTEXT_URL,
   ISSUER_DID,
@@ -139,6 +140,126 @@ test("clearContextCache removes the on-disk cache directory", async () => {
   await poisonCache(DID_JSON_URL, POISONED_DID_DOC);
   await clearContextCache();
   await assert.rejects(() => fs.access(CTX_CACHE));
+});
+
+// ---- Rung 8.3: the CONTEXT_AHEAD_OF_LIVE_OK transitional gate ----
+
+// A stand-in "live" context that is the committed one MINUS one added term —
+// i.e. the exact pre-deploy state after an additive context PR.
+async function liveSubsetOfCommitted(): Promise<any> {
+  const repo = JSON.parse(await fs.readFile(REPO_CONTEXT_FILE, "utf8"));
+  const live = structuredClone(repo);
+  const keys = Object.keys(live["@context"]);
+  delete live["@context"][keys[keys.length - 1]];
+  return live;
+}
+
+test("without the env var, an additively-behind live context still REFUSES (default unchanged)", async () => {
+  delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
+  mockFetch({ [ANDAMIO_CONTEXT_URL]: await liveSubsetOfCommitted() });
+  const loader = makeDocumentLoader();
+  await assert.rejects(
+    () => loader(ANDAMIO_CONTEXT_URL),
+    /drifted from committed context\/v0\.jsonld/,
+  );
+});
+
+test("with CONTEXT_AHEAD_OF_LIVE_OK=1, an additive superset serves the COMMITTED bytes", async () => {
+  process.env.CONTEXT_AHEAD_OF_LIVE_OK = "1";
+  try {
+    mockFetch({ [ANDAMIO_CONTEXT_URL]: await liveSubsetOfCommitted() });
+    const loader = makeDocumentLoader();
+    const { document } = await loader(ANDAMIO_CONTEXT_URL);
+    const repo = JSON.parse(await fs.readFile(REPO_CONTEXT_FILE, "utf8"));
+    assert.deepEqual(document, repo, "must canonicalize against the committed (deploy-bound) context");
+  } finally {
+    delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
+  }
+});
+
+test("with CONTEXT_AHEAD_OF_LIVE_OK=1, a NON-additive divergence still refuses", async () => {
+  process.env.CONTEXT_AHEAD_OF_LIVE_OK = "1";
+  try {
+    const live = await liveSubsetOfCommitted();
+    live["@context"]["andamio"] = "https://evil.example.com/ns#"; // mutated live term
+    mockFetch({ [ANDAMIO_CONTEXT_URL]: live });
+    const loader = makeDocumentLoader();
+    await assert.rejects(
+      () => loader(ANDAMIO_CONTEXT_URL),
+      /drifted from committed context\/v0\.jsonld/,
+      "a live term the committed context does not carry byte-identically must refuse",
+    );
+  } finally {
+    delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
+  }
+});
+
+test("isAdditiveSuperset: only NEW top-level '@context' terms pass; everything else must be byte-identical", () => {
+  const live = {
+    "@context": {
+      "@version": 1.1,
+      "@protected": true,
+      andamio: "https://credentials.andamio.io/ns#",
+      courseOwner: { "@id": "andamio:courseOwner", "@type": "@id" },
+    },
+  };
+
+  // Adding a brand-new term key at the "@context" top level: additive.
+  const addsTerm = structuredClone(live);
+  (addsTerm["@context"] as any).network = { "@id": "andamio:network" };
+  assert.equal(isAdditiveSuperset(addsTerm, live), true);
+
+  // Identical documents are trivially an additive superset.
+  assert.equal(isAdditiveSuperset(structuredClone(live), live), true);
+
+  // Adding a key INSIDE an existing term's definition mutates how existing
+  // documents expand — REFUSED (the ADV-2 case the old any-depth recursion
+  // wrongly accepted).
+  const mutatesInsideTerm = structuredClone(live);
+  (mutatesInsideTerm["@context"] as any).courseOwner["@container"] = "@set";
+  assert.equal(isAdditiveSuperset(mutatesInsideTerm, live), false);
+
+  // Mutating an existing term's value: refused.
+  const mutatesValue = structuredClone(live);
+  (mutatesValue["@context"] as any).andamio = "https://evil.example.com/ns#";
+  assert.equal(isAdditiveSuperset(mutatesValue, live), false);
+
+  // Removing a live term: refused.
+  const removesTerm = structuredClone(live);
+  delete (removesTerm["@context"] as any).courseOwner;
+  assert.equal(isAdditiveSuperset(removesTerm, live), false);
+
+  // Adding a key OUTSIDE "@context": refused (only @context terms may grow).
+  const addsTopLevel = structuredClone(live) as any;
+  addsTopLevel.extra = 1;
+  assert.equal(isAdditiveSuperset(addsTopLevel, live), false);
+
+  // Non-object shapes are never additive supersets.
+  assert.equal(isAdditiveSuperset([1], live), false);
+  assert.equal(isAdditiveSuperset({ "@context": [1] }, live), false);
+});
+
+test("the transitional gate REFUSES a live term mutated by an ADDED key inside its definition", async () => {
+  process.env.CONTEXT_AHEAD_OF_LIVE_OK = "1";
+  try {
+    // Live serves the committed context PLUS an extra key inside an existing
+    // term's definition — committed is NOT a superset of it, and serving the
+    // committed bytes would canonicalize differently than live verifiers do.
+    const repo = JSON.parse(await fs.readFile(REPO_CONTEXT_FILE, "utf8"));
+    const live = structuredClone(repo);
+    live["@context"].courseOwner = {
+      ...live["@context"].courseOwner,
+      "@container": "@set",
+    };
+    mockFetch({ [ANDAMIO_CONTEXT_URL]: live });
+    const loader = makeDocumentLoader();
+    await assert.rejects(
+      () => loader(ANDAMIO_CONTEXT_URL),
+      /drifted from committed context\/v0\.jsonld/,
+    );
+  } finally {
+    delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
+  }
 });
 
 test("loader still refuses anything outside the allowlist", async () => {

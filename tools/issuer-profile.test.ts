@@ -74,6 +74,18 @@ function assertContextDefinesTerms(context: any): void {
   assert.equal(c["AttestationHost"], "andamio:AttestationHost");
   assert.equal(c["OnChainCredentialAnchor"], "andamio:OnChainCredentialAnchor");
   assert.equal(c["@protected"], true, "context must stay @protected");
+  // Rung 8.3 additive terms (plan P1bis-04 + Decision 2 flat evidence dialect).
+  // courseOwner / assessor are @id-typed (URN references, expanded as IRIs);
+  // the four flat anchor terms are the Decision-2 evidence field names,
+  // registered top-level so the flat evidence entry expands with no dropped
+  // terms. Same shapes the rung-1 throwaway context proved against spruce +
+  // 1EdTech (spike/verifier-spike/publish/context/v0.jsonld).
+  assert.deepEqual(c["courseOwner"], { "@id": "andamio:courseOwner", "@type": "@id" });
+  assert.deepEqual(c["assessor"], { "@id": "andamio:assessor", "@type": "@id" });
+  assert.equal(c["network"], "andamio:network");
+  assert.equal(c["policyId"], "andamio:policyId");
+  assert.equal(c["asset"], "andamio:asset");
+  assert.equal(c["claimTxHash"], "andamio:claimTxHash");
   // Guard the SHAPE, not just the key: these terms are object-form with a
   // scoped @context defining their on-chain sub-properties. A flatten to a bare
   // string mapping would still pass `term in c` while silently dropping the
@@ -111,4 +123,15 @@ test("the context guard bites — an undefined AttestationHost fails", () => {
   const context = readJson(CONTEXT_PATH);
   delete context["@context"]["AttestationHost"];
   assert.throws(() => assertContextDefinesTerms(context));
+});
+
+test("the context guard bites — a dropped Rung-8.3 flat-evidence term fails", () => {
+  for (const term of ["courseOwner", "assessor", "network", "policyId", "asset", "claimTxHash"]) {
+    const context = readJson(CONTEXT_PATH);
+    delete context["@context"][term];
+    assert.throws(
+      () => assertContextDefinesTerms(context),
+      `deleting '${term}' must fail the invariant`,
+    );
+  }
 });

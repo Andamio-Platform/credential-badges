@@ -79,11 +79,13 @@ async function fetchCached(url: string): Promise<any> {
   return doc;
 }
 
-// Removes the on-disk context cache entirely. sign.ts calls this at the start
-// of every `--signer kms` run, so a production signing run starts from a
-// provably empty cache: every document it canonicalizes against is fetched
-// fresh from the network.
+// Removes the on-disk context cache entirely AND drops the in-process live-
+// context memo. sign.ts calls this at the start of every `--signer kms` run,
+// so a production signing run starts from a provably empty cache: every
+// document it canonicalizes against — including the drift-checked Andamio
+// context — is fetched fresh from the network.
 export async function clearContextCache(): Promise<void> {
+  checkedLiveContext = null;
   await fs.rm(CTX_CACHE, { recursive: true, force: true });
 }
 
@@ -91,11 +93,69 @@ export async function clearContextCache(): Promise<void> {
 // fetch + drift check below. Never populated from disk.
 let checkedLiveContext: any = null;
 
+// True ONLY when `committed` differs from `live` by adding NEW top-level term
+// keys inside "@context" — the Rung-4 "Option A" additive-evolution shape for
+// the pre-stable v0 context. Everything else must be byte-identical:
+//
+//   - every key OUTSIDE "@context" must match exactly (no adds, no removals),
+//   - every key live's "@context" already defines must be deep-equal in the
+//     committed one — adding a key INSIDE an existing term's definition (e.g.
+//     an "@type" on a term that had none) changes how EXISTING documents
+//     expand, which is a mutation, not an addition. The earlier any-depth
+//     recursion accepted exactly that; this version refuses it.
+//
+// Exported for the hermetic tests.
+export function isAdditiveSuperset(committed: any, live: any): boolean {
+  const isPlainObject = (v: any) =>
+    typeof v === "object" && v !== null && !Array.isArray(v);
+  if (!isPlainObject(committed) || !isPlainObject(live)) return false;
+
+  // Outside "@context": byte-identical, both directions.
+  const allKeys = new Set([...Object.keys(committed), ...Object.keys(live)]);
+  for (const k of allKeys) {
+    if (k === "@context") continue;
+    if (!(k in committed) || !(k in live)) return false;
+    if (JSON.stringify(committed[k]) !== JSON.stringify(live[k])) return false;
+  }
+
+  const cc = committed["@context"];
+  const lc = live["@context"];
+  if (!isPlainObject(cc) || !isPlainObject(lc)) return false;
+
+  // Every live term must exist in committed with a deep-equal definition;
+  // committed may only ADD new term keys at this one level.
+  return Object.keys(lc).every(
+    (k) => k in cc && JSON.stringify(cc[k]) === JSON.stringify(lc[k]),
+  );
+}
+
 async function liveAndamioContext(): Promise<any> {
   if (checkedLiveContext !== null) return checkedLiveContext;
   const doc = await fetchLiveJson(ANDAMIO_CONTEXT_URL);
   const repo = JSON.parse(await fs.readFile(REPO_CONTEXT_FILE, "utf8"));
   if (JSON.stringify(doc) !== JSON.stringify(repo)) {
+    // TRANSITIONAL, EXPLICITLY OPTED-IN (Rung 8.3): when this repo ADDS terms
+    // to the pre-stable v0 context (P1bis-04 + the flat evidence dialect), the
+    // committed context is briefly ahead of the live host — the deploy that
+    // publishes it ships from this very branch. Under CONTEXT_AHEAD_OF_LIVE_OK=1
+    // and ONLY when the committed context is a strict additive superset of the
+    // live one (every live term byte-identical; committed only adds), the
+    // loader serves the COMMITTED bytes so signing canonicalizes against the
+    // context that will be live at deploy. Third parties can only reproduce
+    // the signature after that deploy — the PR body carries the post-deploy
+    // re-verification checklist. Any non-additive divergence still refuses,
+    // env var or not; without the env var the strict equality gate is
+    // unchanged.
+    if (
+      process.env.CONTEXT_AHEAD_OF_LIVE_OK === "1" &&
+      isAdditiveSuperset(repo, doc)
+    ) {
+      console.warn(
+        `context-drift guard: committed context/v0.jsonld is an ADDITIVE superset of live ${ANDAMIO_CONTEXT_URL} — serving COMMITTED bytes (CONTEXT_AHEAD_OF_LIVE_OK=1, pre-deploy transitional state; signature reproducible by third parties only after the deploy)`,
+      );
+      checkedLiveContext = repo;
+      return repo;
+    }
     throw new Error(
       `live ${ANDAMIO_CONTEXT_URL} drifted from committed context/v0.jsonld — refusing to canonicalize`,
     );

@@ -7,9 +7,10 @@
 #
 # Currently allowlisted: context/ (the deliverable), issuer/ (the hosted
 # OB 3.0 issuer Profile), badges/ (presentation-layer badge imagery),
-# .well-known/ (the did:web DID document), public/ (the interactive
-# credential designer, served under /design/ — never merged into the web
-# root, so it can never shadow a trust path), and README.md.
+# status/ (the key-epoch BitstringStatusList credential), .well-known/ (the
+# did:web DID document), public/ (the interactive credential designer,
+# served under /design/ — never merged into the web root, so it can never
+# shadow a trust path), and README.md.
 # When schemas/ land and are confirmed public, add an explicit COPY line
 # here AND update scripts/ci/check-allowlist.sh.
 
@@ -40,6 +41,9 @@ ENV NGINX_ENVSUBST_FILTER="RENDER_UPSTREAM"
 COPY context/   /usr/share/nginx/html/context/
 COPY issuer/    /usr/share/nginx/html/issuer/
 COPY badges/    /usr/share/nginx/html/badges/
+# Key-epoch BitstringStatusList credential (Rung 8.3, deployment plan
+# Decision 3) — the suspension-signal convenience surface; forever-public.
+COPY status/    /usr/share/nginx/html/status/
 # did:web DID document — a forever-public endpoint (did:web:credentials.andamio.io).
 COPY .well-known/ /usr/share/nginx/html/.well-known/
 # Interactive credential designer (#37, PR #50) — its own subtree, NOT the

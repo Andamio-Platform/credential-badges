@@ -9,6 +9,14 @@
     "AttestationHost": "andamio:AttestationHost",
     "OnChainCredentialAnchor": "andamio:OnChainCredentialAnchor",
 
+    "courseOwner": { "@id": "andamio:courseOwner", "@type": "@id" },
+    "assessor": { "@id": "andamio:assessor", "@type": "@id" },
+
+    "network": "andamio:network",
+    "policyId": "andamio:policyId",
+    "asset": "andamio:asset",
+    "claimTxHash": "andamio:claimTxHash",
+
     "onChainAnchor": {
       "@id": "andamio:onChainAnchor",
       "@context": {
