@@ -23,4 +23,5 @@ fi
 echo "# spruce (spruceid/ssi) verify — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "sample: $sample"
 echo
-cargo run --quiet --manifest-path "$here/Cargo.toml" -- "$sample"
+# --bin is required since the `resolve` binary joined `spruce-verify` (Rung 3).
+cargo run --quiet --bin spruce-verify --manifest-path "$here/Cargo.toml" -- "$sample"
