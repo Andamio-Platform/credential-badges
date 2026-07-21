@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
       moduleTitle: moduleTitleEl.value || "Untitled Module",
       courseId: cid,
       sltHash: slt,
-      network: "preprod",
       palId: paletteEl.value,
       isLight: lightInteriorEl.checked
     };

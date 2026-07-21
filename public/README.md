@@ -9,7 +9,7 @@ It provides a visualizer that allows users to preview changes to module titles, 
 The demo is a pure static web application (`HTML` / `CSS` / `Vanilla JS`). It does not require a backend or a Python runtime.
 * `generator.js` is a direct JavaScript port of the core ring-geometry logic found in `generator/gen.py`.
 * `app.js` manages state and re-renders the SVG to the DOM on every input change.
-* `utils/courses.json` holds a snapshot of real, on-chain credential metadata for the dice functionality.
+* `assets/courses.json` holds a snapshot of real, on-chain credential metadata for the dice functionality.
 
 ## Tradeoffs: JS Port vs. Python Generator
 

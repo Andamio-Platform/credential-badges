@@ -136,7 +136,7 @@ function layTitle(text, baseSize, maxw, factor, minOne, floor = 15) {
   return { lines, size: Math.max(Math.min(baseSize, Math.floor(maxw / (factor * longest))), floor) };
 }
 
-function renderSvg({ courseTitle, moduleTitle, courseId, sltHash, network, palId, isLight }) {
+function renderSvg({ courseTitle, moduleTitle, courseId, sltHash, palId, isLight }) {
   let pal = PALETTES.find(p => p.slug === palId) || PALETTES[0];
   if (isLight) pal = lightInterior(pal);
   
