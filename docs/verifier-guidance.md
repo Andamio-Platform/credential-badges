@@ -8,7 +8,7 @@ An [Andamio](https://www.andamio.io) credential is an [Open Badge](https://www.i
 
 Andamio signs a credential to attest that the on-chain record is real, and that this document faithfully reflects it. Andamio is the attestation host for a process it does not run. Andamio does not vouch for the substance of the achievement, and it does not claim to be the authority that granted it.
 
-For example, if a course owner later turns out to be dishonest, Andamio's signature would still attest that the on-chain mint happened. It does not vouch for the "meaning" of the credential. That belongs to the parties who ran the process, not to Andamio.
+For example, if a course owner later turns out to be dishonest, Andamio's signature would still attest that the on-chain claim happened. It does not vouch for the "meaning" of the credential. That belongs to the parties who ran the process, not to Andamio.
 
 ## Who vouches for the achievement?
 
