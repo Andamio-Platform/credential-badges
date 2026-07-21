@@ -22,6 +22,12 @@ server {
     root   /usr/share/nginx/html;
     autoindex off;
 
+    # Relative Location headers on redirects. nginx sits behind Cloud Run's
+    # HTTPS proxy on internal port 8080; an absolute redirect would leak
+    # http:// + :8080 into Location (broken for the public host). Relative
+    # is RFC 7231-legal and resolves against the public origin.
+    absolute_redirect off;
+
     # Unknown types are NOT guessed as something dangerous.
     default_type application/octet-stream;
 
@@ -124,7 +130,10 @@ server {
     # Minimal landing page at "/" — returns 200 so health probes succeed
     # and humans hitting the root get a pointer instead of a bare 404.
     location = / {
-        add_header Content-Type text/plain;
+        # default_type, not add_header: add_header APPENDS a second
+        # Content-Type on top of the server default_type (octet-stream),
+        # producing a malformed double header on the root response.
+        default_type text/plain;
         return 200 "Andamio credential contexts\n\nPublished JSON-LD contexts:\n  /context/v0.jsonld\n\nHosted issuer profile:\n  /issuer\n\nBadge imagery:\n  /badges/\n\nCredential designer:\n  /design/\n\nSee https://github.com/Andamio-Platform/credential-badges\n";
     }
 
