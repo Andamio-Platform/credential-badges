@@ -49,11 +49,14 @@ jobs:
           assert_ct /.well-known/did.json application/did+ld+json
           assert_ct /badges/_placeholder.svg image/svg+xml
           assert_ct /design/             text/html
-          # /design must 301 to /design/ — index.html loads assets via
-          # relative paths, which break without the trailing slash.
+          assert_ct /                    text/plain
+          # /design must 301 to exactly /design/ — index.html loads assets
+          # via relative paths (they break without the trailing slash), and
+          # the Location must be RELATIVE: behind Cloud Run's proxy an
+          # absolute redirect leaks http:// + :8080 into the public URL.
           loc=$(curl -sI http://localhost:8080/design | tr -d '\r' | awk -F': ' 'tolower($1)=="location"{print $2}')
-          echo "/design Location: $loc (expected …/design/)"
-          case "$loc" in */design/) true ;; *) false ;; esac
+          echo "/design Location: $loc (expected /design/)"
+          test "$loc" = "/design/"
           docker rm -f cb
       - name: Test on-demand render fallback (#33, U5) — static-first + @render proxy
         run: IMAGE=credential-badges:ci bash scripts/ci/test-nginx-fallback.sh
