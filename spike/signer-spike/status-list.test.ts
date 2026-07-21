@@ -103,12 +103,27 @@ test("committed status/key-epoch-2026-07.json: signed, fresh, and rebuilds byte-
     `${ISSUER_DID}#${ACTIVE_KEY_VERSION}`,
   );
 
-  // The document (minus proof) must be EXACTLY what the builder produces —
-  // any drift between the builder and the served file is a loud failure.
+  // The document (minus proof) must be what the builder produces — any drift
+  // between the builder and the served file is a loud failure. One nuance:
+  // the gzip HEADER's OS byte varies by platform (the committed artifact was
+  // signed on macOS; CI is Linux), so `encodedList` is compared by its
+  // DECODED 16 KiB bitstring — the semantic content verifiers read — while
+  // every other field is compared byte-for-byte. Re-sign byte-stability is
+  // unaffected: resign runs re-sign the COMMITTED document, not a rebuild.
   const { proof: _proof, ...unsigned } = committed;
-  assert.deepEqual(unsigned, buildStatusListCredential(ISSUER_DID));
+  const rebuilt: any = buildStatusListCredential(ISSUER_DID);
+  const committedEncoded = unsigned.credentialSubject.encodedList;
+  const rebuiltEncoded = rebuilt.credentialSubject.encodedList;
+  assert.ok(committedEncoded.startsWith("u"), "committed encodedList must be multibase-'u'");
+  assert.deepEqual(
+    decodeStatusList(committedEncoded),
+    decodeStatusList(rebuiltEncoded),
+    "committed bitstring must equal the builder's bitstring bit-for-bit",
+  );
+  unsigned.credentialSubject = { ...unsigned.credentialSubject, encodedList: rebuiltEncoded };
+  assert.deepEqual(unsigned, rebuilt);
 
   // And the served list says the active key version is NOT suspended.
-  const bits = decodeStatusList(committed.credentialSubject.encodedList);
+  const bits = decodeStatusList(committedEncoded);
   assert.equal(statusBitAt(bits, ACTIVE_KEY_STATUS_INDEX), 0);
 });

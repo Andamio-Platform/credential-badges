@@ -20,9 +20,13 @@
 //     of the credential subject MUST be a Multibase-encoded base64url (with
 //     no padding)"). The rung-1 throwaway fixture omitted the multibase
 //     prefix; this module is spec-correct.
-//   - The GZIP member is emitted with mtime=0 (node:zlib default) so the
-//     encoding is DETERMINISTIC: the same bitstring always produces the same
-//     encodedList bytes, which keeps the signed credential re-sign-stable.
+//   - The GZIP member is emitted with mtime=0 (node:zlib default), so the
+//     encoding is deterministic PER PLATFORM (the gzip header's OS byte
+//     varies across OSes — the committed artifact carries the macOS byte,
+//     Linux CI produces another). The committed-artifact invariant therefore
+//     compares the DECODED bitstring bit-for-bit, and re-sign byte-stability
+//     is unaffected: resign runs re-sign the COMMITTED document, never a
+//     rebuilt encoding.
 //
 // Dependency-free on purpose (node:zlib only): status-list.test.ts runs in the
 // hermetic CI job with no npm install. Signing happens in sign-status-list.ts,
