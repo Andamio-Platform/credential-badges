@@ -49,6 +49,15 @@ export const KEY_VERSION_POSITIONS: Readonly<Record<string, number>> = {
 export const ACTIVE_KEY_VERSION = "key-2026-07";
 export const ACTIVE_KEY_STATUS_INDEX = KEY_VERSION_POSITIONS[ACTIVE_KEY_VERSION];
 
+// Rung 8.6 · The committed source of truth for which key-version bits are
+// currently SET (suspended). Empty = every key version fresh. Changed ONLY
+// through the key-compromise kill-switch (tools/flip-status-bit.ts +
+// docs/runbooks/key-compromise.md): the flip PR moves this constant, the
+// re-signed status/ artifact, and the sha pin in status-list.test.ts
+// together, and CI enforces their coherence — the served list can never
+// silently disagree with the declared suspension state.
+export const SUSPENDED_KEY_VERSION_POSITIONS: readonly number[] = [];
+
 // Deterministic dating convention for the status list credential: the first
 // instant of the key epoch it covers (key-2026-07 -> July 2026). Like the
 // subject credential's block_time pinning, this is a stated convention, not a
@@ -92,15 +101,17 @@ export function statusBitAt(bits: Uint8Array, index: number): 0 | 1 {
 }
 
 export interface StatusListOpts {
-  /** Key-version bit positions to flip to 1 (suspended). Empty = all fresh. */
-  flippedKeyVersionPositions?: number[];
+  /** Key-version bit positions to flip to 1 (suspended). Defaults to the
+   *  committed SUSPENDED_KEY_VERSION_POSITIONS, so the default build — and
+   *  therefore sign-status-list.ts — always emits the declared state. */
+  flippedKeyVersionPositions?: readonly number[];
 }
 
 /** The unsigned BitstringStatusListCredential. All Bitstring terms are
  *  defined by the W3C VC 2.0 base context, so no Andamio context is needed. */
 export function buildStatusListCredential(issuerDid: string, opts: StatusListOpts = {}) {
   const bytes = new Uint8Array(STATUS_LIST_BIT_LENGTH / 8);
-  for (const pos of opts.flippedKeyVersionPositions ?? []) {
+  for (const pos of opts.flippedKeyVersionPositions ?? SUSPENDED_KEY_VERSION_POSITIONS) {
     if (pos < 0 || pos >= STATUS_LIST_BIT_LENGTH) {
       throw new Error(`status-list position out of range: ${pos}`);
     }
