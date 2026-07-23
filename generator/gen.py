@@ -80,7 +80,7 @@ def credential_json(P, *, course_title, module_title, course_id, slt_hash, netwo
     return json.dumps({
         "@context":["https://www.w3.org/ns/credentials/v2",
                     "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
-                    "https://credentials.andamio.io/context/v0.jsonld"],
+                    "https://credentials.andamio.io/context/v1.jsonld"],
         "type":["VerifiableCredential","OpenBadgeCredential"],
         "issuer":"did:web:credentials.andamio.io","name":module_title,
         "credentialSubject":{"type":["AchievementSubject"],

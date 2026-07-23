@@ -15,14 +15,14 @@
 //     cannot satisfy the key pin, and a key rotation is visible in-process.
 //   - The context-drift guard fetches the live Andamio context over the
 //     network on first use (never from disk), deep-compares it against the
-//     committed context/v0.jsonld, and only then serves it (memoized
+//     committed context/v1.jsonld, and only then serves it (memoized
 //     IN-PROCESS — the memo is the live bytes fetched this run).
 //   - Only the version-pinned, immutable W3C/OB3 contexts go through the disk
 //     cache — and `clearContextCache()` lets a KMS run start from an empty
 //     cache so even those are fetched fresh (sign.ts calls it in kms mode).
 //
 // Integrity guard: the live context fetched from credentials.andamio.io must
-// deep-equal the repo's committed context/v0.jsonld. Signing under a drifted
+// deep-equal the repo's committed context/v1.jsonld. Signing under a drifted
 // context would produce a signature third parties cannot reproduce; the loader
 // makes that a loud failure instead.
 
@@ -32,11 +32,11 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CTX_CACHE = path.join(HERE, "out", "ctx-cache");
-const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v0.jsonld");
+const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v1.jsonld");
 
 export const ISSUER_DID = "did:web:credentials.andamio.io";
 export const DID_JSON_URL = "https://credentials.andamio.io/.well-known/did.json";
-export const ANDAMIO_CONTEXT_URL = "https://credentials.andamio.io/context/v0.jsonld";
+export const ANDAMIO_CONTEXT_URL = "https://credentials.andamio.io/context/v1.jsonld";
 
 const WEB_CONTEXTS = new Set([
   "https://www.w3.org/ns/credentials/v2",
@@ -151,13 +151,13 @@ async function liveAndamioContext(): Promise<any> {
       isAdditiveSuperset(repo, doc)
     ) {
       console.warn(
-        `context-drift guard: committed context/v0.jsonld is an ADDITIVE superset of live ${ANDAMIO_CONTEXT_URL} — serving COMMITTED bytes (CONTEXT_AHEAD_OF_LIVE_OK=1, pre-deploy transitional state; signature reproducible by third parties only after the deploy)`,
+        `context-drift guard: committed context/v1.jsonld is an ADDITIVE superset of live ${ANDAMIO_CONTEXT_URL} — serving COMMITTED bytes (CONTEXT_AHEAD_OF_LIVE_OK=1, pre-deploy transitional state; signature reproducible by third parties only after the deploy)`,
       );
       checkedLiveContext = repo;
       return repo;
     }
     throw new Error(
-      `live ${ANDAMIO_CONTEXT_URL} drifted from committed context/v0.jsonld — refusing to canonicalize`,
+      `live ${ANDAMIO_CONTEXT_URL} drifted from committed context/v1.jsonld — refusing to canonicalize`,
     );
   }
   checkedLiveContext = doc;

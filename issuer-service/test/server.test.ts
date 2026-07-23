@@ -94,7 +94,7 @@ test("happy path: serves a signed OB3 VC that round-trips through the loopback v
     assert.deepEqual(vc["@context"], [
       "https://www.w3.org/ns/credentials/v2",
       "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
-      "https://credentials.andamio.io/context/v0.jsonld",
+      "https://credentials.andamio.io/context/v1.jsonld",
     ]);
     assert.equal(
       vc.id,

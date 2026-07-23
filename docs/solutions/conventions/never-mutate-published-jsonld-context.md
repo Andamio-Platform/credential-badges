@@ -22,7 +22,9 @@ tags: [jsonld, context, caching, immutable, verifier, ob3, data-integrity]
 
 On 2026-07-21 the published context at `https://credentials.andamio.io/context/v0.jsonld` was upgraded in place: new terms (`courseOwner`, the `OnChainCredentialAnchor` evidence fields) were added under the same URL. The context is served with `Cache-Control: public, max-age=86400, immutable`.
 
-The next morning, 1EdTech's verifybadge.org validator failed `EmbeddedProofProbe` (12/13) on a correctly signed badge. Its report showed why: the validator canonicalized the credential against its cached pre-upgrade copy of the context, so the terms that copy didn't define were silently dropped from the N-Quads. The canonical hash no longer matched the signature, which was computed over the complete document. SpruceID's `ssi` (live context resolution) verified the same credential clean, confirming the signature itself was fine. The failure self-healed once the validator's cache expired.
+The next morning, 1EdTech's verifybadge.org validator failed `EmbeddedProofProbe` (12/13) on a correctly signed badge. Its report showed why: the validator canonicalized the credential against its cached pre-upgrade copy of the context, so the terms that copy didn't define were silently dropped from the N-Quads. The canonical hash no longer matched the signature, which was computed over the complete document. SpruceID's `ssi` (live context resolution) verified the same credential clean, confirming the signature itself was fine.
+
+The failure did NOT self-heal. ~38h after the mutation (verifybadge report 82863657, 2026-07-23) the validator still held the pre-upgrade copy: its app-level JSON-LD document cache is effectively unbounded and ignores the HTTP `max-age`. The only deterministic remedy after an in-place mutation is a version bump — publish the vocabulary at a never-before-seen URL (`/context/v1.jsonld`, a guaranteed cache miss for every verifier) and re-sign the affected credentials against it. That remediation shipped 2026-07-23 (PR #64 published + froze v1; the follow-up PR repointed all signing surfaces and re-signed the flagship badge — the `proofValue` was byte-identical since v1's bytes equal post-mutation v0's, proving the signing pipeline deterministic).
 
 ## Guidance
 
@@ -36,7 +38,7 @@ A published, versioned context URL is immutable forever. To change the vocabular
 
 ## Why This Matters
 
-Data Integrity proofs (`eddsa-rdfc-2022`) sign the RDF canonicalization of the document, and canonicalization depends on the context content, not just its URL. Any verifier holding a different copy of the context computes a different hash, so an in-place edit makes valid signatures unverifiable (or, worse, could make tampered documents canonicalize identically). JSON-LD makes this failure silent: undefined terms are dropped without error. `immutable` explicitly licenses every cache to keep the old copy without revalidating, so an in-place change guarantees a window (24h here, unbounded for app-level document caches) where third-party verifiers fail on valid credentials.
+Data Integrity proofs (`eddsa-rdfc-2022`) sign the RDF canonicalization of the document, and canonicalization depends on the context content, not just its URL. Any verifier holding a different copy of the context computes a different hash, so an in-place edit makes valid signatures unverifiable (or, worse, could make tampered documents canonicalize identically). JSON-LD makes this failure silent: undefined terms are dropped without error. `immutable` explicitly licenses every cache to keep the old copy without revalidating — and verifier-side app-level document caches are unbounded in practice (observed: verifybadge.org still stale ~38h past the mutation, far beyond the 24h HTTP TTL), so an in-place change makes third-party verification of valid credentials fail indefinitely, not for a bounded window.
 
 ## When to Apply
 
@@ -58,10 +60,12 @@ Right: publish `/context/v1.jsonld` containing the full vocabulary, and sign new
 ]
 ```
 
-Credentials already signed against `v0` keep verifying because `v0.jsonld` never changes again.
+Credentials already signed against `v0` keep verifying because `v0.jsonld` never changes again — with one caveat this incident proved: a credential signed against post-mutation `v0` bytes never converges at a verifier whose cache holds the pre-mutation copy. For credentials caught on the wrong side of an in-place mutation, the fix is a re-sign against the new version URL, not waiting.
 
 ## Related
 
 - verifybadge.org report 44c287d8 (2026-07-22): the failing probe's `canonicalizedJsonLdObjectWithoutProof` is missing the post-upgrade terms, the direct evidence for this rule
+- verifybadge.org report 82863657 (2026-07-23): same failure ~38h later — the evidence that verifier document caches are unbounded and the incident could not self-heal
+- `tools/context-freeze.test.ts` + the deploy-time freeze-pin step in `.github/workflows/deploy.yml`: this convention as an enforced invariant (any byte change to a published context version is CI-red and deploy-blocked)
 - `spike/verifier-spike/verifiers/spruce/run.sh`: independent verification path used to isolate the failure to the verifier's cache
 - `docs/verifier-guidance.md`: verifier-facing framing of the credential

@@ -2,7 +2,7 @@
 //
 // The hosted issuer Profile (`issuer/profile.jsonld`, served at `/issuer`) MUST
 // carry the spike-proven AttestationHost shape, and the served context
-// (`context/v0.jsonld`, served at `/context/v0.jsonld`) MUST DEFINE the
+// (`context/v1.jsonld`, served at `/context/v1.jsonld`) MUST DEFINE the
 // `AttestationHost` term the Profile references — otherwise strict JSON-LD
 // verifiers silently drop the unmapped `AttestationHost` type. If either file
 // drifts from the shape that passed spruce (VALID 0/0) + the 1EdTech validator,
@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 
 // Ground truth — the subject and served context the Profile must name (Rung 4).
 const ISSUER_DID = "did:web:credentials.andamio.io";
-const SERVED_CONTEXT_URL = "https://credentials.andamio.io/context/v0.jsonld";
+const SERVED_CONTEXT_URL = "https://credentials.andamio.io/context/v1.jsonld";
 const EXPECTED_PROFILE_CONTEXT = [
   "https://www.w3.org/ns/credentials/v2",
   "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
@@ -31,7 +31,7 @@ const PROFILE_PATH = fileURLToPath(
   new URL("../issuer/profile.jsonld", import.meta.url),
 );
 const CONTEXT_PATH = fileURLToPath(
-  new URL("../context/v0.jsonld", import.meta.url),
+  new URL("../context/v1.jsonld", import.meta.url),
 );
 
 function readJson(path: string): any {

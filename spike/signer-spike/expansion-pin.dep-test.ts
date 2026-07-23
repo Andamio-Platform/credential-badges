@@ -7,7 +7,7 @@
 // expands to, the committed proof is cryptographically dead even though the
 // JSON bytes are untouched. `isAdditiveSuperset` narrows what the transitional
 // signing gate accepts, but the durable guarantee is this test: expand each
-// committed signed artifact under the COMMITTED context/v0.jsonld and pin the
+// committed signed artifact under the COMMITTED context/v1.jsonld and pin the
 // sha256 of the canonical N-Quads. A context PR that alters signed-artifact
 // expansion fails here, loudly, before merge.
 //
@@ -36,7 +36,7 @@ import { makeDocumentLoader, ANDAMIO_CONTEXT_URL } from "./document-loader.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
-const REPO_CONTEXT_FILE = path.join(REPO, "context", "v0.jsonld");
+const REPO_CONTEXT_FILE = path.join(REPO, "context", "v1.jsonld");
 
 const SIGNED_ARTIFACTS: Record<string, { file: string; canonicalSha256: string }> = {
   "signed-credential.json": {

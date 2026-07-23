@@ -27,7 +27,7 @@
 //      botched static deploy would 404 did:web resolution for every verifier
 //      while this service happily signed). 4xx => DriftError, refuse to boot,
 //      no retry, no fallback.
-//   4. COMMITTED-CONTEXT LIVENESS: the live context/v0.jsonld must equal the
+//   4. COMMITTED-CONTEXT LIVENESS: the live context/v1.jsonld must equal the
 //      bundled committed context (signing under a drifted context produces
 //      signatures third parties cannot reproduce). Same bounded retry, same
 //      bundled fallback semantics, same 4xx-is-drift classification.
@@ -188,7 +188,7 @@ export async function runStartupDriftCheck(deps: DriftCheckDeps): Promise<{
   if (liveCtx !== null) {
     if (JSON.stringify(liveCtx) !== JSON.stringify(committedCtx)) {
       throw new DriftError(
-        `live ${ANDAMIO_CONTEXT_URL} drifted from the bundled committed context/v0.jsonld — refusing to start (signatures would not be third-party reproducible)`,
+        `live ${ANDAMIO_CONTEXT_URL} drifted from the bundled committed context/v1.jsonld — refusing to start (signatures would not be third-party reproducible)`,
       );
     }
   } else {

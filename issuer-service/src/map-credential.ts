@@ -17,7 +17,7 @@ import { ISSUER_DID } from "./config.ts";
 export const PRODUCTION_CONTEXTS = [
   "https://www.w3.org/ns/credentials/v2",
   "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
-  "https://credentials.andamio.io/context/v0.jsonld",
+  "https://credentials.andamio.io/context/v1.jsonld",
 ] as const;
 
 export function mapCredential(anchor: Anchor): any {

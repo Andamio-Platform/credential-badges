@@ -1,7 +1,8 @@
 name: deploy-issuer
 
 # ============================================================================
-# INERT SKELETON — DO NOT TAG service-v* UNTIL THE OPS GATE LANDS.
+# LIVE since service-v0.1.0 (ops gate landed; LB routes /credentials/* here).
+# The historical ops-gate notes below are kept for provenance.
 # ============================================================================
 # OB3 issuer service (Rung 8.4, deployment plan Decision 5) — the THIRD Cloud
 # Run service. Distinct from deploy.yml (static host, `v[0-9]*.*.*`) and
@@ -162,5 +163,7 @@ jobs:
           echo "${CRED} -> ${code} ${ct} (expected 200 application/ld+json)"
           test "${code}" = "200"
           test "${ct}" = "application/ld+json"
-          # The proof block must be present and name the production key.
-          python3 -c "import json; p=json.load(open('/tmp/cred.json'))['proof'][0]; assert p['cryptosuite']=='eddsa-rdfc-2022' and p['verificationMethod']=='did:web:credentials.andamio.io#key-2026-07', p; print('proof OK:', p['cryptosuite'], p['verificationMethod'])"
+          # The proof block must be present and name the production key, and
+          # the credential must reference the current signing context (v1) —
+          # otherwise "issuer signs v1" would be verified by eyeball only.
+          python3 -c "import json; d=json.load(open('/tmp/cred.json')); p=d['proof'][0]; assert p['cryptosuite']=='eddsa-rdfc-2022' and p['verificationMethod']=='did:web:credentials.andamio.io#key-2026-07', p; assert 'https://credentials.andamio.io/context/v1.jsonld' in d['@context'], d['@context']; print('proof OK:', p['cryptosuite'], p['verificationMethod']); print('context OK: v1')"

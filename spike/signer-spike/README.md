@@ -91,8 +91,8 @@ Ed25519 only:
 The document loader is closed and allowlisted (W3C/OB3 contexts, the live
 production Andamio context, the live production did:web document — nothing
 else), and it refuses to canonicalize if the live
-`https://credentials.andamio.io/context/v0.jsonld` drifts from the committed
-`context/v0.jsonld`.
+`https://credentials.andamio.io/context/v1.jsonld` drifts from the committed
+`context/v1.jsonld`.
 
 Rung-8 hardening (issue #54, findings 1 + 2):
 
