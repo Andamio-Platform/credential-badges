@@ -68,7 +68,7 @@ printf %s '<MAINNET_KEY>' | gcloud secrets versions add andamio-api-mainnet-key 
 printf %s '<PREPROD_KEY>' | gcloud secrets versions add andamio-api-preprod-key --data-file=- --project andamio-credentials
 
 # D. (this repo) cut the first render image:  git tag vrender-0.1.0 && git push origin vrender-0.1.0
-#    deploy-render.yml builds service/Dockerfile from root, pushes render:<tag>, deploys, verifies /healthz.
+#    deploy-render.yml builds service/Dockerfile from root, pushes render:<tag>, deploys, verifies a live-rendered badge (external /healthz probes are dead — Google's frontend intercepts that path on run.app URLs; see #66).
 
 # E. real-image cutover — in envs/credentials.tfvars set
 #      render_use_placeholder_image = false
@@ -104,7 +104,7 @@ git push origin vrender-0.1.0
 3. Builds the image, tags it with **both** the commit SHA and the semver tag. Never `:latest`.
 4. Pushes both tags. Artifact Registry rejects any re-push of an existing tag (immutable) — bump the version instead.
 5. `gcloud run deploy` the semver tag.
-6. Verifies `Content-Type: application/ld+json` on the deployed `*.run.app` URL.
+6. Verifies content types on the deployed `*.run.app` URL (service-level reachability), runs the context freeze-pin test against the tagged checkout, and asserts sha256 of every served `context/*.jsonld` on the **public host** (`credentials.andamio.io`) — the LB route is what verifiers fetch (see `docs/solutions/conventions/cloud-run-deploy-verification-probes.md`).
 
 There is **no** `main`-push or `workflow_dispatch` deploy path by design.
 
@@ -112,8 +112,9 @@ The **render-service** flow (`deploy-render.yml`, on `vrender-*`) is the same
 shape: allowlist check → WIF auth → build `service/Dockerfile` from repo root,
 tag with SHA + the `vrender-*` tag → push both → `gcloud run deploy` **image-only**
 (preserves the TF-managed runtime SA, secret-env wiring, and cache bucket) →
-verify `/healthz` (200) **and** a live-rendered badge returns `image/svg+xml`
-(the smoke target is derived from the first `generator/credentials.json` entry).
+verify a live-rendered badge returns `image/svg+xml` (the smoke target is
+derived from the first `generator/credentials.json` entry; there is no external
+`/healthz` probe — Google's frontend intercepts that path on run.app URLs, #66).
 
 ## Served-file allowlist (load-bearing)
 
