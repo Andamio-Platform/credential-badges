@@ -3,7 +3,7 @@
 // Shape follows the deployment plan's Decision 2 (attestation-host framing) and
 // the rung-1 verifier-spike sample that passed spruce + 1EdTech + loopback,
 // adapted to the PRODUCTION context actually live at
-// https://credentials.andamio.io/context/v0.jsonld. Every term in this document
+// https://credentials.andamio.io/context/v1.jsonld. Every term in this document
 // is defined by the three referenced contexts, so eddsa-rdfc-2022 (RDFC-1.0
 // over expanded RDF) canonicalizes it with no dropped terms — a third-party
 // verifier expanding against the live context reproduces the exact signed
@@ -44,7 +44,7 @@ import { statusListEntry } from "./status-list.ts";
 export const PRODUCTION_CONTEXTS = [
   "https://www.w3.org/ns/credentials/v2",
   "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
-  "https://credentials.andamio.io/context/v0.jsonld",
+  "https://credentials.andamio.io/context/v1.jsonld",
 ] as const;
 
 export const ISSUER_DID = "did:web:credentials.andamio.io";

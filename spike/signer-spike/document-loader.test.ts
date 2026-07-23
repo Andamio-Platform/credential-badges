@@ -23,7 +23,7 @@ import {
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CTX_CACHE = path.join(HERE, "out", "ctx-cache");
-const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v0.jsonld");
+const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v1.jsonld");
 
 const VM_ID = `${ISSUER_DID}#key-2026-07`;
 
@@ -131,7 +131,7 @@ test("context-drift guard reads the NETWORK: a clean-looking cache entry cannot 
   const loader = makeDocumentLoader();
   await assert.rejects(
     () => loader(ANDAMIO_CONTEXT_URL),
-    /drifted from committed context\/v0\.jsonld/,
+    /drifted from committed context\/v1\.jsonld/,
     "the drift guard must see the live (drifted) context, not the stale cache copy",
   );
 });
@@ -160,7 +160,7 @@ test("without the env var, an additively-behind live context still REFUSES (defa
   const loader = makeDocumentLoader();
   await assert.rejects(
     () => loader(ANDAMIO_CONTEXT_URL),
-    /drifted from committed context\/v0\.jsonld/,
+    /drifted from committed context\/v1\.jsonld/,
   );
 });
 
@@ -186,7 +186,7 @@ test("with CONTEXT_AHEAD_OF_LIVE_OK=1, a NON-additive divergence still refuses",
     const loader = makeDocumentLoader();
     await assert.rejects(
       () => loader(ANDAMIO_CONTEXT_URL),
-      /drifted from committed context\/v0\.jsonld/,
+      /drifted from committed context\/v1\.jsonld/,
       "a live term the committed context does not carry byte-identically must refuse",
     );
   } finally {
@@ -255,7 +255,7 @@ test("the transitional gate REFUSES a live term mutated by an ADDED key inside i
     const loader = makeDocumentLoader();
     await assert.rejects(
       () => loader(ANDAMIO_CONTEXT_URL),
-      /drifted from committed context\/v0\.jsonld/,
+      /drifted from committed context\/v1\.jsonld/,
     );
   } finally {
     delete process.env.CONTEXT_AHEAD_OF_LIVE_OK;
