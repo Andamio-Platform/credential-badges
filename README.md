@@ -38,8 +38,8 @@ Four things live at `https://credentials.andamio.io`:
 | Path | What it is |
 |---|---|
 | `/badges/<policy_id>.<slt_hash>.svg` | The badge imagery. Static-first, with an on-demand render fallback, so *any* credential resolves without being pre-generated. Referenced by `achievement.image` in the OB 3.0 credential. Presentation-layer only, never identity-bearing. |
-| `/context/v0.jsonld` | The JSON-LD context for Andamio's Open Badges 3.0 extension terms (`AttestationHost`, `OnChainCredentialAnchor`, `onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`). Pre-stable (`v0`). |
-| `/issuer` | The hosted OB 3.0 issuer `Profile`, typed `["Profile","AttestationHost"]`. Its `id` is the DID `did:web:credentials.andamio.io` (`url` stays the homepage). Strict verifiers dereference `issuer.url` here and expect `application/ld+json`; `AttestationHost` is defined in `/context/v0.jsonld`. Nothing signs against it yet. |
+| `/context/v1.jsonld` | The JSON-LD context for Andamio's Open Badges 3.0 extension terms (`AttestationHost`, `OnChainCredentialAnchor`, `onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`, `courseOwner`, flat evidence terms). The current signing context; byte-frozen once published. `/context/v0.jsonld` is retired but serves forever (credentials reference a version URL for life). |
+| `/issuer` | The hosted OB 3.0 issuer `Profile`, typed `["Profile","AttestationHost"]`. Its `id` is the DID `did:web:credentials.andamio.io` (`url` stays the homepage). Strict verifiers dereference `issuer.url` here and expect `application/ld+json`; `AttestationHost` is defined in `/context/v1.jsonld`. |
 | `/.well-known/did.json` | The `did:web:credentials.andamio.io` DID document — publishes the issuer signing key. Verifiers resolve the issuer's `did:web` here. Served as `application/did+ld+json`. (The key is published only; nothing signs yet.) |
 
 > **On naming:** the badge filename's first half is the credential's **course-NFT minting policy id** (56-hex). In Andamio a course is identified by its course-NFT minting policy, so that policy id *is* the course identifier, not a separate one. The second half is the SLT (credential) hash.
@@ -79,7 +79,7 @@ Turns the badge from "Proof-Ring + on-chain anchor" into an independently verifi
 
 Until then, a badge's proof is its Proof-Ring encoding plus the on-chain anchor.
 
-> **Two version axes, do not conflate them.** The repo/release tag (`v1.0.0`, which deploys the static host) is separate from the **JSON-LD schema version**. The schema is still `v0` (pre-stable). The first *stable* `v1.jsonld` ships with the v1.1 signing work. Tagging the repo `v1.0.0` does not make the schema stable.
+> **Two version axes, do not conflate them.** The repo/release tag (`v1.0.0`, which deploys the static host) is separate from the **JSON-LD schema version**. `v1.jsonld` shipped 2026-07-23 as a byte-copy of the (mutated) v0 at a fresh URL — a cache-migration bump, not a vocabulary change (see `docs/solutions/conventions/never-mutate-published-jsonld-context.md`). Vocabulary changes ship as new version files (`v2.jsonld`, ...). Tagging the repo does not version the schema.
 
 ---
 
@@ -109,7 +109,7 @@ Some things you can build on today, and where it's headed:
   ```
 - **Resolve any credential on demand.** You do not need a badge to be pre-generated. Request the URL for any `(policy_id, slt_hash)` pair and the host renders and caches it on first hit.
 - **Verify a badge against the chain.** The rings are an encoding, not decoration. `make verify` decodes a built badge and confirms it matches its on-chain hashes, so the image is self-checking.
-- **Read the credential's schema.** Fetch `/context/v0.jsonld` to see Andamio's OB 3.0 extension terms and build your own renderer or validator against them.
+- **Read the credential's schema.** Fetch `/context/v1.jsonld` to see Andamio's OB 3.0 extension terms and build your own renderer or validator against them.
 - **Regenerate or restyle locally.** `make badges` renders the full set offline and deterministically. Fork the generator in [`generator/`](generator/README.md) to experiment with palettes or encodings (`gen.py`, `colors.py`).
 - **Coming in v1.1:** import a signed, independently verifiable credential into your own app via the SDK, or point people at the standalone wallet-connect viewer, no Andamio account required.
 

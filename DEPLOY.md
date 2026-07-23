@@ -128,7 +128,8 @@ The `Dockerfile` uses **explicit `COPY` of allowlisted paths only** (`context/`,
 - Initial bootstrap (project, WIF, AR, Cloud Run, domain mapping) was done via Terraform; the first image was built and deployed manually as `v0.1.1` (equivalent to what this workflow does).
 - Render service first deploy follows the **Apply order** above (A–F): TF stands the service up on the placeholder image, then `vrender-0.1.0` ships the real image, then TF flips `render_use_placeholder_image = false`.
 - Rollback (either service): re-pin the previous tag in the Terraform vars and `terraform apply`, or `gcloud run deploy` the previous tag. Cloud Run rolls back in <60s. For the render service, dropping `RENDER_UPSTREAM` on the static host disables on-demand fallback entirely (a `/badges/` miss reverts to a plain 404) without touching the render service.
-- `/` returns a tiny 200 landing page (keeps health probes trivial); the deliverable is `/context/v0.jsonld`.
+- **Static/issuer rollback coupling (since the context v1 repoint):** the issuer's boot drift-check fetches the live signing context (`/context/v1.jsonld`) and refuses to start on a 404; running issuer instances sign v1-referencing credentials. Rolling the static host back past the tag that published v1 (`v1.0.8`) while the issuer runs a v1-repointed build is therefore a coupled outage — new issuer instances crash-loop and already-issued credentials reference a dead URL. Static rollbacks past that tag must be paired with an issuer rollback to a pre-repoint `service-v*` tag. `v1.0.8` is the safe static-rollback floor; issuer-only rollback (static stays current) is always safe, because frozen `v0.jsonld` keeps serving forever.
+- `/` returns a tiny 200 landing page (keeps health probes trivial); the deliverables are `/context/v1.jsonld` (current signing context) and `/context/v0.jsonld` (frozen forever).
 
 ## Versioning ops debt (non-blocking)
 

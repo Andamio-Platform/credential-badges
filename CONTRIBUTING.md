@@ -46,7 +46,7 @@ Only an allowlisted set of files is baked into the served image (`Dockerfile` + 
 
 ### Hosted files are versioned, never edited in place
 
-Context files (`context/v0.jsonld`) are immutable once published — credentials in the wild reference a specific version forever. Only fix typos or add a **new** version file; never change a published version. The issuer profile (`issuer/profile.jsonld`) is the documented exception (mutable, cached but not `immutable`).
+Context files (`context/*.jsonld`) are immutable once published — credentials in the wild reference a specific version forever, and verifier document caches never expire. Never change a published version, not even for a typo; ship a **new** version file and add its sha256 pin to `tools/context-freeze.test.ts` in the same PR (the freeze test and the deploy workflow enforce this). The issuer profile (`issuer/profile.jsonld`) is the documented exception (mutable, cached but not `immutable`).
 
 ## Commit messages
 
