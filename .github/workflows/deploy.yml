@@ -19,6 +19,9 @@ permissions:
   id-token: write # required for WIF OIDC
 
 env:
+  # Same host as the did:web DID (tools/gen-did-json.ts) and the hardcoded
+  # probe URL in deploy-issuer.yml — a rename must touch all three.
+  PUBLIC_HOST: credentials.andamio.io
   GCP_PROJECT: andamio-credentials
   GCP_REGION: us-central1
   GCP_SERVICE: credential-badges
@@ -34,6 +37,18 @@ jobs:
 
       - name: Enforce served-file allowlist
         run: bash scripts/ci/check-allowlist.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Context freeze pin — the tagged checkout must match the immutable pins
+        # ci.yml runs only on pull_request and push-to-main, never on tag
+        # pushes. Without this step a tag cut from a commit carrying an
+        # in-place context mutation would deploy, and the byte probe below
+        # would "verify" the mutated bytes against themselves. Dep-free, so
+        # no npm install is needed.
+        run: node --experimental-strip-types --test tools/context-freeze.test.ts
 
       - id: auth
         uses: google-github-actions/auth@v2
@@ -74,7 +89,40 @@ jobs:
             test "$ct" = "$2"
             curl -sf "${URL}$1" >/dev/null
           }
-          assert_ct /context/v0.jsonld   application/ld+json
+          # Loop the checked-out context dir so future versions are covered
+          # with no edit here (same genericity as the byte-verify step below).
+          for f in context/*.jsonld; do
+            assert_ct "/$f" application/ld+json
+          done
           assert_ct /issuer              application/ld+json
           assert_ct /.well-known/did.json application/did+ld+json
           assert_ct /badges/_placeholder.svg image/svg+xml
+
+      - name: Verify served context bytes on the public host (freeze pin, end to end)
+        # The freeze-pin step above proves the tagged checkout matches the
+        # immutable pins; this closes the checkout-vs-served gap (stale image,
+        # LB misroute). Together: served == checkout == pinned. Probing the
+        # PUBLIC host, not *.run.app, is deliberate — the issuer lane already
+        # paid for that lesson (#62/#63): only the LB route proves what
+        # verifiers actually fetch. Loops the checked-out dir, so future
+        # context versions are covered with no edit here.
+        run: |
+          for f in context/*.jsonld; do
+            expected=$(sha256sum "$f" | cut -d' ' -f1)
+            for attempt in 1 2 3 4 5; do
+              # Fetch to a file, not $(...): command substitution strips the
+              # trailing newline and would hash different bytes than served.
+              if curl -sf "https://${PUBLIC_HOST}/$f" -o served.jsonld; then
+                served=$(sha256sum served.jsonld | cut -d' ' -f1)
+              else
+                served="fetch-failed"
+              fi
+              [ "$served" = "$expected" ] && break
+              if [ "$attempt" -lt 5 ]; then
+                echo "attempt $attempt: /$f served=$served expected=$expected — retrying"
+                sleep 5
+              fi
+            done
+            echo "/$f sha256: $served (expected $expected)"
+            test "$served" = "$expected"
+          done
