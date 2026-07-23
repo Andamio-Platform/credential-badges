@@ -71,18 +71,19 @@ jobs:
             --platform managed \
             --quiet
 
-      # /healthz needs no gateway/GCS (it short-circuits in app.py) — the
-      # liveness gate. The rendered-badge check exercises the full live path
-      # (GCS cache + gateway key); the target is derived from the first entry
-      # in generator/credentials.json so it never hardcodes a credential.
-      - name: Verify /healthz + a live-rendered badge content-type
+      # NO external /healthz probe: Google's frontend intercepts the literal
+      # path /healthz on the run.app URL (generic HTML 404, the request never
+      # reaches the container) — the vrender-0.1.2 deploy failed on exactly
+      # this, and the issuer lane hit the same wall earlier (#62). /healthz
+      # remains for Cloud Run's internal probes, which bypass the frontend.
+      # The rendered-badge check below is the real verification anyway — it
+      # exercises the full live path (GCS cache + gateway key); the target is
+      # derived from the first entry in generator/credentials.json so it never
+      # hardcodes a credential.
+      - name: Verify a live-rendered badge content-type
         run: |
           URL=$(gcloud run services describe "${GCP_SERVICE}" --region "${GCP_REGION}" --project "${GCP_PROJECT}" --format='value(status.url)')
           echo "service URL: ${URL}"
-
-          code=$(curl -s -o /dev/null -w '%{http_code}' "${URL}/healthz")
-          echo "/healthz -> ${code}"
-          test "${code}" = "200"
 
           NAME=$(python3 -c "import json;e=json.load(open('generator/credentials.json'))[0];print(f\"{e['course_id']}.{e['slt_hash']}\")")
           echo "render smoke target: /badges/${NAME}.svg"
