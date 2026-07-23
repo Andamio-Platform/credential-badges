@@ -7,7 +7,7 @@
 # repo artifacts the service pins at runtime:
 #   docker build -f issuer-service/Dockerfile -t credential-badges-issuer .
 #
-#   context/v0.jsonld          — the committed Andamio context (closed loader
+#   context/v1.jsonld          — the committed Andamio context (closed loader
 #                                serves these bytes; boot check verifies live)
 #   .well-known/did.json       — bundled drift-check fallback (lockstep CI
 #                                artifact; live did.json is authoritative)
@@ -25,7 +25,7 @@ WORKDIR /app
 COPY issuer-service/package.json issuer-service/package-lock.json issuer-service/
 RUN cd issuer-service && npm ci --omit=dev
 
-COPY context/v0.jsonld           context/v0.jsonld
+COPY context/v1.jsonld           context/v1.jsonld
 COPY .well-known/did.json        .well-known/did.json
 COPY status/                     status/
 COPY generator/credentials.json  generator/credentials.json

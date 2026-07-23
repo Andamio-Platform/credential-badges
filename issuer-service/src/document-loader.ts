@@ -8,7 +8,7 @@
 //     verified at load) — no network fetch at request time, ever. The spike's
 //     disk cache + clearContextCache dance is replaced by build-time pinning.
 //   - The Andamio context is served from the COMMITTED repo bytes
-//     (context/v0.jsonld, baked into the image). The live-host drift check
+//     (context/v1.jsonld, baked into the image). The live-host drift check
 //     the spike ran per-invocation moves to the service's STARTUP checks
 //     (drift-check.ts) — a long-running service must not make the static
 //     host a per-request availability dependency of the signing path.
@@ -28,9 +28,9 @@ import { ISSUER_DID, ANDAMIO_CONTEXT_URL } from "./config.ts";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CONTEXTS_DIR = path.join(HERE, "..", "contexts");
 const MANIFEST_FILE = path.join(CONTEXTS_DIR, "manifest.json");
-// Dockerfile bakes the repo's committed context/v0.jsonld at the same
+// Dockerfile bakes the repo's committed context/v1.jsonld at the same
 // relative location as in the repo checkout.
-const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v0.jsonld");
+const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v1.jsonld");
 
 export type DocumentLoader = (url: string) => Promise<{
   contextUrl: null;

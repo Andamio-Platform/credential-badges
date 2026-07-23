@@ -50,7 +50,7 @@ function fetchServing(map: Record<string, any>): typeof fetch {
 }
 
 const DID_URL = "https://credentials.andamio.io/.well-known/did.json";
-const CTX_URL = "https://credentials.andamio.io/context/v0.jsonld";
+const CTX_URL = "https://credentials.andamio.io/context/v1.jsonld";
 const STATUS_URL = "https://credentials.andamio.io/status/key-epoch-2026-07.json";
 
 const LIVE_URLS = {
@@ -143,7 +143,7 @@ test("REFUSES when the live Andamio context drifts from the committed bytes", as
     runStartupDriftCheck({
       verificationMethodId: VM_ID,
       getOwnPublicKeyMultibase: async () => LIVE_MULTIBASE,
-      fetchImpl: fetchServing({ ...LIVE_URLS, "https://credentials.andamio.io/context/v0.jsonld": drifted }),
+      fetchImpl: fetchServing({ ...LIVE_URLS, "https://credentials.andamio.io/context/v1.jsonld": drifted }),
       retryDelaysMs: [],
       log: () => {},
     }),

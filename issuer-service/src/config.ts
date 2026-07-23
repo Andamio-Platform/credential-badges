@@ -11,7 +11,7 @@
 export const ISSUER_DID = "did:web:credentials.andamio.io";
 export const STATIC_HOST = "https://credentials.andamio.io";
 export const DID_JSON_URL = `${STATIC_HOST}/.well-known/did.json`;
-export const ANDAMIO_CONTEXT_URL = `${STATIC_HOST}/context/v0.jsonld`;
+export const ANDAMIO_CONTEXT_URL = `${STATIC_HOST}/context/v1.jsonld`;
 export const SCAN_URL = "https://andamioscan.io";
 
 // The one network this deployment serves. The route's {network} segment is a
