@@ -38,6 +38,18 @@ jobs:
       - name: Enforce served-file allowlist
         run: bash scripts/ci/check-allowlist.sh
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Context freeze pin — the tagged checkout must match the immutable pins
+        # ci.yml runs only on pull_request and push-to-main, never on tag
+        # pushes. Without this step a tag cut from a commit carrying an
+        # in-place context mutation would deploy, and the byte probe below
+        # would "verify" the mutated bytes against themselves. Dep-free, so
+        # no npm install is needed.
+        run: node --experimental-strip-types --test tools/context-freeze.test.ts
+
       - id: auth
         uses: google-github-actions/auth@v2
         with:
@@ -87,14 +99,13 @@ jobs:
           assert_ct /badges/_placeholder.svg image/svg+xml
 
       - name: Verify served context bytes on the public host (freeze pin, end to end)
-        # The repo-side freeze pin (tools/context-freeze.test.ts) proves the
-        # COMMITTED bytes never change; this closes the repo-vs-served gap the
-        # repo test cannot see (stale image, LB misroute, tag cut from a red
-        # branch). Probing the PUBLIC host, not *.run.app, is deliberate — the
-        # issuer lane already paid for that lesson (#62/#63): only the LB route
-        # proves what verifiers actually fetch. Compares against the checked-out
-        # tag's bytes, so future context versions are covered with no edit here;
-        # CI's freeze test guarantees those bytes equal the immutable pins.
+        # The freeze-pin step above proves the tagged checkout matches the
+        # immutable pins; this closes the checkout-vs-served gap (stale image,
+        # LB misroute). Together: served == checkout == pinned. Probing the
+        # PUBLIC host, not *.run.app, is deliberate — the issuer lane already
+        # paid for that lesson (#62/#63): only the LB route proves what
+        # verifiers actually fetch. Loops the checked-out dir, so future
+        # context versions are covered with no edit here.
         run: |
           for f in context/*.jsonld; do
             expected=$(sha256sum "$f" | cut -d' ' -f1)
@@ -107,8 +118,10 @@ jobs:
                 served="fetch-failed"
               fi
               [ "$served" = "$expected" ] && break
-              echo "attempt $attempt: /$f served=$served expected=$expected — retrying"
-              sleep 5
+              if [ "$attempt" -lt 5 ]; then
+                echo "attempt $attempt: /$f served=$served expected=$expected — retrying"
+                sleep 5
+              fi
             done
             echo "/$f sha256: $served (expected $expected)"
             test "$served" = "$expected"
