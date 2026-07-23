@@ -21,15 +21,21 @@
 /tools/gen-did-json.ts         @workshop-maybe
 /tools/did-pin.test.ts         @workshop-maybe
 
-# The hosted OB 3.0 issuer Profile and the served JSON-LD context (Rung 4). The
-# Profile declares the issuer as ["Profile","AttestationHost"] and names the
-# did:web subject; the context DEFINES the AttestationHost extension term the
-# Profile references. A wrong id, a dropped type, or an undefined term silently
-# breaks strict-verifier expansion for every credential, so changes get a
-# deliberate review. tools/issuer-profile.test.ts pins the shape invariant, so
-# it is gated alongside.
+# The hosted OB 3.0 issuer Profile and the served JSON-LD contexts (Rung 4;
+# v1 added by the context-version bump). The Profile declares the issuer as
+# ["Profile","AttestationHost"] and names the did:web subject; the context
+# DEFINES the AttestationHost extension term the Profile references. A wrong
+# id, a dropped type, or an undefined term silently breaks strict-verifier
+# expansion for every credential, so changes get a deliberate review.
+# Published context versions are immutable forever — the sha256 pins live in
+# tools/context-freeze.test.ts, which is gated alongside (same pattern as
+# did-pin.test.ts). The whole /context/** is gated (matching /.well-known/**
+# and /status/**) so any future version or stray sibling on this forever-
+# public path is reviewed too. tools/issuer-profile.test.ts pins the profile
+# shape invariant, so it is gated alongside as well.
 /issuer/profile.jsonld         @workshop-maybe
-/context/v0.jsonld             @workshop-maybe
+/context/**                    @workshop-maybe
+/tools/context-freeze.test.ts  @workshop-maybe
 /tools/issuer-profile.test.ts  @workshop-maybe
 
 # The served key-epoch BitstringStatusList credential and its builder/tests

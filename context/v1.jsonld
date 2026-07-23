@@ -1,0 +1,105 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@protected": true,
+
+    "andamio": "https://credentials.andamio.io/ns/v0#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+
+    "AttestationHost": "andamio:AttestationHost",
+    "OnChainCredentialAnchor": "andamio:OnChainCredentialAnchor",
+
+    "courseOwner": { "@id": "andamio:courseOwner", "@type": "@id" },
+    "assessor": { "@id": "andamio:assessor", "@type": "@id" },
+
+    "network": "andamio:network",
+    "policyId": "andamio:policyId",
+    "asset": "andamio:asset",
+    "claimTxHash": "andamio:claimTxHash",
+
+    "onChainAnchor": {
+      "@id": "andamio:onChainAnchor",
+      "@context": {
+        "@protected": true,
+        "network": "andamio:network",
+        "type": "andamio:anchorType",
+        "policyId": "andamio:policyId",
+        "assetName": "andamio:assetName",
+        "assetNameAscii": "andamio:assetNameAscii",
+        "assetFingerprint": "andamio:assetFingerprint",
+        "creationTxHash": "andamio:creationTxHash",
+        "creationTime": { "@id": "andamio:creationTime", "@type": "xsd:dateTime" },
+        "claimTxHash": "andamio:claimTxHash",
+        "explorerUrl": { "@id": "andamio:explorerUrl", "@type": "@id" }
+      }
+    },
+
+    "onChainAttestation": {
+      "@id": "andamio:onChainAttestation",
+      "@context": {
+        "@protected": true,
+        "type": "andamio:attestationType",
+        "policyId": "andamio:policyId",
+        "stateHash": "andamio:stateHash",
+        "sltHash": "andamio:sltHash",
+        "completionHash": "andamio:completionHash",
+        "globalStateUtxo": "andamio:globalStateUtxo",
+        "globalStateDatumHash": "andamio:globalStateDatumHash",
+        "verification": "andamio:verification"
+      }
+    },
+
+    "accessToken": {
+      "@id": "andamio:accessToken",
+      "@context": {
+        "@protected": true,
+        "policyId": "andamio:policyId",
+        "userTokenAssetName": "andamio:userTokenAssetName",
+        "userTokenAssetNameAscii": "andamio:userTokenAssetNameAscii",
+        "globalStateAssetName": "andamio:globalStateAssetName",
+        "globalStateAssetNameAscii": "andamio:globalStateAssetNameAscii",
+        "alias": "andamio:alias",
+        "era": "andamio:era",
+        "name": "andamio:tokenName",
+        "image": { "@id": "andamio:image", "@type": "@id" },
+        "appUrl": { "@id": "andamio:appUrl", "@type": "@id" },
+        "userTokenHolder": "andamio:userTokenHolder",
+        "globalStateScriptAddress": "andamio:globalStateScriptAddress",
+        "globalStateUtxo": "andamio:globalStateUtxo"
+      }
+    },
+
+    "requires": {
+      "@id": "andamio:requires",
+      "@container": "@set",
+      "@context": {
+        "@protected": true,
+        "achievementId": { "@id": "andamio:achievementId", "@type": "@id" },
+        "enforcement": "andamio:enforcement",
+        "policyReference": { "@id": "andamio:policyReference", "@type": "@id" },
+        "rationale": "andamio:rationale",
+        "prereqAttestation": {
+          "@id": "andamio:prereqAttestation",
+          "@context": {
+            "@protected": true,
+            "policyId": "andamio:policyId",
+            "sltHash": "andamio:sltHash",
+            "stateHash": "andamio:stateHash",
+            "completionHash": "andamio:completionHash"
+          }
+        }
+      }
+    },
+
+    "prereqAttestation": {
+      "@id": "andamio:prereqAttestation",
+      "@context": {
+        "@protected": true,
+        "policyId": "andamio:policyId",
+        "sltHash": "andamio:sltHash",
+        "stateHash": "andamio:stateHash",
+        "completionHash": "andamio:completionHash"
+      }
+    }
+  }
+}

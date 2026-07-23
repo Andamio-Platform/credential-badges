@@ -19,6 +19,9 @@ permissions:
   id-token: write # required for WIF OIDC
 
 env:
+  # Same host as the did:web DID (tools/gen-did-json.ts) and the hardcoded
+  # probe URL in deploy-issuer.yml — a rename must touch all three.
+  PUBLIC_HOST: credentials.andamio.io
   GCP_PROJECT: andamio-credentials
   GCP_REGION: us-central1
   GCP_SERVICE: credential-badges
@@ -74,7 +77,39 @@ jobs:
             test "$ct" = "$2"
             curl -sf "${URL}$1" >/dev/null
           }
-          assert_ct /context/v0.jsonld   application/ld+json
+          # Loop the checked-out context dir so future versions are covered
+          # with no edit here (same genericity as the byte-verify step below).
+          for f in context/*.jsonld; do
+            assert_ct "/$f" application/ld+json
+          done
           assert_ct /issuer              application/ld+json
           assert_ct /.well-known/did.json application/did+ld+json
           assert_ct /badges/_placeholder.svg image/svg+xml
+
+      - name: Verify served context bytes on the public host (freeze pin, end to end)
+        # The repo-side freeze pin (tools/context-freeze.test.ts) proves the
+        # COMMITTED bytes never change; this closes the repo-vs-served gap the
+        # repo test cannot see (stale image, LB misroute, tag cut from a red
+        # branch). Probing the PUBLIC host, not *.run.app, is deliberate — the
+        # issuer lane already paid for that lesson (#62/#63): only the LB route
+        # proves what verifiers actually fetch. Compares against the checked-out
+        # tag's bytes, so future context versions are covered with no edit here;
+        # CI's freeze test guarantees those bytes equal the immutable pins.
+        run: |
+          for f in context/*.jsonld; do
+            expected=$(sha256sum "$f" | cut -d' ' -f1)
+            for attempt in 1 2 3 4 5; do
+              # Fetch to a file, not $(...): command substitution strips the
+              # trailing newline and would hash different bytes than served.
+              if curl -sf "https://${PUBLIC_HOST}/$f" -o served.jsonld; then
+                served=$(sha256sum served.jsonld | cut -d' ' -f1)
+              else
+                served="fetch-failed"
+              fi
+              [ "$served" = "$expected" ] && break
+              echo "attempt $attempt: /$f served=$served expected=$expected — retrying"
+              sleep 5
+            done
+            echo "/$f sha256: $served (expected $expected)"
+            test "$served" = "$expected"
+          done

@@ -96,7 +96,11 @@ jobs:
             test "$ct" = "$2"
             curl -sf "http://localhost:8080$1" >/dev/null
           }
-          assert_ct /context/v0.jsonld   application/ld+json
+          # Loop the checked-out context dir so future versions are covered
+          # with no edit here.
+          for f in context/*.jsonld; do
+            assert_ct "/$f" application/ld+json
+          done
           assert_ct /issuer              application/ld+json
           assert_ct /.well-known/did.json application/did+ld+json
           assert_ct /did.json            application/did+ld+json

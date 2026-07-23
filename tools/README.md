@@ -65,6 +65,12 @@ cd tools && npm test        # == node --experimental-strip-types --test *.test.t
 - **`gen-did-json.test.ts`** — encoding units (SPKI strip, multibase, round-trip,
   determinism, malformed-key rejection, byte-match against the committed file).
   Hermetic: no network, no KMS.
+- **`context-freeze.test.ts`** — the **context-freeze invariant**: every file
+  in `context/` must be byte-identical to its sha256 pin (`PINNED_CONTEXTS`).
+  Published context versions are immutable forever — an in-place edit, a
+  deleted version, or an unpinned new file is a **red test**, not a silent
+  verification break at caching verifiers. Includes a guard-bites self-test.
+  Deliberately excludes `/status/*` (kill-switch mutability). Hermetic.
 - **`did-pin.test.ts`** — the **key-pin invariant**: the committed
   `.well-known/did.json` must decode to the raw bytes of KMS `vc-sign-ed25519`
   version 1. A wrong or rotated committed key is a **red test**, not a silent
