@@ -80,6 +80,16 @@ jobs:
           test "$code" = "404"
           docker rm -f cbi
 
+  generator-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Generator tests — hermetic, stdlib-only (no pip install): render parity (build output byte-identical to committed badges/; baked badges compared modulo the signed credential block, which tools/bake-signed-vc.test.ts owns), render title/palette rules, and the offline api_client suite. These previously ran nowhere in CI, which let a real parity break land green (docs/solutions/workflow-issues/unwired-test-suites-silently-rot.md)."
+        run: |
+          python3 generator/tests/test_render_parity.py
+          python3 generator/tests/test_render.py
+          python3 generator/tests/test_api_client.py
+
   docker-build:
     runs-on: ubuntu-latest
     steps:

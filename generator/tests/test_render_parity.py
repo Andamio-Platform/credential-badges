@@ -11,6 +11,7 @@ No third-party test framework in this repo — runnable directly:
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -32,9 +33,29 @@ def _nonskipped_records():
     return [r for r in data if r["course_id"] not in build.SKIP_COURSES]
 
 
+# A BAKED badge (tools/bake-signed-vc.ts) has its <openbadges:credential> block
+# replaced with the signed credential, so it legitimately diverges from raw
+# generator output in exactly that one element. Detection: only signed
+# credentials carry a proofValue. For baked badges the parity check normalizes
+# that block out of BOTH sides — everything the generator owns (rings, palette,
+# titles, the unsigned <metadata> block) must still match byte-for-byte. The
+# credential block itself is guarded by tools/bake-signed-vc.test.ts (committed
+# SVG must embed signed-credential.json byte-identically), not by this test.
+_CRED_BLOCK = re.compile(rb"<openbadges:credential\b.*?</openbadges:credential>",
+                         re.S)
+
+
+def _without_credential_block(data):
+    normalized, n = _CRED_BLOCK.subn(b"<openbadges:credential/>", data)
+    assert n == 1, f"expected exactly one openbadges:credential block, found {n}"
+    return normalized
+
+
 def test_build_output_byte_identical_to_committed_badges():
     """Regenerate every badge to a scratch dir via build.py and assert each file
-    is byte-identical to the committed badges/ — never write into the live tree."""
+    is byte-identical to the committed badges/ — never write into the live tree.
+    Baked badges are compared with the signed credential block normalized out
+    (see _CRED_BLOCK above)."""
     records = _nonskipped_records()
     with tempfile.TemporaryDirectory() as out:
         r = subprocess.run([sys.executable, os.path.join(GEN, "build.py"), out],
@@ -44,16 +65,24 @@ def test_build_output_byte_identical_to_committed_badges():
         assert len(produced) == len(records), (
             f"expected {len(records)} badges, build produced {len(produced)}")
         mismatches = []
+        baked = 0
         for name in produced:
             new = open(os.path.join(out, name), "rb").read()
             committed_path = os.path.join(BADGES, name)
             if not os.path.exists(committed_path):
                 mismatches.append(f"{name}: no committed badge to compare")
                 continue
-            if new != open(committed_path, "rb").read():
+            committed = open(committed_path, "rb").read()
+            if b"proofValue" in committed:
+                baked += 1
+                if _without_credential_block(new) != _without_credential_block(committed):
+                    mismatches.append(
+                        f"{name}: generated portions differ from committed baked badge")
+            elif new != committed:
                 mismatches.append(f"{name}: bytes differ from committed badge")
         assert not mismatches, "byte-identity broken:\n  " + "\n  ".join(mismatches)
-    print(f"  ✅ {len(records)} badges byte-identical to committed badges/")
+    print(f"  ✅ {len(records)} badges byte-identical to committed badges/ "
+          f"({baked} baked, compared modulo the signed credential block)")
 
 
 def test_build_svg_wrapper_matches_render_svg():
