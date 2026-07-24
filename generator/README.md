@@ -16,21 +16,24 @@ the art *is* the proof (`make verify`).
 fetch.py   →  credentials.json   →  build.py    →  ../badges/<course_id>.<slt_hash>.svg
 (chain, authed)   (snapshot)         (offline)   ┐
                                                   ├→ rasterize.ts  → ../badges/<stem>.png     (1024x1024)
-                                     og.py ───────┴→ compose-og.ts → ../badges/<stem>.og.png  (1200x630)
+                                     og.py ───────┼→ compose-og.ts → ../badges/<stem>.og.png  (1200x630)
                                      (imaging/, resvg)
+                                     page.py ─────┴→ ../badges/<stem>.html  (display/share page, served at /badges/<stem>)
 ```
 
-Per credential, `badges/` holds three artifacts: the **SVG** (the badge, and the
-verifiable-credential carrier), a **download PNG**, and a **1200x630 Open Graph
-card** for social unfurls. The SVG is the source of truth; the PNGs are raster
-presentation output.
+Per credential, `badges/` holds four artifacts: the **SVG** (the badge, and the
+verifiable-credential carrier), a **download PNG**, a **1200x630 Open Graph
+card** for social unfurls, and a static **display/share page** (`.html`). The
+SVG is the source of truth; the PNGs are raster presentation output; the page is
+a human landing surface served at the extensionless `/badges/{stem}` URL.
 
 | Command | What it does | Needs |
 |---|---|---|
 | `make badges` | Render every badge from `credentials.json`, then self-prune orphans. Deterministic + offline. | Python 3 |
 | `make pngs` | Rasterize `badges/*.svg` → `badges/*.png` (1024x1024) via resvg. | Node ≥ 24, `npm ci` in `../imaging/` |
 | `make og-cards` | Compose + rasterize 1200x630 Open Graph cards → `badges/*.og.png`. | Node ≥ 24, `npm ci` in `../imaging/` |
-| `make reconcile` | Prune `badges/` artifacts (svg/png/og.png) with no `credentials.json` record. | Python 3 |
+| `make pages` | Generate the static display/share page per badge → `badges/*.html`, with server-delivered Open Graph tags. | Python 3 |
+| `make reconcile` | Prune `badges/` artifacts (svg/png/og.png/html) with no `credentials.json` record. | Python 3 |
 | `make verify` | Decode a built badge's rings and check they equal its on-chain hashes. | Python 3 |
 | `make fetch`  | Refresh `credentials.json` from chain (andamioscan + Andamio CLI). | network, authed `andamio` CLI |
 | `make fonts`  | Rebuild `fonts.css` (subset, base64-embed Archivo + Spline Sans Mono). | network, `fonttools`+`brotli` |
@@ -60,7 +63,8 @@ and hands resvg the decoded font buffers. See `../imaging/`.
 - `gen.py` — the SVG generator (palette-driven, ring encoder, OB3 metadata, inlines `fonts.css`).
 - `colors.py` — the 10 palettes + the light-interior transform.
 - `og.py` — composes the 1200x630 Open Graph card SVG per credential (reuses palette + fonts).
-- `reconcile.py` — self-pruning reconciler (#31): deletes `badges/` orphans across svg/png/og.png.
+- `page.py` — generates the static display/share page per credential (#70): server-delivered Open Graph tags in `<head>`, served at the extensionless `/badges/{stem}` URL. Reserves `/badges/{stem}/{alias}` for the holder viewer (#73).
+- `reconcile.py` — self-pruning reconciler (#31): deletes `badges/` orphans across svg/png/og.png/html.
 - `decode.py` — ring-geometry verifier (proves a badge round-trips).
 - `fetch.py` — data refresh from chain → `credentials.json`.
 - `embed_fonts.py` — subset + base64-embed the fonts → `fonts.css`.

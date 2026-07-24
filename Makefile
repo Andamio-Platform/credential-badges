@@ -8,14 +8,15 @@ IMG := imaging
 # this protects local badges/png/og-card regeneration.
 export PYTHONDONTWRITEBYTECODE := 1
 
-.PHONY: help badges verify fetch fonts reconcile pngs og-cards
+.PHONY: help badges verify fetch fonts reconcile pngs og-cards pages
 
 help:
 	@echo "Credential badge generator:"
 	@echo "  make badges    - regenerate badges/ from $(GEN)/credentials.json (offline, deterministic; self-prunes orphans)"
 	@echo "  make pngs      - rasterize badges/*.svg -> badges/*.png at 1024x1024 (resvg; needs 'npm ci' in $(IMG)/)"
 	@echo "  make og-cards  - compose + rasterize 1200x630 Open Graph cards -> badges/*.og.png (needs 'npm ci' in $(IMG)/)"
-	@echo "  make reconcile - prune badges/ artifacts (svg/png/og.png) with no credentials.json record"
+	@echo "  make pages     - generate the static display/share page per badge -> badges/*.html (served extensionless)"
+	@echo "  make reconcile - prune badges/ artifacts (svg/png/og.png/html) with no credentials.json record"
 	@echo "  make verify    - round-trip a built badge's rings back to its on-chain hashes"
 	@echo "  make fetch     - refresh $(GEN)/credentials.json from chain (needs network + authed 'andamio' CLI)"
 	@echo "  make fonts     - rebuild $(GEN)/fonts.css from Google Fonts (needs network + fonttools)"
@@ -30,6 +31,9 @@ og-cards:
 	$(PY) $(GEN)/og.py $(IMG)/.og-build
 	cd $(IMG) && node --experimental-strip-types compose-og.ts .og-build
 	rm -rf $(IMG)/.og-build
+
+pages:
+	$(PY) $(GEN)/page.py
 
 reconcile:
 	$(PY) $(GEN)/reconcile.py

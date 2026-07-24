@@ -98,6 +98,7 @@ jobs:
           python3 generator/tests/test_api_client.py
           python3 generator/tests/test_reconcile.py
           python3 generator/tests/test_og.py
+          python3 generator/tests/test_page.py
 
   imaging:
     runs-on: ubuntu-latest
@@ -162,6 +163,24 @@ jobs:
           png_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/$STEM.nope.png")
           echo "/badges/<miss>.png -> $png_404 (expected 404, not a 502 render-proxy error)"
           test "$png_404" = "404"
+          # v1.2 display/share page (#70): the EXTENSIONLESS /badges/{stem} serves
+          # the generated HTML page as text/html (try_files internally redirects
+          # to {stem}.html), with the server-delivered Open Graph tags in <head>.
+          assert_ct /badges/$STEM         text/html
+          page_body=$(curl -sf "http://localhost:8080/badges/$STEM")
+          echo "$page_body" | grep -q 'property="og:image"' || { echo "page missing og:image tag"; exit 1; }
+          echo "$page_body" | grep -q 'twitter:card' || { echo "page missing twitter:card tag"; exit 1; }
+          echo "/badges/$STEM carries og:image + twitter:card in delivered HTML"
+          # R3 regression: the badge IMAGE URL is byte-for-byte unchanged — the
+          # extensionless page must NOT shadow or move /badges/{stem}.svg.
+          assert_ct /badges/$STEM.svg     image/svg+xml
+          # Direct .html access serves the same page bytes as text/html (the
+          # extensionless form is canonical; this is the nested `~ \.html$` route).
+          assert_ct /badges/$STEM.html    text/html
+          # An extensionless page miss is a clean 404 (never @render).
+          page_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.0000000000000000000000000000000000000000000000000000000000000000")
+          echo "/badges/<miss> (extensionless) -> $page_404 (expected 404)"
+          test "$page_404" = "404"
           assert_ct /design/             text/html
           assert_ct /                    text/plain
           # /design must 301 to exactly /design/ — index.html loads assets
