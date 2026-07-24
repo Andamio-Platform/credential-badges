@@ -48,7 +48,7 @@ def test_check_page_walks_non_andamio_path():
     assert "without trusting" in html and "Andamio" in html
     assert "did:web:credentials.andamio.io" in html, "resolve-issuer step missing"
     assert "signature" in html.lower(), "verify-signature step missing"
-    assert "andamioscan.io" in html and "Cardano explorer" in html, "chase-anchor step missing"
+    assert 'href="https://andamioscan.io"' in html and "Cardano explorer" in html, "chase-anchor step missing"
     assert "status list" in html.lower(), "status step missing"
     print("  ✅ check page walks the non-Andamio path end to end")
 
