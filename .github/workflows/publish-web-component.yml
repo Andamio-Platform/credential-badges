@@ -1,0 +1,59 @@
+name: publish-web-component
+
+# npm-publish deploy lane for @andamio/andamio-badge (#74).
+#
+# Its own tag prefix — `wc-v*` — non-overlapping with the other lanes so no tag
+# double-fires: `v[0-9]*.*.*` (static host, deploy.yml), `vrender-*` (render),
+# `service-v*` (issuer). `wc-v1.2.3` matches none of those.
+#
+# This lane authenticates to NPM, not GCP, so the GCP-WIF `refs/tags/v*`
+# constraint is irrelevant here. Prerequisites (external, one-time):
+#   - the `@andamio` npm org exists (it does), and
+#   - an `NPM_TOKEN` repo secret with publish rights to it.
+# Until NPM_TOKEN is set the publish step fails LOUD (npm 401) rather than
+# silently succeeding — matching the repo's fail-loud posture.
+#
+# Provenance: `id-token: write` + `npm publish --provenance` attaches a signed
+# build-provenance statement (the package.json also sets publishConfig.provenance).
+
+on:
+  push:
+    tags:
+      - "wc-v*"
+
+permissions:
+  contents: read
+  id-token: write   # npm publish --provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-component
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      # The published API is dependency-free vanilla ESM — no build, no install.
+      # Run the pure-logic tests as a gate before publishing.
+      - name: Test
+        run: node --experimental-strip-types --test andamio-badge.test.ts
+
+      # Guard: the tag must match the package version, so `wc-v1.2.3` can never
+      # publish a package whose package.json says something else.
+      - name: Assert tag matches package version
+        run: |
+          tag="${GITHUB_REF_NAME#wc-v}"
+          pkg=$(node -p "require('./package.json').version")
+          echo "tag version: $tag / package.json version: $pkg"
+          test "$tag" = "$pkg" || { echo "tag wc-v$tag != package version $pkg"; exit 1; }
+
+      - name: Publish to npm (public, with provenance)
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
