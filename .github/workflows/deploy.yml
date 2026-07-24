@@ -110,6 +110,9 @@ jobs:
           # or a try_files/content-type regression on the real path is caught here.
           assert_ct "/badges/$STEM"        text/html
           curl -sf "${URL}/badges/$STEM" | grep -q 'og:image' || { echo "deployed page missing og:image"; exit 1; }
+          # v1.2 embed variant (#71): a new served URL under the same
+          # try_files-to-.html routing — probe it on the deployed revision too.
+          assert_ct "/badges/$STEM.embed"  text/html
 
       - name: Verify served context bytes on the public host (freeze pin, end to end)
         # The freeze-pin step above proves the tagged checkout matches the

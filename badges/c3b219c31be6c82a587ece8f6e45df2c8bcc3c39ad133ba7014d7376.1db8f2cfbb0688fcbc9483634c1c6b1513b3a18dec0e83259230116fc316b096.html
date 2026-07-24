@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Projects End-to-End — Build on Andamio · Andamio</title>
-<meta name="description" content="Projects End-to-End — a credential from Build on Andamio, anchored on Cardano and independently checkable by DI-capable OB 3.0 / VC verifiers.">
+<meta name="description" content="Projects End-to-End — a credential from Build on Andamio, anchored on Cardano.">
 <meta name="theme-color" content="#08140F">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Andamio Credentials">
 <meta property="og:title" content="Projects End-to-End">
-<meta property="og:description" content="Projects End-to-End — a credential from Build on Andamio, anchored on Cardano and independently checkable by DI-capable OB 3.0 / VC verifiers.">
+<meta property="og:description" content="Projects End-to-End — a credential from Build on Andamio, anchored on Cardano.">
 <meta property="og:url" content="https://credentials.andamio.io/badges/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096">
 <meta property="og:image" content="https://credentials.andamio.io/badges/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096.og.png">
 <meta property="og:image:width" content="1200">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Projects End-to-End — Build on Andamio credential badge">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Projects End-to-End">
-<meta name="twitter:description" content="Projects End-to-End — a credential from Build on Andamio, anchored on Cardano and independently checkable by DI-capable OB 3.0 / VC verifiers.">
+<meta name="twitter:description" content="Projects End-to-End — a credential from Build on Andamio, anchored on Cardano.">
 <meta name="twitter:image" content="https://credentials.andamio.io/badges/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096.og.png">
 <style>
 :root{--deep:#08140F;--ink:#0E1E18;--raised:#163026;--prim:#E9B23C;--prim-lt:#F3CE80;--sec:#46D6A0;--bone:#E7EDE6;--slate:#6E8478;--hair:#244236;}
@@ -34,8 +34,13 @@ h1{font-size:clamp(24px,5vw,34px);font-weight:800;line-height:1.15;margin:0 0 8p
 .verify{font-size:13px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto;}
 .verify a{color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}
 .verify a:hover{border-bottom-color:var(--sec);}
-/* Slots for the share actions (#71) and explainer links (#72) — populated later. */
+/* Slots for the share actions (#71) and explainer links (#72). */
 .actions:empty,.explainers:empty{display:none;}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 12px;}
+.btn{appearance:none;cursor:pointer;font:inherit;font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--bone);text-decoration:none;}
+.btn:hover{border-color:var(--sec);color:var(--sec);}
+.actions-note{font-size:12px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto 22px;}
+.actions-note strong{color:var(--bone);}
 a{color:var(--sec);}
 </style>
 </head>
@@ -49,15 +54,41 @@ a{color:var(--sec);}
   <p class="course">Build on Andamio</p>
   <p class="issuer">Issued by Andamio</p>
 
-  <!-- share actions (#71) attach here -->
-  <div class="actions" data-slot="share-actions"></div>
+  <div class="actions" data-slot="share-actions">
+    <a class="btn" href="/badges/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096.svg" download>Download SVG</a>
+    <a class="btn" href="/badges/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096.png" download>Download PNG</a>
+    <button class="btn" type="button" data-share-copy hidden>Copy link</button>
+    <a class="btn" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fc3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096&amp;text=Projects%20End-to-End&amp;hashtags=Andamio,Cardano" target="_blank" rel="noopener">Share on X</a>
+    <a class="btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fc3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096" target="_blank" rel="noopener">Share on LinkedIn</a>
+    <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
+    <button class="btn" type="button" data-share-embed data-embed="&lt;iframe src=&quot;https://credentials.andamio.io/badges/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096.embed&quot; width=&quot;340&quot; height=&quot;380&quot; style=&quot;border:0&quot; loading=&quot;lazy&quot; title=&quot;Andamio credential badge&quot;&gt;&lt;/iframe&gt;" hidden>Copy embed code</button>
+    <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=Projects%20End-to-End&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fc3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096&amp;certId=c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376.1db8f2cfbb0688fcbc9483634c1c6b1513b3a18dec0e83259230116fc316b096" target="_blank" rel="noopener">Add to LinkedIn profile</a>
+  </div>
+  <p class="actions-note">Download the <strong>SVG</strong> — it carries this credential's data, anchored on-chain. (Signed verifiable-credential baking, checkable by DI-capable OB 3.0 / VC verifiers, is rolling out; the PNG is for display.)</p>
   <!-- explainer links (#72) attach here -->
   <div class="explainers" data-slot="explainers"></div>
 
   <hr class="divider">
-  <p class="verify">This badge is anchored on Cardano. The badge image is a
-     self-contained credential you can download and check with DI-capable
-     OB 3.0 / VC verifiers — no need to trust Andamio.</p>
+  <p class="verify">This badge is anchored on Cardano — the on-chain record is the proof. Signed verifiable-credential baking, checkable by DI-capable OB 3.0 / VC verifiers, is rolling out.</p>
 </main>
+<script>
+(function(){
+  // Capture the true label once (data-label) so a rapid re-click can't strand
+  // the button on the transient 'Copied!' text.
+  function flash(b,m){if(!b.dataset.label)b.dataset.label=b.textContent;b.textContent=m;
+    clearTimeout(b._t);b._t=setTimeout(function(){b.textContent=b.dataset.label;},1500);}
+  function copyTo(b,text,ok){navigator.clipboard.writeText(text)
+    .then(function(){flash(b,ok);}).catch(function(){flash(b,'Copy failed');});}
+  var copy=document.querySelector('[data-share-copy]');
+  if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',function(){
+    copyTo(copy,location.href,'Copied!');});}
+  var emb=document.querySelector('[data-share-embed]');
+  if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
+    copyTo(emb,emb.getAttribute('data-embed'),'Embed copied!');});}
+  var ws=document.querySelector('[data-share-web]');
+  if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
+    navigator.share({title:document.title,url:location.href}).catch(function(){});});}
+})();
+</script>
 </body>
 </html>

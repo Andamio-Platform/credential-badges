@@ -25,13 +25,22 @@ import page      # noqa: E402
 import colors    # noqa: E402
 import build     # noqa: E402
 
-REC = {
+REC = {  # an UNBAKED (presentation-only) badge — the common case
     "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
     "slt_hash": "9fa3cdce9eaa801270d42154dcb12b64448bfab826971f1d0e74f9d0e87cc3e9",
     "course_title": "Run GovTool Locally (Minikube + K8s)",
     "module_title": "Deploy the Proposal Pillar",
 }
 STEM = f"{REC['course_id']}.{REC['slt_hash']}"
+
+# The flagship — the one committed badge whose SVG carries a signed VC (proofValue).
+FLAGSHIP_REC = {
+    "course_id": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
+    "slt_hash": "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",
+    "course_title": "Andamio Issuer",
+    "module_title": "About Andamio Issuer",
+}
+FLAGSHIP_STEM = f"{FLAGSHIP_REC['course_id']}.{FLAGSHIP_REC['slt_hash']}"
 
 
 def test_well_formed_html():
@@ -74,9 +83,11 @@ def test_theme_color_matches_palette():
 def test_html_escaping():
     rec = dict(REC, module_title='A & B <script> "x"')
     html = page._page_html(rec)
-    assert "<script>" not in html, "raw markup must be escaped, never injected"
+    # The page carries a legitimate inline enhancement <script>; what must NEVER
+    # appear is the user's injected markup rendered raw.
+    assert '<script> "x"' not in html, "user markup must be escaped, never injected"
     assert "&amp;" in html and "&lt;script&gt;" in html
-    print("  ✅ interpolated text is HTML-escaped")
+    print("  ✅ interpolated user text is HTML-escaped (injection blocked)")
 
 
 def test_quote_escaped_in_attribute_context():
@@ -111,6 +122,148 @@ def test_alt_text_present_and_escaped():
     print("  ✅ og:image:alt + img alt present and escaped")
 
 
+def test_download_controls_present():
+    html = page._page_html(REC)
+    assert f'href="/badges/{STEM}.svg" download' in html, "download-SVG control missing"
+    assert f'href="/badges/{STEM}.png" download' in html, "download-PNG control missing"
+    assert "PNG is for display" in html
+    print("  ✅ download SVG/PNG controls present")
+
+
+def test_verifiability_copy_is_baked_aware():
+    """Only a signed/baked badge may claim its SVG *is* a checkable verifiable
+    credential (CONCEPTS: Flagship Badge). The presentation-only majority must
+    NOT overclaim a signature that isn't there."""
+    unbaked = page._page_html(REC)              # REC is unbaked
+    assert "is the signed verifiable credential" not in unbaked, "must not overclaim for unbaked"
+    assert "anchored on-chain" in unbaked
+    assert page._is_baked(STEM) is False
+
+    baked = page._page_html(FLAGSHIP_REC)       # flagship carries proofValue
+    assert page._is_baked(FLAGSHIP_STEM) is True, "flagship should read as baked"
+    assert "is the signed verifiable credential" in baked, "flagship claims signed VC"
+    # wording gate holds in both
+    assert "any OB3 verifier" not in unbaked and "any OB3 verifier" not in baked
+    print("  ✅ verifiability copy gated on baked/signed state (no overclaim)")
+
+
+def test_x_intent_link():
+    html = page._page_html(REC)
+    assert "twitter.com/intent/tweet?url=" in html
+    assert page._q(f"https://credentials.andamio.io/badges/{STEM}") in html, "page url must be percent-encoded"
+    assert "hashtags=Andamio,Cardano" in html, "hashtags comma-separated, no #"
+    assert "%23" not in html.split("hashtags=")[1][:40], "hashtags must not contain #"
+    print("  ✅ X intent link: encoded url + comma hashtags, no #")
+
+
+def test_linkedin_share_link_url_only():
+    html = page._page_html(REC)
+    assert "linkedin.com/sharing/share-offsite/?url=" in html
+    # the share-offsite href carries only url= (title/desc come from OG tags)
+    frag = html.split("share-offsite/?")[1].split('"')[0]
+    assert frag.startswith("url="), frag
+    assert "&amp;text" not in frag and "&text" not in frag, "share-offsite must be url-only"
+    print("  ✅ LinkedIn share link is url-only")
+
+
+def test_linkedin_add_to_profile_link():
+    html = page._page_html(REC)
+    assert "linkedin.com/profile/add?startTask=CERTIFICATION_NAME" in html
+    assert "organizationName=Andamio%20Teams" in html, "org falls back to name until ORG_ID set"
+    assert f"certUrl={page._q('https://credentials.andamio.io/badges/' + STEM)}" in html
+    assert f"certId={page._q(STEM)}" in html
+    print("  ✅ LinkedIn add-to-profile deep link (org name fallback, certUrl=page)")
+
+
+def test_share_encoding_no_attribute_breakout():
+    rec = dict(REC, module_title='Deploy & "the" Pillar')
+    html = page._page_html(rec)
+    # percent-encoded in the query (space -> %20, quote -> %22, & -> %26)
+    assert "%22" in html and "%20" in html
+    # the intent hrefs stay well-formed (no raw quote breaking the attribute)
+    assert 'href="https://twitter.com/intent/tweet?url=' in html
+    print("  ✅ share URLs percent-encode title; hrefs stay well-formed")
+
+
+def test_progressive_enhancement_buttons_hidden_and_script_present():
+    html = page._page_html(REC)
+    for marker in ("data-share-copy", "data-share-web", "data-share-embed"):
+        assert marker in html, f"{marker} button missing"
+    # JS-only buttons ship hidden so a no-JS client sees no dead button
+    assert 'data-share-copy hidden' in html
+    assert 'data-share-web hidden' in html
+    assert 'data-share-embed data-embed=' in html and 'hidden>' in html
+    assert "<script>" in html and "navigator.share" in html and "navigator.clipboard" in html
+    print("  ✅ JS-only controls hidden until enhanced; inline script present")
+
+
+def test_embed_data_attribute_escaped():
+    html = page._page_html(REC)
+    # the iframe snippet is HTML-escaped inside data-embed (no raw < breaking out)
+    assert f"data-embed=\"&lt;iframe src=&quot;https://credentials.andamio.io/badges/{STEM}.embed" in html
+    print("  ✅ embed snippet HTML-escaped in data-embed")
+
+
+def test_hostile_title_never_renders_raw_anywhere():
+    """Whole-page escaping invariant: a classic XSS payload as the title must not
+    appear raw in ANY context of the rendered page — text, attributes, share
+    hrefs, or data-embed."""
+    payload = '"><img src=x onerror=alert(1)>'
+    html = page._page_html(dict(REC, module_title=payload, course_title=payload))
+    # The payload's raw <img tag must never appear live — only entity-escaped
+    # (&lt;img…) as inert text or percent-encoded in share URLs. (The badge's own
+    # <img class="badge"…> is ours, not the payload, so match the payload's src=x.)
+    assert "<img src=x" not in html, "raw injected <img> tag leaked"
+    assert '"><img' not in html, "attribute-breakout payload leaked"
+    assert "onerror=alert(1)>" not in html, "raw onerror handler leaked"
+    assert "&lt;img src=x" in html, "payload should survive only entity-escaped"
+    print("  ✅ hostile title never renders as a live tag in any page context")
+
+
+def test_share_script_is_a_constant_no_per_badge_interpolation():
+    """The inline enhancement script must be identical across badges — no title/
+    stem is ever interpolated into JS (would be an injection channel)."""
+    a = page._page_html(REC)
+    b = page._page_html(dict(REC, module_title='evil");alert(1)//'))
+    assert page._SHARE_SCRIPT in a and page._SHARE_SCRIPT in b, "script must be the shared constant"
+    # the script block is byte-identical in both pages
+    assert a.count(page._SHARE_SCRIPT) == 1
+    print("  ✅ inline script is a constant (no per-badge JS interpolation)")
+
+
+def test_empty_title_share_urls_use_fallback():
+    """A title that sanitizes to empty must carry the 'Credential' fallback into
+    the X text= and LinkedIn name= params — never an empty share URL."""
+    html = page._page_html(dict(REC, module_title="中文"))  # sanitizes to empty
+    assert f"text={page._q('Credential')}" in html, "X intent text= must use fallback"
+    assert f"name={page._q('Credential')}" in html, "LinkedIn name= must use fallback"
+    print("  ✅ empty title falls back to 'Credential' in share URLs")
+
+
+def test_ctx_shared_derivation_agrees_across_builders():
+    """The page and embed builders derive from one _ctx, so their page_url/stem
+    agree for the same record (regression guard against the old duplication)."""
+    ctx = page._ctx(REC)
+    assert ctx["page_url"] == f"https://credentials.andamio.io/badges/{STEM}"
+    assert f'href="{ctx["page_url"]}"' in page._embed_html(REC)
+    assert f'content="{ctx["page_url"]}"' in page._page_html(REC)  # og:url
+    print("  ✅ page + embed share one _ctx derivation (no drift)")
+
+
+def test_embed_variant_minimal_and_links_back():
+    html = page._embed_html(REC)
+    assert html.startswith("<!doctype html>") and html.rstrip().endswith("</html>")
+    # ROOT-relative img src (not absolute) so it resolves against the iframe's
+    # own origin (credentials.andamio.io) when embedded on a third-party page.
+    assert f'src="/badges/{STEM}.svg"' in html, "embed img must be root-relative"
+    assert f'src="https://credentials.andamio.io/badges/{STEM}.svg"' not in html
+    assert f'href="https://credentials.andamio.io/badges/{STEM}"' in html, "embed must link back to the page"
+    assert 'name="viewport"' in html, "embed needs a viewport meta for the iframe"
+    # minimal: no share chrome
+    assert "data-share-copy" not in html and "twitter.com/intent" not in html
+    print("  ✅ embed variant: minimal, shows badge, links back to the page")
+
+
 def test_main_output_byte_identical_to_committed_pages():
     """Parity guard (mirrors test_render_parity.py): regenerate every page via
     page.main() into a scratch dir and assert each is byte-identical to the
@@ -124,8 +277,12 @@ def test_main_output_byte_identical_to_committed_pages():
                            capture_output=True, text=True)
         assert r.returncode == 0, f"page.py failed: {r.stderr}"
         produced = [f for f in os.listdir(out) if f.endswith(".html")]
-        assert len(produced) == len(records), (
-            f"expected {len(records)} pages, main() produced {len(produced)}")
+        pages = [f for f in produced if not f.endswith(".embed.html")]
+        embeds = [f for f in produced if f.endswith(".embed.html")]
+        assert len(pages) == len(records), (
+            f"expected {len(records)} pages, main() produced {len(pages)}")
+        assert len(embeds) == len(records), (
+            f"expected {len(records)} embed variants, main() produced {len(embeds)}")
         mismatches = []
         for name in produced:
             new = open(os.path.join(out, name), "rb").read()

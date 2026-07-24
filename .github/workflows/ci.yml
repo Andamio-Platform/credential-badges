@@ -171,6 +171,24 @@ jobs:
           echo "$page_body" | grep -q 'property="og:image"' || { echo "page missing og:image tag"; exit 1; }
           echo "$page_body" | grep -q 'twitter:card' || { echo "page missing twitter:card tag"; exit 1; }
           echo "/badges/$STEM carries og:image + twitter:card in delivered HTML"
+          # v1.2 share actions (#71): the delivered page carries the share
+          # controls (a download link + an X share intent + the LinkedIn
+          # add-to-profile deep link).
+          echo "$page_body" | grep -q "href=\"/badges/$STEM.svg\" download" || { echo "page missing download-SVG control"; exit 1; }
+          echo "$page_body" | grep -q 'twitter.com/intent/tweet' || { echo "page missing X share intent"; exit 1; }
+          echo "$page_body" | grep -q 'linkedin.com/profile/add' || { echo "page missing LinkedIn add-to-profile"; exit 1; }
+          echo "/badges/$STEM carries the share controls"
+          # The embed variant (#71): /badges/{stem}.embed serves the minimal
+          # iframe page as text/html (via the same try_files $uri.html routing),
+          # showing the badge and linking back to the display page.
+          assert_ct /badges/$STEM.embed   text/html
+          embed_body=$(curl -sf "http://localhost:8080/badges/$STEM.embed")
+          echo "$embed_body" | grep -q "/badges/$STEM\"" || { echo "embed missing link back to the page"; exit 1; }
+          echo "/badges/$STEM.embed serves the embed variant, links back to the page"
+          # An embed miss for a nonexistent stem 404s cleanly (same try_files path).
+          embed_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.0000000000000000000000000000000000000000000000000000000000000000.embed")
+          echo "/badges/<miss>.embed -> $embed_404 (expected 404)"
+          test "$embed_404" = "404"
           # R3 regression: the badge IMAGE URL is byte-for-byte unchanged — the
           # extensionless page must NOT shadow or move /badges/{stem}.svg.
           assert_ct /badges/$STEM.svg     image/svg+xml
