@@ -36,6 +36,7 @@ are human/third-party surfaces.
 | `make pngs` | Rasterize `badges/*.svg` → `badges/*.png` (1024x1024) via resvg. | Node ≥ 24, `npm ci` in `../imaging/` |
 | `make og-cards` | Compose + rasterize 1200x630 Open Graph cards → `badges/*.og.png`. | Node ≥ 24, `npm ci` in `../imaging/` |
 | `make pages` | Generate the display/share page (`*.html`, OG tags + share actions) and the embed variant (`*.embed.html`) per badge. | Python 3 |
+| `make explainers` | Generate the two explainers → `badges/how-to-share.html`, `how-to-check.html` (served at `/badges/how-to-share`, `/badges/how-to-check`). | Python 3 |
 | `make reconcile` | Prune `badges/` artifacts (svg/png/og.png/html/embed.html) with no `credentials.json` record. | Python 3 |
 | `make verify` | Decode a built badge's rings and check they equal its on-chain hashes. | Python 3 |
 | `make fetch`  | Refresh `credentials.json` from chain (andamioscan + Andamio CLI). | network, authed `andamio` CLI |
@@ -67,6 +68,7 @@ and hands resvg the decoded font buffers. See `../imaging/`.
 - `colors.py` — the 10 palettes + the light-interior transform.
 - `og.py` — composes the 1200x630 Open Graph card SVG per credential (reuses palette + fonts).
 - `page.py` — generates the static display/share page per credential (#70): server-delivered Open Graph tags in `<head>`, served at the extensionless `/badges/{stem}` URL, with the **share actions** (#71 — download SVG/PNG, copy link, X/LinkedIn intents, Web Share, copy-embed, LinkedIn add-to-profile) filled into the page and a small inline progressive-enhancement script. Also emits the **minimal embed variant** `badges/{stem}.embed.html`, served at `/badges/{stem}.embed` (the iframe target). Reserves `/badges/{stem}/{alias}` for the holder viewer (#73).
+- `explainers.py` — generates the two general explainers (#72): `how-to-share.html` (holder) and `how-to-check.html` (verifier, adapting `../docs/verifier-guidance.md`), linked from every badge page. Non-hex stems, so inert to the reconciler; guarded by `imaging/check-artifacts.ts`.
 - `reconcile.py` — self-pruning reconciler (#31): deletes `badges/` orphans across svg/png/og.png/html/embed.html.
 - `decode.py` — ring-geometry verifier (proves a badge round-trips).
 - `fetch.py` — data refresh from chain → `credentials.json`.

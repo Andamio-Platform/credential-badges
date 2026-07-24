@@ -99,6 +99,7 @@ jobs:
           python3 generator/tests/test_reconcile.py
           python3 generator/tests/test_og.py
           python3 generator/tests/test_page.py
+          python3 generator/tests/test_explainers.py
 
   imaging:
     runs-on: ubuntu-latest
@@ -189,6 +190,17 @@ jobs:
           embed_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.0000000000000000000000000000000000000000000000000000000000000000.embed")
           echo "/badges/<miss>.embed -> $embed_404 (expected 404)"
           test "$embed_404" = "404"
+          # v1.2 explainers (#72): both are served text/html at their
+          # extensionless URLs; the check-this page walks the non-Andamio path.
+          assert_ct /badges/how-to-share text/html
+          assert_ct /badges/how-to-check text/html
+          check_body=$(curl -sf "http://localhost:8080/badges/how-to-check")
+          echo "$check_body" | grep -q 'without trusting' || { echo "check page missing 'without trusting' framing"; exit 1; }
+          echo "$check_body" | grep -q 'did:web:credentials.andamio.io' || { echo "check page missing did:web resolve step"; exit 1; }
+          echo "$check_body" | grep -q 'andamioscan.io' || { echo "check page missing on-chain anchor step"; exit 1; }
+          echo "/badges/how-to-check walks the non-Andamio verification path"
+          # the badge page links both explainers
+          echo "$page_body" | grep -q 'href="/badges/how-to-share"' || { echo "badge page missing explainer links"; exit 1; }
           # R3 regression: the badge IMAGE URL is byte-for-byte unchanged — the
           # extensionless page must NOT shadow or move /badges/{stem}.svg.
           assert_ct /badges/$STEM.svg     image/svg+xml

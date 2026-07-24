@@ -29,18 +29,13 @@ import sys
 from urllib.parse import quote
 
 import colors
-from gen import esc
+from gen import esc, HOST, ISSUER
 from render import sanitize_title
 from build import SKIP_COURSES
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "credentials.json")
 DEFAULT_OUT = os.path.join(HERE, "..", "badges")
-
-# The forever-public host. Single source here, matching gen.py's hard-coded
-# https://credentials.andamio.io/context/v1.jsonld and the did:web issuer.
-HOST = "https://credentials.andamio.io"
-ISSUER = "Andamio"
 
 OG_W, OG_H = 1200, 630
 
@@ -249,6 +244,9 @@ h1{{font-size:clamp(24px,5vw,34px);font-weight:800;line-height:1.15;margin:0 0 8
 .btn:hover{{border-color:var(--sec);color:var(--sec);}}
 .actions-note{{font-size:12px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto 22px;}}
 .actions-note strong{{color:var(--bone);}}
+.explainers{{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin:0 0 4px;}}
+.explainer{{font-size:13px;color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}}
+.explainer:hover{{border-bottom-color:var(--sec);}}
 a{{color:var(--sec);}}
 </style>
 </head>"""
@@ -267,8 +265,10 @@ a{{color:var(--sec);}}
   <p class="issuer">Issued by {ISSUER}</p>
 
   {_share_controls(stem, module_title, page_url, baked)}
-  <!-- explainer links (#72) attach here -->
-  <div class="explainers" data-slot="explainers"></div>
+  <div class="explainers" data-slot="explainers">
+    <a class="explainer" href="/badges/how-to-share">How do I share this?</a>
+    <a class="explainer" href="/badges/how-to-check">How do I check this?</a>
+  </div>
 
   <hr class="divider">
   <p class="verify">{_verify_note(baked)}</p>

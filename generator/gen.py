@@ -23,6 +23,12 @@ _FONTCSS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts.css")
 FONT_FACE = (open(_FONTCSS).read() if os.path.exists(_FONTCSS)
              else "@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap');")
 
+# Forever-public host + issuer name — the shared leaf constants for every page
+# generator (page.py, explainers.py). gen.py is the common leaf both import, so
+# these live here rather than coupling explainers.py to page.py's heavy surface.
+HOST = "https://credentials.andamio.io"
+ISSUER = "Andamio"
+
 COURSE_TITLE = "Andamio for Developers"
 MODULE_TITLE = "Transactions"
 COURSE_ID    = "6348bba0f9b7d7e0353715ece5946f3b61de433d314e84dad313a677"          # 28 bytes

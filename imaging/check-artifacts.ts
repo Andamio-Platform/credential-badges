@@ -89,13 +89,41 @@ for (const svg of svgs) {
   }
 }
 
+// The two explainers (#72) are general editorial pages (non-hex stems), so the
+// per-credential orphan guard is blind to them — check them here so a deleted OR
+// body-wiped explainer fails CI. Content markers are the real check: a byte-size
+// floor is useless (the ~56KB inlined font CSS keeps even an empty-body page
+// well over any floor), so require distinctive body content per page.
+const EXPLAINERS: Array<[string, string[]]> = [
+  ["how-to-share.html", ["How do I share this badge?", "learning target"]],
+  ["how-to-check.html",
+   ["without trusting", "did:web:credentials.andamio.io", "andamioscan.io"]],
+];
+for (const [name, markers] of EXPLAINERS) {
+  const path = join(BADGES, name);
+  if (!existsSync(path)) {
+    problems.push(`missing ${name} (explainer)`);
+    continue;
+  }
+  const html = readFileSync(path, "utf8");
+  for (const m of markers) {
+    if (!html.includes(m)) problems.push(`${name}: missing content marker "${m}" — page malformed`);
+  }
+}
+// The check page links docs/verifier-guidance.md for depth; guard the mirrored
+// doc still exists so the trust page's depth link can't silently 404 on a rename.
+if (!existsSync(join(dirname(BADGES), "docs", "verifier-guidance.md"))) {
+  problems.push("docs/verifier-guidance.md missing — how-to-check's depth link would 404");
+}
+
 console.error(
   `checked ${svgs.length} badges — png/og-card existence + dimensions + byte-floor, ` +
-    `and page (.html) existence (not byte-identity; resvg raster is not byte-stable cross-platform).`,
+    `page (.html) + embed (.embed.html) existence, and the two explainers ` +
+    `(not byte-identity; resvg raster is not byte-stable cross-platform).`,
 );
 if (problems.length) {
   console.error(`FAIL: ${problems.length} problem(s):`);
   for (const p of problems) console.error(`  ${p}`);
   process.exit(1);
 }
-console.error(`OK: every badge has a 1024x1024 .png, a 1200x630 .og.png (all >= ${MIN_BYTES}B), a .html page, and a .embed.html variant`);
+console.error(`OK: every badge has a 1024x1024 .png, a 1200x630 .og.png (all >= ${MIN_BYTES}B), a .html page, and a .embed.html variant; both explainers present`);
