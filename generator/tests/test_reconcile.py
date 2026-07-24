@@ -90,6 +90,21 @@ def test_orphan_pruned_across_all_types():
     print("  ✅ dropped credential pruned across svg/png/og.png/html/embed.html")
 
 
+def test_known_suffixes_ordered_longest_first():
+    """split_stem depends on longer suffixes being tried before shorter ones they
+    end with (.og.png before .png; .embed.html before .html). The ordering is
+    derived (sorted by length) so this invariant can't silently break as suffixes
+    are added."""
+    lengths = [len(s) for s in reconcile.KNOWN_SUFFIXES]
+    assert lengths == sorted(lengths, reverse=True), \
+        f"KNOWN_SUFFIXES must be longest-first, got {reconcile.KNOWN_SUFFIXES}"
+    # every superset suffix precedes its shorter tail
+    for i, s in enumerate(reconcile.KNOWN_SUFFIXES):
+        for shorter in reconcile.KNOWN_SUFFIXES[i + 1:]:
+            assert not s.endswith(shorter) or len(s) > len(shorter)
+    print("  ✅ KNOWN_SUFFIXES is longest-first (derived, not hand-ordered)")
+
+
 def test_embed_html_stem_not_misclassified_as_html():
     """.embed.html must match its own suffix (longest-first), classifying to the
     bare stem — not misparse via the shorter .html suffix."""

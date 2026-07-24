@@ -61,6 +61,36 @@ def _q(s):
     return quote(str(s), safe="")
 
 
+def _is_baked(stem):
+    """True if the committed badge SVG carries a signed VC (``proofValue``) — a
+    Flagship-style signed credential, not presentation-only (CONCEPTS: Baking /
+    Flagship Badge). Reads the committed badges/ tree (DEFAULT_OUT), independent
+    of the page output dir, so the baked state is a stable property of the
+    artifact. Most badges are presentation-only until a signed VC is baked in;
+    the verifiability copy must not overclaim for them."""
+    try:
+        with open(os.path.join(DEFAULT_OUT, f"{stem}.svg"), encoding="utf-8") as f:
+            return "proofValue" in f.read()
+    except OSError:
+        return False
+
+
+def _ctx(rec):
+    """Per-credential fields shared by the page and embed builders — one source
+    for the stem, sanitized titles, palette, canonical page URL, and baked
+    state, so the two builders can't drift."""
+    course_id, slt_hash = rec["course_id"], rec["slt_hash"]
+    stem = f"{course_id}.{slt_hash}"
+    return {
+        "course_id": course_id, "slt_hash": slt_hash, "stem": stem,
+        "course_title": sanitize_title(rec["course_title"]) or ISSUER,
+        "module_title": sanitize_title(rec["module_title"]) or "Credential",
+        "pal": colors.palette_for(course_id),
+        "page_url": f"{HOST}/badges/{stem}",
+        "baked": _is_baked(stem),
+    }
+
+
 def _embed_snippet(stem):
     """The iframe embed snippet a third party pastes into their own page. Points
     at the minimal embed variant (U2), served at the extensionless
@@ -71,11 +101,17 @@ def _embed_snippet(stem):
             f'</iframe>')
 
 
-def _share_controls(stem, module_title, page_url):
+def _share_controls(stem, module_title, page_url, baked):
     """The share-actions region: downloads + copy + social + Web Share + embed +
     LinkedIn add-to-profile. Downloads and social links are plain anchors (work
     with JS disabled); copy-link / Web Share / copy-embed are buttons revealed by
-    the inline script only when their browser API exists (no dead buttons)."""
+    the inline script only when their browser API exists (no dead buttons).
+
+    ``baked`` gates the verifiability claim: only a signed/baked SVG *is* a
+    checkable verifiable credential (CONCEPTS: Flagship Badge). For the
+    presentation-only majority the copy stays accurate — anchored on-chain, with
+    signed verification rolling out — never overclaiming a signature that isn't
+    there."""
     x_url = (f"https://twitter.com/intent/tweet?url={_q(page_url)}"
              f"&text={_q(module_title)}&hashtags={HASHTAGS}")
     li_share = f"https://www.linkedin.com/sharing/share-offsite/?url={_q(page_url)}"
@@ -94,9 +130,19 @@ def _share_controls(stem, module_title, page_url):
     <button class="btn" type="button" data-share-embed data-embed="{embed}" hidden>Copy embed code</button>
     <a class="btn" href="{esc(li_add)}" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
-  <p class="actions-note">The <strong>SVG</strong> is the verifiable credential —
-     download it and check it with DI-capable OB 3.0 / VC verifiers. The PNG is
-     for display.</p>"""
+  <p class="actions-note">{_svg_note(baked)}</p>"""
+
+
+def _svg_note(baked):
+    """Baked-aware download copy — never claim a signature the SVG doesn't carry."""
+    if baked:
+        return ("The <strong>SVG</strong> is the signed verifiable credential — "
+                "download it and check it with DI-capable OB 3.0 / VC verifiers, "
+                f"no need to trust {ISSUER}. The PNG is for display.")
+    return ("Download the <strong>SVG</strong> — it carries this credential's "
+            "data, anchored on-chain. (Signed verifiable-credential baking, "
+            "checkable by DI-capable OB 3.0 / VC verifiers, is rolling out; the "
+            "PNG is for display.)")
 
 
 # Inline progressive-enhancement script: reveals + wires the three JS-only
@@ -104,13 +150,18 @@ def _share_controls(stem, module_title, page_url):
 # embed snippet; Web Share uses the native sheet on a real click.
 _SHARE_SCRIPT = """<script>
 (function(){
-  function flash(b,m){var t=b.textContent;b.textContent=m;setTimeout(function(){b.textContent=t;},1500);}
+  // Capture the true label once (data-label) so a rapid re-click can't strand
+  // the button on the transient 'Copied!' text.
+  function flash(b,m){if(!b.dataset.label)b.dataset.label=b.textContent;b.textContent=m;
+    clearTimeout(b._t);b._t=setTimeout(function(){b.textContent=b.dataset.label;},1500);}
+  function copyTo(b,text,ok){navigator.clipboard.writeText(text)
+    .then(function(){flash(b,ok);}).catch(function(){flash(b,'Copy failed');});}
   var copy=document.querySelector('[data-share-copy]');
   if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',function(){
-    navigator.clipboard.writeText(location.href).then(function(){flash(copy,'Copied!');});});}
+    copyTo(copy,location.href,'Copied!');});}
   var emb=document.querySelector('[data-share-embed]');
   if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
-    navigator.clipboard.writeText(emb.getAttribute('data-embed')).then(function(){flash(emb,'Embed copied!');});});}
+    copyTo(emb,emb.getAttribute('data-embed'),'Embed copied!');});}
   var ws=document.querySelector('[data-share-web]');
   if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
     navigator.share({title:document.title,url:location.href}).catch(function(){});});}
@@ -118,26 +169,39 @@ _SHARE_SCRIPT = """<script>
 </script>"""
 
 
-def _description(course_title, module_title):
+def _verify_note(baked):
+    """Baked-aware footer copy about how this badge is checked."""
+    if baked:
+        return (f"This badge is anchored on Cardano, and its SVG is a signed, "
+                f"self-contained credential — download it and check it with "
+                f"DI-capable OB 3.0 / VC verifiers, no need to trust {ISSUER}.")
+    return ("This badge is anchored on Cardano — the on-chain record is the "
+            "proof. Signed verifiable-credential baking, checkable by DI-capable "
+            "OB 3.0 / VC verifiers, is rolling out.")
+
+
+def _description(course_title, module_title, baked):
     # Wording-gated: "DI-capable OB 3.0 / VC verifiers", never "any OB3 verifier".
+    # Only a baked/signed badge is claimed checkable; the rest are anchored-only.
+    if baked:
+        return (f"{module_title} — a signed credential from {course_title}, "
+                f"anchored on Cardano and checkable by DI-capable OB 3.0 / VC "
+                f"verifiers.")
     return (f"{module_title} — a credential from {course_title}, anchored on "
-            f"Cardano and independently checkable by DI-capable OB 3.0 / VC "
-            f"verifiers.")
+            f"Cardano.")
 
 
 def _page_html(rec):
-    course_id, slt_hash = rec["course_id"], rec["slt_hash"]
-    stem = f"{course_id}.{slt_hash}"
-    course_title = sanitize_title(rec["course_title"]) or ISSUER
-    module_title = sanitize_title(rec["module_title"]) or "Credential"
-    desc = _description(course_title, module_title)
+    ctx = _ctx(rec)
+    stem, course_title, module_title = ctx["stem"], ctx["course_title"], ctx["module_title"]
+    baked, page_url = ctx["baked"], ctx["page_url"]
+    desc = _description(course_title, module_title, baked)
 
-    pal = colors.palette_for(course_id)
+    pal = ctx["pal"]
     deep, ink, raised = pal["deep"], pal["ink"], pal["raised"]
     prim, prim_lt, sec = pal["prim"], pal["prim_lt"], pal["sec"]
     bone, slate, hair = pal["bone"], pal["slate"], pal["hair"]
 
-    page_url = f"{HOST}/badges/{stem}"
     card_url = f"{HOST}/badges/{stem}.og.png"      # absolute og:image (#69 card)
     svg_url = f"/badges/{stem}.svg"                 # root-relative badge image
 
@@ -202,14 +266,12 @@ a{{color:var(--sec);}}
   <p class="course">{esc(course_title)}</p>
   <p class="issuer">Issued by {ISSUER}</p>
 
-  {_share_controls(stem, module_title, page_url)}
+  {_share_controls(stem, module_title, page_url, baked)}
   <!-- explainer links (#72) attach here -->
   <div class="explainers" data-slot="explainers"></div>
 
   <hr class="divider">
-  <p class="verify">This badge is anchored on Cardano. The badge image is a
-     self-contained credential you can download and check with DI-capable
-     OB 3.0 / VC verifiers — no need to trust {ISSUER}.</p>
+  <p class="verify">{_verify_note(baked)}</p>
 </main>
 {_SHARE_SCRIPT}
 </body>
@@ -224,12 +286,9 @@ def _embed_html(rec):
     at the extensionless /badges/{stem}.embed by the #70 routing. Root-relative
     image src resolves against the iframe's own origin (credentials.andamio.io);
     the link breaks out of the iframe (target=_blank) to the full page."""
-    course_id, slt_hash = rec["course_id"], rec["slt_hash"]
-    stem = f"{course_id}.{slt_hash}"
-    module_title = sanitize_title(rec["module_title"]) or "Credential"
-    pal = colors.palette_for(course_id)
-    ink, bone, sec = pal["ink"], pal["bone"], pal["sec"]
-    page_url = f"{HOST}/badges/{stem}"
+    ctx = _ctx(rec)
+    stem, module_title, page_url = ctx["stem"], ctx["module_title"], ctx["page_url"]
+    ink, bone, sec = ctx["pal"]["ink"], ctx["pal"]["bone"], ctx["pal"]["sec"]
     return f"""<!doctype html>
 <html lang="en">
 <head>

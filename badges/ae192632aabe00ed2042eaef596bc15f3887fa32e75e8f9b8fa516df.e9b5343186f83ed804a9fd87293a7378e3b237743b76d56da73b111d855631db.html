@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>About Andamio Issuer — Andamio Issuer · Andamio</title>
-<meta name="description" content="About Andamio Issuer — a credential from Andamio Issuer, anchored on Cardano and independently checkable by DI-capable OB 3.0 / VC verifiers.">
+<meta name="description" content="About Andamio Issuer — a signed credential from Andamio Issuer, anchored on Cardano and checkable by DI-capable OB 3.0 / VC verifiers.">
 <meta name="theme-color" content="#0E0A1F">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Andamio Credentials">
 <meta property="og:title" content="About Andamio Issuer">
-<meta property="og:description" content="About Andamio Issuer — a credential from Andamio Issuer, anchored on Cardano and independently checkable by DI-capable OB 3.0 / VC verifiers.">
+<meta property="og:description" content="About Andamio Issuer — a signed credential from Andamio Issuer, anchored on Cardano and checkable by DI-capable OB 3.0 / VC verifiers.">
 <meta property="og:url" content="https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db">
 <meta property="og:image" content="https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.og.png">
 <meta property="og:image:width" content="1200">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="About Andamio Issuer — Andamio Issuer credential badge">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="About Andamio Issuer">
-<meta name="twitter:description" content="About Andamio Issuer — a credential from Andamio Issuer, anchored on Cardano and independently checkable by DI-capable OB 3.0 / VC verifiers.">
+<meta name="twitter:description" content="About Andamio Issuer — a signed credential from Andamio Issuer, anchored on Cardano and checkable by DI-capable OB 3.0 / VC verifiers.">
 <meta name="twitter:image" content="https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.og.png">
 <style>
 :root{--deep:#0E0A1F;--ink:#15112B;--raised:#201A3C;--prim:#8B6CF0;--prim-lt:#B9A6F7;--sec:#E86CA8;--bone:#ECE7F2;--slate:#7A7196;--hair:#2E2A4A;}
@@ -64,26 +64,27 @@ a{color:var(--sec);}
     <button class="btn" type="button" data-share-embed data-embed="&lt;iframe src=&quot;https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.embed&quot; width=&quot;340&quot; height=&quot;380&quot; style=&quot;border:0&quot; loading=&quot;lazy&quot; title=&quot;Andamio credential badge&quot;&gt;&lt;/iframe&gt;" hidden>Copy embed code</button>
     <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=About%20Andamio%20Issuer&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db&amp;certId=ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
-  <p class="actions-note">The <strong>SVG</strong> is the verifiable credential —
-     download it and check it with DI-capable OB 3.0 / VC verifiers. The PNG is
-     for display.</p>
+  <p class="actions-note">The <strong>SVG</strong> is the signed verifiable credential — download it and check it with DI-capable OB 3.0 / VC verifiers, no need to trust Andamio. The PNG is for display.</p>
   <!-- explainer links (#72) attach here -->
   <div class="explainers" data-slot="explainers"></div>
 
   <hr class="divider">
-  <p class="verify">This badge is anchored on Cardano. The badge image is a
-     self-contained credential you can download and check with DI-capable
-     OB 3.0 / VC verifiers — no need to trust Andamio.</p>
+  <p class="verify">This badge is anchored on Cardano, and its SVG is a signed, self-contained credential — download it and check it with DI-capable OB 3.0 / VC verifiers, no need to trust Andamio.</p>
 </main>
 <script>
 (function(){
-  function flash(b,m){var t=b.textContent;b.textContent=m;setTimeout(function(){b.textContent=t;},1500);}
+  // Capture the true label once (data-label) so a rapid re-click can't strand
+  // the button on the transient 'Copied!' text.
+  function flash(b,m){if(!b.dataset.label)b.dataset.label=b.textContent;b.textContent=m;
+    clearTimeout(b._t);b._t=setTimeout(function(){b.textContent=b.dataset.label;},1500);}
+  function copyTo(b,text,ok){navigator.clipboard.writeText(text)
+    .then(function(){flash(b,ok);}).catch(function(){flash(b,'Copy failed');});}
   var copy=document.querySelector('[data-share-copy]');
   if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',function(){
-    navigator.clipboard.writeText(location.href).then(function(){flash(copy,'Copied!');});});}
+    copyTo(copy,location.href,'Copied!');});}
   var emb=document.querySelector('[data-share-embed]');
   if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
-    navigator.clipboard.writeText(emb.getAttribute('data-embed')).then(function(){flash(emb,'Embed copied!');});});}
+    copyTo(emb,emb.getAttribute('data-embed'),'Embed copied!');});}
   var ws=document.querySelector('[data-share-web]');
   if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
     navigator.share({title:document.title,url:location.href}).catch(function(){});});}

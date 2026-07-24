@@ -185,6 +185,10 @@ jobs:
           embed_body=$(curl -sf "http://localhost:8080/badges/$STEM.embed")
           echo "$embed_body" | grep -q "/badges/$STEM\"" || { echo "embed missing link back to the page"; exit 1; }
           echo "/badges/$STEM.embed serves the embed variant, links back to the page"
+          # An embed miss for a nonexistent stem 404s cleanly (same try_files path).
+          embed_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.0000000000000000000000000000000000000000000000000000000000000000.embed")
+          echo "/badges/<miss>.embed -> $embed_404 (expected 404)"
+          test "$embed_404" = "404"
           # R3 regression: the badge IMAGE URL is byte-for-byte unchanged — the
           # extensionless page must NOT shadow or move /badges/{stem}.svg.
           assert_ct /badges/$STEM.svg     image/svg+xml

@@ -80,8 +80,11 @@ for (const svg of svgs) {
     const embed = readFileSync(embedPath, "utf8");
     if (embed.length < 200) {
       problems.push(`${stem}.embed.html: ${embed.length} bytes — likely blank/truncated`);
-    } else if (!embed.includes(`/badges/${stem}`)) {
-      problems.push(`${stem}.embed.html: missing link back to /badges/${stem}`);
+    } else if (!embed.includes(`href="https://credentials.andamio.io/badges/${stem}"`)) {
+      // Check the ANCHOR back-link specifically — a bare /badges/{stem} substring
+      // is also satisfied by the img src (/badges/{stem}.svg), so match the
+      // absolute page href to prove the link-back is really present.
+      problems.push(`${stem}.embed.html: missing anchor link back to the badge page`);
     }
   }
 }
