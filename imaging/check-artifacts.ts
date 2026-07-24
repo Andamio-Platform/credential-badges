@@ -58,9 +58,19 @@ for (const svg of svgs) {
       problems.push(`${name}: ${d.w}x${d.h}, expected ${w}x${h}`);
     }
   }
-  // The display/share page (#70) — existence only (HTML has no dimensions).
-  if (!existsSync(join(BADGES, `${stem}.html`))) {
+  // The display/share page (#70). HTML has no dimensions, so guard against a
+  // blank/truncated/stale page with a size floor + the required og:image tag —
+  // an independent corruption tripwire alongside test_page.py's byte-parity.
+  const pagePath = join(BADGES, `${stem}.html`);
+  if (!existsSync(pagePath)) {
     problems.push(`missing ${stem}.html (badge page)`);
+  } else {
+    const html = readFileSync(pagePath, "utf8");
+    if (html.length < 800) {
+      problems.push(`${stem}.html: ${html.length} bytes — likely blank/truncated`);
+    } else if (!html.includes('property="og:image"')) {
+      problems.push(`${stem}.html: missing og:image tag — page malformed`);
+    }
   }
 }
 

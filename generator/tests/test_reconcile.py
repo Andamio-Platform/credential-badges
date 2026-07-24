@@ -120,11 +120,12 @@ def test_strict_key_match_leaves_unknown_files():
         "notes.txt": "n",                       # unknown extension
         "abc.png": "x",                         # bad stem shape
         f"{'a' * 40}.svg": "short-stem",        # 40-hex, not 56.64
+        "index.html": "h",                      # bad stem shape (.html, #70)
         "README.md": "r",
     })
     orphans = reconcile.reconcile(d, expected=expected, delete=True, log=lambda *_: None)
     assert orphans == [], f"unknown files must not be pruned, got {orphans}"
-    for name in ("notes.txt", "abc.png", f"{'a' * 40}.svg", "README.md"):
+    for name in ("notes.txt", "abc.png", f"{'a' * 40}.svg", "index.html", "README.md"):
         assert os.path.exists(os.path.join(d, name)), f"{name} was wrongly deleted"
     print("  ✅ malformed/unknown files are never deleted (strict key match)")
 

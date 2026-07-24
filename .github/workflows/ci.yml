@@ -174,6 +174,9 @@ jobs:
           # R3 regression: the badge IMAGE URL is byte-for-byte unchanged — the
           # extensionless page must NOT shadow or move /badges/{stem}.svg.
           assert_ct /badges/$STEM.svg     image/svg+xml
+          # Direct .html access serves the same page bytes as text/html (the
+          # extensionless form is canonical; this is the nested `~ \.html$` route).
+          assert_ct /badges/$STEM.html    text/html
           # An extensionless page miss is a clean 404 (never @render).
           page_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.0000000000000000000000000000000000000000000000000000000000000000")
           echo "/badges/<miss> (extensionless) -> $page_404 (expected 404)"

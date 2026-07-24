@@ -9,15 +9,21 @@ escaping, glyph-subset sanitization, and the wording gate.
 No third-party test framework — runnable directly:
     python3 generator/tests/test_page.py
 """
+import json
 import os
+import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GEN = os.path.dirname(HERE)
+REPO = os.path.dirname(GEN)
+BADGES = os.path.join(REPO, "badges")
 sys.path.insert(0, GEN)
 
 import page      # noqa: E402
 import colors    # noqa: E402
+import build     # noqa: E402
 
 REC = {
     "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
@@ -71,6 +77,66 @@ def test_html_escaping():
     assert "<script>" not in html, "raw markup must be escaped, never injected"
     assert "&amp;" in html and "&lt;script&gt;" in html
     print("  ✅ interpolated text is HTML-escaped")
+
+
+def test_quote_escaped_in_attribute_context():
+    """A double-quote in a title must become &quot; so it cannot break out of a
+    content="..."/alt="..." attribute — the OG tags carry the title in double-
+    quoted attributes, so this is the real injection boundary."""
+    rec = dict(REC, module_title='Deploy "the" Pillar')
+    html = page._page_html(rec)
+    assert '&quot;' in html, "raw double-quote must be escaped to &quot; in attributes"
+    assert 'content="Deploy "the" Pillar"' not in html, "attribute must not break open"
+    print("  ✅ double-quote escaped to &quot; (attribute breakout blocked)")
+
+
+def test_empty_title_falls_back():
+    """A title that sanitizes to empty (all out-of-subset) falls back to the
+    generic, never a blank og:title / heading."""
+    rec = dict(REC, module_title="中文", course_title="日本語")
+    html = page._page_html(rec)
+    assert 'property="og:title" content="Credential"' in html, "empty module title -> 'Credential'"
+    assert '>Andamio<' in html or 'Andamio' in html  # course falls back to issuer
+    print("  ✅ sanitize-to-empty title falls back to generic, never blank")
+
+
+def test_alt_text_present_and_escaped():
+    """og:image:alt and the <img alt> carry the credential description and are
+    escaped like every other interpolated field."""
+    rec = dict(REC, module_title='Deploy & <Pillar>')
+    html = page._page_html(rec)
+    assert 'property="og:image:alt"' in html
+    assert '<img' in html and 'alt="' in html
+    assert "<Pillar>" not in html, "alt text must be escaped too"
+    print("  ✅ og:image:alt + img alt present and escaped")
+
+
+def test_main_output_byte_identical_to_committed_pages():
+    """Parity guard (mirrors test_render_parity.py): regenerate every page via
+    page.main() into a scratch dir and assert each is byte-identical to the
+    committed badges/*.html. Pages are pure-deterministic from the registry (no
+    baking), so byte-identity must hold — this exercises the main() write path
+    and catches page.py <-> committed drift."""
+    records = [r for r in json.load(open(os.path.join(GEN, "credentials.json")))
+               if r["course_id"] not in build.SKIP_COURSES]
+    with tempfile.TemporaryDirectory() as out:
+        r = subprocess.run([sys.executable, os.path.join(GEN, "page.py"), out],
+                           capture_output=True, text=True)
+        assert r.returncode == 0, f"page.py failed: {r.stderr}"
+        produced = [f for f in os.listdir(out) if f.endswith(".html")]
+        assert len(produced) == len(records), (
+            f"expected {len(records)} pages, main() produced {len(produced)}")
+        mismatches = []
+        for name in produced:
+            new = open(os.path.join(out, name), "rb").read()
+            committed_path = os.path.join(BADGES, name)
+            if not os.path.exists(committed_path):
+                mismatches.append(f"{name}: no committed page to compare")
+                continue
+            if new != open(committed_path, "rb").read():
+                mismatches.append(f"{name}: bytes differ from committed page")
+        assert not mismatches, "page parity broken:\n  " + "\n  ".join(mismatches)
+    print(f"  ✅ {len(records)} pages byte-identical to committed badges/*.html")
 
 
 def test_out_of_subset_title_sanitized():

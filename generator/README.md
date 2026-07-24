@@ -16,8 +16,9 @@ the art *is* the proof (`make verify`).
 fetch.py   →  credentials.json   →  build.py    →  ../badges/<course_id>.<slt_hash>.svg
 (chain, authed)   (snapshot)         (offline)   ┐
                                                   ├→ rasterize.ts  → ../badges/<stem>.png     (1024x1024)
-                                     og.py ───────┴→ compose-og.ts → ../badges/<stem>.og.png  (1200x630)
+                                     og.py ───────┼→ compose-og.ts → ../badges/<stem>.og.png  (1200x630)
                                      (imaging/, resvg)
+                                     page.py ─────┴→ ../badges/<stem>.html  (display/share page, served at /badges/<stem>)
 ```
 
 Per credential, `badges/` holds four artifacts: the **SVG** (the badge, and the

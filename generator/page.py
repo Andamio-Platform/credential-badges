@@ -145,8 +145,10 @@ def main():
     data = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
     for rec in data:
         html = _page_html(rec)
+        # encoding pinned: the template always carries non-ASCII (em dash,
+        # middot), so a C/POSIX-locale build must not fall back to a lossy codec.
         open(os.path.join(out, f"{rec['course_id']}.{rec['slt_hash']}.html"),
-             "w").write(html)
+             "w", encoding="utf-8").write(html)
     print(f"wrote {len(data)} badge pages -> {os.path.relpath(out, HERE)}/")
 
 
