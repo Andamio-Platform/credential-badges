@@ -47,6 +47,8 @@ interface Chunk {
   end: number;
   /** the chunk's data bytes (between type and CRC) */
   data: Buffer;
+  /** the chunk's stored CRC-32 (over type + data) */
+  crc: number;
 }
 
 /** Walk the PNG chunk stream. Throws if the signature or framing is malformed. */
@@ -63,7 +65,11 @@ function parseChunks(png: Buffer): Chunk[] {
     const dataEnd = dataStart + length;
     const end = dataEnd + 4; // + CRC
     if (end > png.length) throw new Error(`truncated chunk ${type}`);
-    chunks.push({ type, start: off, end, data: png.subarray(dataStart, dataEnd) });
+    chunks.push({
+      type, start: off, end,
+      data: png.subarray(dataStart, dataEnd),
+      crc: png.readUInt32BE(dataEnd),
+    });
     off = end;
     if (type === IEND) break;
   }
@@ -102,6 +108,13 @@ export function extractVc(png: Buffer): string {
     const nul = c.data.indexOf(0x00);
     if (nul === -1) continue;
     if (c.data.toString("latin1", 0, nul) !== KEYWORD) continue;
+    // Verify the chunk's CRC before trusting its bytes as the signed VC: a
+    // bit-flipped credential chunk must fail loud here, not silently return a
+    // corrupt "signed VC" that only breaks at downstream verification.
+    const wantCrc = crc32(Buffer.concat([Buffer.from(ITXT, "latin1"), c.data])) >>> 0;
+    if (c.crc !== wantCrc) {
+      throw new Error("openbadgecredential iTXt chunk failed CRC check — credential is corrupt");
+    }
     const compFlag = c.data[nul + 1];
     if (compFlag !== 0) {
       throw new Error("openbadgecredential iTXt is compressed — unsupported (spec: uncompressed)");

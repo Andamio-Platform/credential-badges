@@ -33,6 +33,12 @@ const BADGES_DIR = join(REPO, "badges");
 
 export const PNG_SIZE = 1024;
 
+/** PNG IHDR width/height — big-endian uint32 at byte offsets 16 and 20. The one
+ *  PNG-dimension reader, shared by the tests and the CI coverage check. */
+export function pngDims(buf: Buffer): { w: number; h: number } {
+  return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+}
+
 /** Inline CSS custom properties so resvg can render the badge.
  *
  *  The badge SVGs color everything with `var(--token, <fallback>)` (gen.py's
@@ -52,6 +58,18 @@ export function inlineCssVars(svg: string): string {
     prev = out;
     out = out.replace(/var\(\s*--[A-Za-z0-9_-]+\s*,\s*([^()]*?)\s*\)/g, "$1");
   } while (out !== prev);
+  // Fail loud, not silent-black. The regex only inlines `var(--x, <hex>)` with a
+  // paren-free fallback (all gen.py emits today). A `var()` with no fallback, or
+  // a fallback containing parens (rgba()/url()/calc()), would survive — and
+  // resvg would collapse that element to default-fill black with no other
+  // signal. Throw so such a change is caught at build time, not shipped as a
+  // black disc that still passes the existence/dimension check.
+  if (/var\(\s*--/.test(out)) {
+    throw new Error(
+      "unresolved CSS var() after inlining — resvg would render it black; " +
+        "gen.py must emit a paren-free literal fallback for every var(--token, …)",
+    );
+  }
   return out;
 }
 

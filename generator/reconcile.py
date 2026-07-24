@@ -51,6 +51,13 @@ KNOWN_SUFFIXES = (".og.png", ".png", ".svg")
 STEM_RE = re.compile(r"^[0-9a-f]{56}\.[0-9a-f]{64}$")
 
 
+class ReconcileError(Exception):
+    """A condition under which pruning must stop loudly rather than risk a
+    destructive false positive (e.g. an empty/corrupt registry that would
+    authorize wiping the whole committed badges/ tree). Mirrors
+    scripts/cache-admin.py's CacheAdminError posture."""
+
+
 def expected_stems(data_path=DATA):
     """The set of ``{course_id}.{slt_hash}`` stems that SHOULD have artifacts —
     every registry record except the withheld ``SKIP_COURSES`` (matching
@@ -102,8 +109,21 @@ def find_orphans(badges_dir, expected=None):
 def reconcile(badges_dir, *, expected=None, delete=False, log=print):
     """Find (and, with ``delete=True``, remove) orphan artifacts. Returns the
     list of orphan filenames. In check mode (``delete=False``) nothing is
-    removed — the caller inspects the return / exit code."""
+    removed — the caller inspects the return / exit code.
+
+    Blast-radius guard: refuses to delete when the expected-stem set is empty
+    while recognized artifacts exist on disk. An empty expected set means
+    ``credentials.json`` is empty, all-skipped, or truncated — trusting it would
+    authorize wiping the entire committed ``badges/`` tree. Like
+    ``cache-admin.py`` aborting on an inconclusive oracle, we stop loudly rather
+    than let one bad local file zero out the art. (Check mode still reports.)"""
+    expected = expected if expected is not None else expected_stems()
     orphans = find_orphans(badges_dir, expected=expected)
+    if delete and not expected and orphans:
+        raise ReconcileError(
+            f"credentials.json yielded 0 expected stems but {len(orphans)} "
+            f"recognized artifact(s) exist in {badges_dir} — refusing to prune "
+            f"the whole tree. Fix/restore the registry and re-run.")
     for name in orphans:
         if delete:
             os.remove(os.path.join(badges_dir, name))
@@ -120,7 +140,11 @@ def main(argv=None):
                     help="report orphans and exit 1 if any; delete nothing")
     args = ap.parse_args(argv)
 
-    orphans = reconcile(args.badges_dir, delete=not args.check)
+    try:
+        orphans = reconcile(args.badges_dir, delete=not args.check)
+    except ReconcileError as e:
+        print(f"ABORTED: {e}", file=sys.stderr)
+        return 2
     if args.check:
         if orphans:
             print(f"reconcile --check: {len(orphans)} orphan(s) with no "

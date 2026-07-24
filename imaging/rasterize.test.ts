@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadFontBuffers, rasterize, inlineCssVars, PNG_SIZE } from "./rasterize.ts";
+import { loadFontBuffers, rasterize, inlineCssVars, PNG_SIZE, pngDims } from "./rasterize.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const BADGES = join(dirname(HERE), "badges");
@@ -21,11 +21,6 @@ function aRealBadge(): string {
   );
   assert.ok(name, "expected at least one committed badge SVG");
   return readFileSync(join(BADGES, name!), "utf8");
-}
-
-function pngDims(buf: Buffer): { w: number; h: number } {
-  // PNG IHDR width/height are big-endian uint32 at byte offsets 16 and 20.
-  return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
 }
 
 test("loadFontBuffers decodes both embedded woff2 families", () => {
@@ -39,6 +34,16 @@ test("inlineCssVars replaces var(--x, fallback) with the fallback", () => {
   assert.equal(inlineCssVars("stop-color=\"var(--ink, #121A2D)\""), 'stop-color="#121A2D"');
   // No var(): unchanged.
   assert.equal(inlineCssVars('fill="#000"'), 'fill="#000"');
+});
+
+test("inlineCssVars throws (not silent-black) on unresolvable var() forms", () => {
+  // Fallback-less var() and paren-containing fallbacks are the forms resvg
+  // would render as default-fill black. Fail loud instead.
+  assert.throws(() => inlineCssVars('fill="var(--prim)"'), /unresolved CSS var/);
+  assert.throws(
+    () => inlineCssVars('fill="var(--prim, rgba(0,0,0,.5))"'),
+    /unresolved CSS var/,
+  );
 });
 
 test("happy path: a badge rasterizes to a 1024x1024 PNG", () => {

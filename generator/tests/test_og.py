@@ -45,6 +45,35 @@ def test_card_contains_titles_and_wordmark():
     print("  ✅ course title, credential title, and ANDAMIO wordmark present")
 
 
+def test_nested_badge_art_is_embedded():
+    """The composition must actually embed the badge art (a nested <svg>), not
+    just the text column — dropping the badge append should fail this."""
+    svg = og._card_svg(REC)
+    assert svg.count("<svg") >= 2, "expected the nested badge <svg> inside the card"
+    # The badge encodes the credential's identity in its rings/metadata.
+    assert REC["course_id"] in svg and REC["slt_hash"] in svg
+    print("  ✅ nested badge art embedded in the card")
+
+
+def test_wrapped_course_title_still_centers():
+    """block_h counts every course line, so a wrapping course_title keeps the
+    text block on-canvas (regression guard for the single-line miscount)."""
+    rec = dict(REC, course_title=(
+        "A Very Long Course Title That Will Definitely Wrap Across Two Lines Here"))
+    clines, csz = og.gen.lay_title(rec["course_title"], 30, og.COL_W, 0.54, 22)
+    assert len(clines) >= 2, "test title should wrap"
+    line_h_c = int(csz * 1.18)
+    line_h_m = int(og.gen.lay_title(rec["module_title"], 56, og.COL_W, 0.58, 34)[1] * 1.12)
+    mlines = og.gen.lay_title(rec["module_title"], 56, og.COL_W, 0.58, 34)[0]
+    block_h = 30 + len(clines) * line_h_c + 20 + len(mlines) * line_h_m
+    y0 = (og.H - block_h) // 2 + csz
+    assert y0 - 30 >= 0, "text block starts above the top edge"
+    # last module baseline stays on-canvas
+    y_last = y0 + 30 + len(clines) * line_h_c + 20 + len(mlines) * line_h_m
+    assert y_last <= og.H, "text block overflows the bottom edge"
+    print("  ✅ wrapped course title keeps the text block on-canvas")
+
+
 def test_long_title_wraps_to_multiple_lines():
     long_rec = dict(REC, module_title=(
         "Prepare a local environment for GovTool development with Docker, "

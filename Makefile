@@ -2,6 +2,12 @@ PY ?= python3
 GEN := generator
 IMG := imaging
 
+# Never write .pyc: a stale __pycache__ can mask a source edit on a local build
+# whose output gets committed (docs/solutions/runtime-errors/
+# stale-pycache-bytecode-masks-source-edits.md). CI is immune (fresh checkout);
+# this protects local badges/png/og-card regeneration.
+export PYTHONDONTWRITEBYTECODE := 1
+
 .PHONY: help badges verify fetch fonts reconcile pngs og-cards
 
 help:

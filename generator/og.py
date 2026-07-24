@@ -82,10 +82,13 @@ def _card_svg(rec):
     p.append(badge)
     p.append('</g>')
 
-    # Right text column, vertically centered as one block.
+    # Right text column, vertically centered as one block. block_h mirrors the
+    # exact advance sequence below (eyebrow 30 + every course line + gap 20 +
+    # every module line) so a wrapped course_title still centers correctly —
+    # counting all of clines, not just the first line.
     line_h_c = int(csz * 1.18)
     line_h_m = int(msz * 1.12)
-    block_h = (line_h_c + 18) + len(mlines) * line_h_m + 30 + 26
+    block_h = 30 + len(clines) * line_h_c + 20 + len(mlines) * line_h_m
     y = (H - block_h) // 2 + csz
 
     p.append(f'<text class="mono" x="{COL_X}" y="{y}" font-size="14" '

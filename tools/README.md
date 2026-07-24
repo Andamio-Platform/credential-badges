@@ -56,6 +56,29 @@ Transcripts for the first baked badge (Rung 7) live in `transcripts/`.
 **`make badges` re-emits the unsigned hook** — regenerating over a baked badge
 un-bakes it; `bake-signed-vc.test.ts` (below) goes red if that ever happens.
 
+## `bake-png-vc.ts` — bake / extract a signed VC in a badge PNG
+
+The PNG analog of `bake-signed-vc.ts` (#69, v1.2). Embeds the signed OB3
+credential in an **uncompressed `iTXt` chunk** with keyword
+`openbadgecredential`, per OB 3.0 section 5.3.1, inserted immediately before
+`IEND`. Same byte-transparency contract: the VC goes in byte-for-byte (never
+reformatted — a mutation breaks the signature), the image pixels
+(`IHDR`/`IDAT`/`IEND`) are preserved exactly, and `extract` reverses it. It
+refuses to bake an unsigned credential, keeps exactly one credential chunk on a
+re-bake, and verifies the chunk's CRC-32 on extract (a corrupt chunk fails loud
+rather than returning as the "signed VC"). Same dependency-free rule — only
+`node:fs` / `node:zlib` / `node:url`.
+
+```sh
+node --experimental-strip-types tools/bake-png-vc.ts bake <badge.png> <signed-vc.json> <out.png>
+node --experimental-strip-types tools/bake-png-vc.ts extract <badge.png> [out.json]
+```
+
+Presentation-only, never identity-bearing: the on-chain anchor is identity; the
+VC-in-PNG is a transport convenience. **`make pngs` re-rasterizes from the SVG**,
+so it un-bakes the PNG the same way `make badges` un-bakes the SVG — a PNG bake
+must follow any regeneration of a signed badge.
+
 ## Tests
 
 ```sh
@@ -81,3 +104,8 @@ cd tools && npm test        # == node --experimental-strip-types --test *.test.t
   `spike/signer-spike/signed-credential.json` byte-for-byte (proof block and
   anchor identifiers asserted field-by-field), in the OB3 embedded-proof form.
   Plus hermetic bake/extract round-trip units. No network.
+- **`bake-png-vc.test.ts`** — hermetic bake/extract units for the PNG iTXt bake:
+  round-trip byte-identity on the real flagship PNG, refuse-unsigned, single
+  credential chunk on re-bake, image-pixel preservation, valid CRC on the
+  written chunk, fail-loud on a bit-flipped (CRC-mismatch) chunk, and rejection
+  of a compressed chunk. No network.

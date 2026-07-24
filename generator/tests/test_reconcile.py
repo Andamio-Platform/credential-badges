@@ -136,6 +136,39 @@ def test_baked_badge_kept_when_in_registry():
     print("  ✅ in-registry baked badge is kept")
 
 
+def test_empty_registry_refuses_to_wipe_tree():
+    """Blast-radius guard: an empty expected set (empty/corrupt/all-skipped
+    credentials.json) must NOT delete every artifact — it raises instead, so a
+    bad registry fails the build loudly rather than zeroing out badges/."""
+    d = _mkdir_badges({
+        f"{STEM_A}.svg": "s", f"{STEM_A}.png": "p", f"{STEM_B}.svg": "s",
+        "_placeholder.svg": "ph",
+    })
+    raised = False
+    try:
+        reconcile.reconcile(d, expected=set(), delete=True, log=lambda *_: None)
+    except reconcile.ReconcileError:
+        raised = True
+    assert raised, "expected ReconcileError on empty registry with artifacts present"
+    # Nothing deleted.
+    for name in (f"{STEM_A}.svg", f"{STEM_A}.png", f"{STEM_B}.svg", "_placeholder.svg"):
+        assert os.path.exists(os.path.join(d, name)), f"{name} was wrongly deleted"
+    # Check mode with an empty registry still reports (no raise): every artifact
+    # is an orphan, but nothing is removed.
+    orphans = reconcile.reconcile(d, expected=set(), delete=False, log=lambda *_: None)
+    assert len(orphans) == 3  # the 3 well-formed artifacts; placeholder protected
+    print("  ✅ empty registry refuses to prune (build fails loud, tree preserved)")
+
+
+def test_empty_dir_empty_registry_is_noop():
+    """An empty registry against an empty (or placeholder-only) dir is a safe
+    no-op — the guard only fires when there is real art to protect."""
+    d = _mkdir_badges({"_placeholder.svg": "ph"})
+    orphans = reconcile.reconcile(d, expected=set(), delete=True, log=lambda *_: None)
+    assert orphans == []
+    print("  ✅ empty registry + no artifacts is a safe no-op")
+
+
 def test_check_mode_is_read_only():
     """--check reports orphans but deletes nothing."""
     expected = {STEM_A}

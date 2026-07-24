@@ -97,6 +97,13 @@ jobs:
           assert_ct /issuer              application/ld+json
           assert_ct /.well-known/did.json application/did+ld+json
           assert_ct /badges/_placeholder.svg image/svg+xml
+          # v1.2 raster artifacts (#69, R9): the download PNG + OG card are new
+          # served content types on this lane — probe them on the deployed
+          # service, not just the CI docker smoke, so an LB misroute or missing
+          # image/png mime regression is caught here too. Real committed stem.
+          STEM=ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db
+          assert_ct "/badges/$STEM.png"    image/png
+          assert_ct "/badges/$STEM.og.png" image/png
 
       - name: Verify served context bytes on the public host (freeze pin, end to end)
         # The freeze-pin step above proves the tagged checkout matches the
