@@ -73,11 +73,18 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
+          # HOLDER_UPSTREAM (#73) wires the same-origin /holder-api/ proxy to the
+          # public andamioscan /api/v2 base so the holder viewer reads live
+          # on-chain state (andamioscan sends no CORS headers, so a browser can't
+          # read it cross-origin). It is a public host, not a secret.
+          # --update-env-vars only touches this key, leaving any other service env
+          # (e.g. a separately-set RENDER_UPSTREAM) intact.
           gcloud run deploy "${GCP_SERVICE}" \
             --image "${AR_IMAGE}:${GITHUB_REF_NAME}" \
             --region "${GCP_REGION}" \
             --project "${GCP_PROJECT}" \
             --platform managed \
+            --update-env-vars "HOLDER_UPSTREAM=https://andamioscan.io/api/v2/" \
             --quiet
 
       - name: Verify Content-Type + reachability on the *.run.app URL
@@ -116,6 +123,24 @@ jobs:
           # v1.2 explainers (#72): two new served URLs — probe them too.
           assert_ct "/badges/how-to-share" text/html
           assert_ct "/badges/how-to-check" text/html
+          # v1.2 holder viewer (#73): the nested per-holder route + its static
+          # assets are new served surfaces — probe them on the deployed revision so
+          # an LB misroute on the two-segment path is caught here, not just in the
+          # CI docker smoke. The client reads live state in the browser; this
+          # asserts the shell + registry serve. Real flagship stem + real holder.
+          assert_ct "/badges/$STEM/james"  text/html
+          curl -sf "${URL}/badges/$STEM/james" | grep -q 'data-holder-list' || { echo "deployed holder shell missing render hook"; exit 1; }
+          assert_ct "/badges/_registry.json" application/json
+          js_ct=$(curl -sI "${URL}/badges/_holder.js" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "/badges/_holder.js Content-Type: $js_ct"
+          echo "$js_ct" | grep -qi javascript || { echo "deployed _holder.js not served as javascript"; exit 1; }
+          # The holder-state proxy is wired (HOLDER_UPSTREAM set above): a request
+          # must not 404 (which would mean the location is missing). 200 (scan up)
+          # or 502 (scan momentarily down) both prove wiring without coupling this
+          # gate to andamioscan availability.
+          holder_api=$(curl -s -o /dev/null -w '%{http_code}' "${URL}/holder-api/users/james/state")
+          echo "/holder-api/users/james/state -> $holder_api (expected non-404 — proxy wired)"
+          test "$holder_api" != "404"
 
       - name: Verify served context bytes on the public host (freeze pin, end to end)
         # The freeze-pin step above proves the tagged checkout matches the

@@ -32,11 +32,18 @@ RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 # unset. 127.0.0.1:9 (discard) needs no DNS, so nginx always boots; with the
 # render service not yet wired, the baked badges still serve from disk and a
 # cache-miss simply returns 502 (connection refused) until U7 sets the URL.
-# NGINX_ENVSUBST_FILTER restricts substitution to RENDER_UPSTREAM so nginx's
-# own runtime $variables ($uri, $host, $proxy_host, $scheme, …) are untouched.
+# HOLDER_UPSTREAM (#73) is the andamioscan `/api/v2/` base the holder-state
+# proxy (`^~ /holder-api/`) forwards to — the same IP-literal-default reasoning
+# applies (nginx resolves a literal proxy_pass host at STARTUP, so an unset var
+# must default to a no-DNS discard or the container won't boot; an un-wired
+# deploy then fails LOUD with 502, never a silent fake-OK). Injected at deploy.
+# NGINX_ENVSUBST_FILTER matches `_UPSTREAM` so BOTH RENDER_UPSTREAM and
+# HOLDER_UPSTREAM are substituted while nginx's own runtime $variables ($uri,
+# $host, $proxy_host, $scheme, …) are untouched.
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 ENV RENDER_UPSTREAM="http://127.0.0.1:9"
-ENV NGINX_ENVSUBST_FILTER="RENDER_UPSTREAM"
+ENV HOLDER_UPSTREAM="http://127.0.0.1:9"
+ENV NGINX_ENVSUBST_FILTER="_UPSTREAM"
 
 COPY context/   /usr/share/nginx/html/context/
 COPY issuer/    /usr/share/nginx/html/issuer/

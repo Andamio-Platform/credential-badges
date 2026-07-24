@@ -8,7 +8,7 @@ IMG := imaging
 # this protects local badges/png/og-card regeneration.
 export PYTHONDONTWRITEBYTECODE := 1
 
-.PHONY: help badges verify fetch fonts reconcile pngs og-cards pages explainers
+.PHONY: help badges verify fetch fonts reconcile pngs og-cards pages explainers holder
 
 help:
 	@echo "Credential badge generator:"
@@ -17,6 +17,7 @@ help:
 	@echo "  make og-cards  - compose + rasterize 1200x630 Open Graph cards -> badges/*.og.png (needs 'npm ci' in $(IMG)/)"
 	@echo "  make pages     - generate the display/share page (*.html) + embed variant (*.embed.html) per badge"
 	@echo "  make explainers- generate the two explainers -> badges/how-to-share.html, how-to-check.html"
+	@echo "  make holder    - generate the holder viewer shell + registry -> badges/_holder.html, _registry.json"
 	@echo "  make reconcile - prune badges/ artifacts (svg/png/og.png/html/embed.html) with no credentials.json record"
 	@echo "  make verify    - round-trip a built badge's rings back to its on-chain hashes"
 	@echo "  make fetch     - refresh $(GEN)/credentials.json from chain (needs network + authed 'andamio' CLI)"
@@ -38,6 +39,9 @@ pages:
 
 explainers:
 	$(PY) $(GEN)/explainers.py
+
+holder:
+	$(PY) $(GEN)/holder.py
 
 reconcile:
 	$(PY) $(GEN)/reconcile.py
