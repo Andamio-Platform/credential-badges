@@ -13,6 +13,13 @@ jobs:
       - name: Enforce served-file allowlist
         run: bash scripts/ci/check-allowlist.sh
 
+  orphan-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Orphan guard (#31) — every served badges/ artifact (svg/png/og.png) must map to a credentials.json record. The allowlist check allowlists badges/ wholesale and is structurally blind to files inside it, so a dropped credential's art could otherwise linger on the forever-public host. Stdlib-only, no install."
+        run: bash scripts/ci/check-orphans.sh
+
   did-pin:
     runs-on: ubuntu-latest
     steps:
