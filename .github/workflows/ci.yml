@@ -99,6 +99,7 @@ jobs:
           python3 generator/tests/test_reconcile.py
           python3 generator/tests/test_og.py
           python3 generator/tests/test_page.py
+          python3 generator/tests/test_explainers.py
 
   imaging:
     runs-on: ubuntu-latest
