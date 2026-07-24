@@ -108,6 +108,15 @@ server {
         try_files $uri =404;
     }
 
+    # The andamio-badge web component (#74) — the served embed bundle at
+    # /embed/andamio-badge.js. A single static ES module (.js resolves from stock
+    # mime.types); cached a day, a miss is a clean 404. `^~` owns the prefix so
+    # the generic asset regexes below never shadow it.
+    location ^~ /embed/ {
+        add_header Cache-Control "public, max-age=86400";
+        try_files $uri =404;
+    }
+
     # Badge imagery — static-first with on-demand render fallback (#33, KTD-4).
     #
     # `^~` makes this a prefix match that OWNS /badges/ and short-circuits the

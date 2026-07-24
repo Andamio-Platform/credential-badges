@@ -58,6 +58,12 @@ COPY .well-known/ /usr/share/nginx/html/.well-known/
 # would let a future public/ file silently shadow .well-known/, issuer/, or
 # context/.
 COPY public/    /usr/share/nginx/html/design/
+# The andamio-badge web component (#74) — a single dependency-free ES module a
+# third-party site loads to embed a badge. Byte-identical to web-component/
+# (its npm source); `make web-component` regenerates it and CI pins them equal.
+# Forever-public: an embed script URL on our own origin, so a credential embed
+# doesn't depend on a third-party CDN.
+COPY embed/     /usr/share/nginx/html/embed/
 COPY README.md  /usr/share/nginx/html/README.md
 
 EXPOSE 8080
