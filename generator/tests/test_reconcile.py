@@ -51,13 +51,15 @@ def test_happy_path_no_orphans():
     expected = {STEM_A, STEM_B}
     d = _mkdir_badges({
         f"{STEM_A}.svg": "s", f"{STEM_A}.png": "p", f"{STEM_A}.og.png": "o",
+        f"{STEM_A}.html": "h",
         f"{STEM_B}.svg": "s",
         "_placeholder.svg": "placeholder",
     })
     orphans = reconcile.reconcile(d, expected=expected, delete=True, log=lambda *_: None)
     assert orphans == [], f"expected no orphans, got {orphans}"
     assert os.path.exists(os.path.join(d, f"{STEM_A}.og.png"))
-    print("  ✅ expected artifacts are kept; nothing pruned")
+    assert os.path.exists(os.path.join(d, f"{STEM_A}.html")), "in-registry page must be kept"
+    print("  ✅ expected artifacts (svg/png/og.png/html) are kept; nothing pruned")
 
 
 def test_orphan_svg_pruned():
@@ -72,17 +74,20 @@ def test_orphan_svg_pruned():
 
 
 def test_orphan_pruned_across_all_types():
-    """Covers R6. Dropping a credential prunes svg + png + og.png for its stem."""
+    """Covers R6. Dropping a credential prunes svg + png + og.png + html (#70)
+    for its stem."""
     expected = {STEM_A}  # STEM_B dropped from the registry
     d = _mkdir_badges({
         f"{STEM_A}.svg": "s",
         f"{STEM_B}.svg": "s", f"{STEM_B}.png": "p", f"{STEM_B}.og.png": "o",
+        f"{STEM_B}.html": "h",
     })
     orphans = reconcile.reconcile(d, expected=expected, delete=True, log=lambda *_: None)
-    assert set(orphans) == {f"{STEM_B}.svg", f"{STEM_B}.png", f"{STEM_B}.og.png"}, orphans
-    for suffix in (".svg", ".png", ".og.png"):
+    assert set(orphans) == {f"{STEM_B}.svg", f"{STEM_B}.png", f"{STEM_B}.og.png",
+                            f"{STEM_B}.html"}, orphans
+    for suffix in (".svg", ".png", ".og.png", ".html"):
         assert not os.path.exists(os.path.join(d, f"{STEM_B}{suffix}"))
-    print("  ✅ dropped credential pruned across svg/png/og.png")
+    print("  ✅ dropped credential pruned across svg/png/og.png/html")
 
 
 def test_protected_names_never_deleted():
