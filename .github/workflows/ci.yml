@@ -100,6 +100,7 @@ jobs:
           python3 generator/tests/test_og.py
           python3 generator/tests/test_page.py
           python3 generator/tests/test_explainers.py
+          python3 generator/tests/test_holder.py
 
   imaging:
     runs-on: ubuntu-latest
@@ -201,6 +202,36 @@ jobs:
           echo "/badges/how-to-check walks the non-Andamio verification path"
           # the badge page links both explainers
           echo "$page_body" | grep -q 'href="/badges/how-to-share"' || { echo "badge page missing explainer links"; exit 1; }
+          # v1.2 holder viewer (#73): the nested per-holder route
+          # /badges/{stem}/{alias} serves the committed static shell as text/html
+          # (a new nginx nested-regex route); the shell's client JS reads live
+          # state in the browser. Uses the real flagship stem + a real holder.
+          assert_ct "/badges/$STEM/james" text/html
+          holder_body=$(curl -sf "http://localhost:8080/badges/$STEM/james")
+          echo "$holder_body" | grep -q 'data-holder-list' || { echo "holder shell missing render hook"; exit 1; }
+          echo "$holder_body" | grep -q 'src="/badges/_holder.js"' || { echo "holder shell missing client module"; exit 1; }
+          echo "/badges/$STEM/james serves the holder viewer shell"
+          # The client module + registry are served static (underscore-protected).
+          # nginx mime.types maps .js to text/javascript OR application/javascript
+          # across versions — match loosely on "javascript" rather than pin one.
+          js_ct=$(curl -sI "http://localhost:8080/badges/_holder.js" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "/badges/_holder.js Content-Type: $js_ct"
+          echo "$js_ct" | grep -qi javascript || { echo "_holder.js not served as javascript"; exit 1; }
+          curl -sf "http://localhost:8080/badges/_holder.js" | grep -q 'loadHolderView' || { echo "_holder.js missing content"; exit 1; }
+          assert_ct /badges/_registry.json application/json
+          curl -sf "http://localhost:8080/badges/_registry.json" | grep -q '"signed"' || { echo "_registry.json missing signed flag"; exit 1; }
+          # A malformed holder path (non-hex stem) must NOT match the holder route —
+          # it falls through to the outer try_files =404, never the shell.
+          holder_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/nothex/james")
+          echo "/badges/nothex/james -> $holder_404 (expected 404, not the shell)"
+          test "$holder_404" = "404"
+          # The holder-state proxy (#73, KTD-2) is WIRED: the default HOLDER_UPSTREAM
+          # is an IP-literal discard, so a request 502s (connection refused) —
+          # proving the location matches and forwards. A 404 would mean the proxy
+          # location is missing; a 200 would mean an unexpected upstream answered.
+          holder_api=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/holder-api/users/james/state")
+          echo "/holder-api/users/james/state -> $holder_api (expected 502 — proxy wired to discard upstream, NOT 404)"
+          test "$holder_api" = "502"
           # R3 regression: the badge IMAGE URL is byte-for-byte unchanged — the
           # extensionless page must NOT shadow or move /badges/{stem}.svg.
           assert_ct /badges/$STEM.svg     image/svg+xml

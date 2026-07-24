@@ -116,6 +116,28 @@ if (!existsSync(join(dirname(BADGES), "docs", "verifier-guidance.md"))) {
   problems.push("docs/verifier-guidance.md missing — how-to-check's depth link would 404");
 }
 
+// The holder viewer (#73): three general `_`-prefixed served files the
+// per-credential orphan guard is blind to. A deleted or body-wiped shell / JS /
+// registry would silently break the per-holder view; content markers are the
+// real check (size floors are useless — the shell's inlined font CSS dwarfs any
+// floor, and the registry/JS have no natural minimum).
+const HOLDER: Array<[string, string[]]> = [
+  ["_holder.html", ["data-holder-list", 'src="/badges/_holder.js"', "key-version"]],
+  ["_holder.js", ["parsePath", "loadHolderView", "/holder-api/"]],
+  ["_registry.json", ["course_title", "module_title", "signed"]],
+];
+for (const [name, markers] of HOLDER) {
+  const path = join(BADGES, name);
+  if (!existsSync(path)) {
+    problems.push(`missing ${name} (holder viewer)`);
+    continue;
+  }
+  const body = readFileSync(path, "utf8");
+  for (const m of markers) {
+    if (!body.includes(m)) problems.push(`${name}: missing content marker "${m}" — file malformed`);
+  }
+}
+
 console.error(
   `checked ${svgs.length} badges — png/og-card existence + dimensions + byte-floor, ` +
     `page (.html) + embed (.embed.html) existence, and the two explainers ` +
