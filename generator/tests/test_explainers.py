@@ -11,10 +11,14 @@ No third-party test framework — runnable directly:
     python3 generator/tests/test_explainers.py
 """
 import os
+import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GEN = os.path.dirname(HERE)
+REPO = os.path.dirname(GEN)
+BADGES = os.path.join(REPO, "badges")
 sys.path.insert(0, GEN)
 
 import explainers  # noqa: E402
@@ -63,10 +67,46 @@ def test_hash_and_anchor_level_no_reveal_link():
         html = build()
         assert "hash-and-anchor" in html
         assert "private to the holder" in html or "stays private" in html
-        assert "reveal" not in html.lower() or "reveal path" not in html.lower() or \
-            'href="reveal' not in html  # no reveal link
+        # the reveal path is NOTED but never LINKED (no reveal href/route)
         assert 'href="reveal' not in html and "/reveal" not in html
     print("  ✅ hash-and-anchor disclosure; reveal path noted, not linked")
+
+
+def test_check_page_does_not_overclaim_signature():
+    """Only the flagship badge is signed today (CONCEPTS: Flagship Badge); the
+    check page — linked from every badge, mostly presentation-only — must NOT
+    imply every badge carries a checkable signature. It must carry the v1.1
+    signing-status caveat and say the on-chain anchor backs an unsigned badge."""
+    html = explainers._check_page()
+    assert "<strong>Status.</strong>" in html, "missing the signing-status caveat"
+    assert "on signed" in html.lower() or "signed</strong> badges" in html, \
+        "signature step must be scoped to signed badges"
+    assert "the chain still backs" in html, "must say the chain backs an unsigned badge"
+    print("  ✅ check page is signing-status honest (no universal-signature overclaim)")
+
+
+def test_back_cross_links_resolve():
+    """Each explainer links to the other via a relative URL that resolves from
+    /badges/how-to-share and /badges/how-to-check (base /badges/)."""
+    assert 'href="how-to-check"' in explainers._share_page()
+    assert 'href="how-to-share"' in explainers._check_page()
+    print("  ✅ the two explainers cross-link each other")
+
+
+def test_output_byte_identical_to_committed():
+    """Parity guard (mirrors test_page.py): regenerate via explainers.main() into
+    a scratch dir and assert byte-identity to the committed badges/how-to-*.html —
+    exercises the write path and catches explainers.py <-> committed drift."""
+    with tempfile.TemporaryDirectory() as out:
+        r = subprocess.run([sys.executable, os.path.join(GEN, "explainers.py"), out],
+                           capture_output=True, text=True)
+        assert r.returncode == 0, f"explainers.py failed: {r.stderr}"
+        for name in ("how-to-share.html", "how-to-check.html"):
+            new = open(os.path.join(out, name), "rb").read()
+            committed = os.path.join(BADGES, name)
+            assert os.path.exists(committed), f"no committed {name}"
+            assert new == open(committed, "rb").read(), f"{name} differs from committed"
+    print("  ✅ both explainers byte-identical to committed badges/how-to-*.html")
 
 
 def test_wording_gate():

@@ -23,8 +23,7 @@ import os
 import sys
 
 import gen
-from gen import esc
-from page import HOST, ISSUER
+from gen import esc, ISSUER
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUT = os.path.join(HERE, "..", "badges")
@@ -132,6 +131,12 @@ def _check_page():
 <p class="lead">You can confirm this badge is genuine <strong>without trusting
    {ISSUER}</strong> — the proof lives on the Cardano blockchain, and the badge
    is a portable copy you can verify independently.</p>
+<p class="note"><strong>Status.</strong> Today most Andamio badges prove
+   themselves by their <strong>on-chain anchor</strong> (plus the Proof-Ring
+   encoding on the badge face); a cryptographic signature over the portable copy
+   is present on <strong>signed</strong> badges and is rolling out to the rest.
+   Where a signature isn't present yet, the chain still backs the badge — the
+   on-chain check below (step 3) needs no signature at all.</p>
 
 <h2>Who stands behind it</h2>
 <p>Four parties produce an Andamio credential, each carrying a different part of
@@ -158,12 +163,13 @@ def _check_page():
       <code>did:web:credentials.andamio.io</code>; its evidence entry carries the
       on-chain anchor (network, course id, the recipient's on-chain asset, and
       the claim transaction hash).</li>
-  <li><strong>Resolve the issuer and check the signature.</strong>
-      <code>did:web:credentials.andamio.io</code> resolves to a published signing
-      key; verify the Data Integrity proof against it with a
+  <li><strong>Resolve the issuer and check the signature</strong> (on a signed
+      badge). <code>did:web:credentials.andamio.io</code> resolves to a published
+      signing key; verify the Data Integrity proof against it with a
       <strong>DI-capable OB 3.0 / VC verifier</strong> (for example spruce or the
       1EdTech validator). Verifiers that read only JWS-style credentials will not
-      read this proof format.</li>
+      read this proof format. If a badge isn't signed yet, there's no signature
+      to check here — go straight to step 3; the on-chain anchor is the proof.</li>
   <li><strong>Chase the anchor on-chain.</strong> Look up the claim transaction
       on a public Cardano explorer or on
       <a href="https://andamioscan.io">andamioscan.io</a>, and confirm it matches

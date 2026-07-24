@@ -90,23 +90,30 @@ for (const svg of svgs) {
 }
 
 // The two explainers (#72) are general editorial pages (non-hex stems), so the
-// per-credential orphan guard is blind to them — check them here so a deleted
-// explainer fails CI. how-to-check must carry the non-Andamio verification path.
-for (const name of ["how-to-share.html", "how-to-check.html"]) {
+// per-credential orphan guard is blind to them — check them here so a deleted OR
+// body-wiped explainer fails CI. Content markers are the real check: a byte-size
+// floor is useless (the ~56KB inlined font CSS keeps even an empty-body page
+// well over any floor), so require distinctive body content per page.
+const EXPLAINERS: Array<[string, string[]]> = [
+  ["how-to-share.html", ["How do I share this badge?", "learning target"]],
+  ["how-to-check.html",
+   ["without trusting", "did:web:credentials.andamio.io", "andamioscan.io"]],
+];
+for (const [name, markers] of EXPLAINERS) {
   const path = join(BADGES, name);
   if (!existsSync(path)) {
     problems.push(`missing ${name} (explainer)`);
     continue;
   }
   const html = readFileSync(path, "utf8");
-  if (html.length < 800) problems.push(`${name}: ${html.length} bytes — likely blank/truncated`);
-}
-const check = join(BADGES, "how-to-check.html");
-if (existsSync(check)) {
-  const html = readFileSync(check, "utf8");
-  if (!html.includes("without trusting") || !html.includes("did:web:credentials.andamio.io")) {
-    problems.push("how-to-check.html: missing the non-Andamio verification path");
+  for (const m of markers) {
+    if (!html.includes(m)) problems.push(`${name}: missing content marker "${m}" — page malformed`);
   }
+}
+// The check page links docs/verifier-guidance.md for depth; guard the mirrored
+// doc still exists so the trust page's depth link can't silently 404 on a rename.
+if (!existsSync(join(dirname(BADGES), "docs", "verifier-guidance.md"))) {
+  problems.push("docs/verifier-guidance.md missing — how-to-check's depth link would 404");
 }
 
 console.error(

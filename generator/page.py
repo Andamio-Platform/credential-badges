@@ -29,18 +29,13 @@ import sys
 from urllib.parse import quote
 
 import colors
-from gen import esc
+from gen import esc, HOST, ISSUER
 from render import sanitize_title
 from build import SKIP_COURSES
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "credentials.json")
 DEFAULT_OUT = os.path.join(HERE, "..", "badges")
-
-# The forever-public host. Single source here, matching gen.py's hard-coded
-# https://credentials.andamio.io/context/v1.jsonld and the did:web issuer.
-HOST = "https://credentials.andamio.io"
-ISSUER = "Andamio"
 
 OG_W, OG_H = 1200, 630
 
