@@ -1,8 +1,9 @@
-// check-artifacts.ts — CI coverage guard for the raster artifacts (#69).
+// check-artifacts.ts — CI coverage guard for the generated badge artifacts (#69, #70).
 //
-// Asserts every committed badge SVG has a matching download PNG (1024x1024) and
+// Asserts every committed badge SVG has a matching download PNG (1024x1024), an
 // Open Graph card (1200x630) with the correct dimensions AND a plausible byte
-// size. This is an EXISTENCE + DIMENSION + SANITY check, NOT byte-identity:
+// size, and a display/share page ({stem}.html, #70). The PNG checks are an
+// EXISTENCE + DIMENSION + SANITY check, NOT byte-identity:
 // resvg raster output is not guaranteed byte-stable across platforms (fonts,
 // libc), whereas the committed PNGs are built locally — so byte-parity across a
 // CI runner would be flaky. The SVG byte-identity guarantee
@@ -57,15 +58,19 @@ for (const svg of svgs) {
       problems.push(`${name}: ${d.w}x${d.h}, expected ${w}x${h}`);
     }
   }
+  // The display/share page (#70) — existence only (HTML has no dimensions).
+  if (!existsSync(join(BADGES, `${stem}.html`))) {
+    problems.push(`missing ${stem}.html (badge page)`);
+  }
 }
 
 console.error(
-  `checked ${svgs.length} badges — existence + dimensions + byte-floor only ` +
-    `(not byte-identity; resvg raster is not guaranteed byte-stable cross-platform).`,
+  `checked ${svgs.length} badges — png/og-card existence + dimensions + byte-floor, ` +
+    `and page (.html) existence (not byte-identity; resvg raster is not byte-stable cross-platform).`,
 );
 if (problems.length) {
   console.error(`FAIL: ${problems.length} problem(s):`);
   for (const p of problems) console.error(`  ${p}`);
   process.exit(1);
 }
-console.error(`OK: every badge has a 1024x1024 .png and a 1200x630 .og.png (all >= ${MIN_BYTES}B)`);
+console.error(`OK: every badge has a 1024x1024 .png, a 1200x630 .og.png (all >= ${MIN_BYTES}B), and a .html page`);
