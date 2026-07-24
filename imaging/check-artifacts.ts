@@ -72,6 +72,18 @@ for (const svg of svgs) {
       problems.push(`${stem}.html: missing og:image tag — page malformed`);
     }
   }
+  // The minimal embed variant (#71) — served at /badges/{stem}.embed.
+  const embedPath = join(BADGES, `${stem}.embed.html`);
+  if (!existsSync(embedPath)) {
+    problems.push(`missing ${stem}.embed.html (embed variant)`);
+  } else {
+    const embed = readFileSync(embedPath, "utf8");
+    if (embed.length < 200) {
+      problems.push(`${stem}.embed.html: ${embed.length} bytes — likely blank/truncated`);
+    } else if (!embed.includes(`/badges/${stem}`)) {
+      problems.push(`${stem}.embed.html: missing link back to /badges/${stem}`);
+    }
+  }
 }
 
 console.error(
@@ -83,4 +95,4 @@ if (problems.length) {
   for (const p of problems) console.error(`  ${p}`);
   process.exit(1);
 }
-console.error(`OK: every badge has a 1024x1024 .png, a 1200x630 .og.png (all >= ${MIN_BYTES}B), and a .html page`);
+console.error(`OK: every badge has a 1024x1024 .png, a 1200x630 .og.png (all >= ${MIN_BYTES}B), a .html page, and a .embed.html variant`);

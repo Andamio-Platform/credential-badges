@@ -179,6 +179,17 @@ def test_embed_data_attribute_escaped():
     print("  ✅ embed snippet HTML-escaped in data-embed")
 
 
+def test_embed_variant_minimal_and_links_back():
+    html = page._embed_html(REC)
+    assert html.startswith("<!doctype html>") and html.rstrip().endswith("</html>")
+    assert f'src="/badges/{STEM}.svg"' in html, "embed must show the badge image"
+    assert f'href="https://credentials.andamio.io/badges/{STEM}"' in html, "embed must link back to the page"
+    assert 'name="viewport"' in html, "embed needs a viewport meta for the iframe"
+    # minimal: no share chrome
+    assert "data-share-copy" not in html and "twitter.com/intent" not in html
+    print("  ✅ embed variant: minimal, shows badge, links back to the page")
+
+
 def test_main_output_byte_identical_to_committed_pages():
     """Parity guard (mirrors test_render_parity.py): regenerate every page via
     page.main() into a scratch dir and assert each is byte-identical to the
@@ -192,8 +203,12 @@ def test_main_output_byte_identical_to_committed_pages():
                            capture_output=True, text=True)
         assert r.returncode == 0, f"page.py failed: {r.stderr}"
         produced = [f for f in os.listdir(out) if f.endswith(".html")]
-        assert len(produced) == len(records), (
-            f"expected {len(records)} pages, main() produced {len(produced)}")
+        pages = [f for f in produced if not f.endswith(".embed.html")]
+        embeds = [f for f in produced if f.endswith(".embed.html")]
+        assert len(pages) == len(records), (
+            f"expected {len(records)} pages, main() produced {len(pages)}")
+        assert len(embeds) == len(records), (
+            f"expected {len(records)} embed variants, main() produced {len(embeds)}")
         mismatches = []
         for name in produced:
             new = open(os.path.join(out, name), "rb").read()

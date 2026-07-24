@@ -43,9 +43,10 @@ DEFAULT_BADGES = os.path.join(HERE, "..", "badges")
 from build import SKIP_COURSES  # noqa: E402
 
 # Known generated artifact suffixes under badges/. Ordered longest-first so a
-# stem is matched against ".og.png" before ".png" (".og.png" endswith ".png").
-# .html is the display/share page (#70) — unambiguous, no longest-match concern.
-KNOWN_SUFFIXES = (".og.png", ".png", ".svg", ".html")
+# stem is matched against a longer suffix before a shorter one it ends with:
+# ".og.png" before ".png", and ".embed.html" (the #71 embed variant) before
+# ".html" (the #70 page). Both must precede their shorter tail.
+KNOWN_SUFFIXES = (".embed.html", ".og.png", ".png", ".svg", ".html")
 
 # A well-formed badge stem: course_id 28 bytes (56 hex) . slt_hash 32 bytes
 # (64 hex). Sibling of service/app.py:BADGE_RE and cache-admin's BADGE_RE.

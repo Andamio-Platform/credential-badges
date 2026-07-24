@@ -218,17 +218,57 @@ a{{color:var(--sec);}}
     return head + body
 
 
+def _embed_html(rec):
+    """The minimal per-badge embed variant (#71). Just the badge image linking
+    to the display page — no share chrome — sized for the iframe snippet. Served
+    at the extensionless /badges/{stem}.embed by the #70 routing. Root-relative
+    image src resolves against the iframe's own origin (credentials.andamio.io);
+    the link breaks out of the iframe (target=_blank) to the full page."""
+    course_id, slt_hash = rec["course_id"], rec["slt_hash"]
+    stem = f"{course_id}.{slt_hash}"
+    module_title = sanitize_title(rec["module_title"]) or "Credential"
+    pal = colors.palette_for(course_id)
+    ink, bone, sec = pal["ink"], pal["bone"], pal["sec"]
+    page_url = f"{HOST}/badges/{stem}"
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{esc(module_title)} — {ISSUER} credential</title>
+<style>
+html,body{{margin:0;height:100%;}}
+body{{background:{ink};color:{bone};font-family:Archivo,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;box-sizing:border-box;}}
+img{{width:min(240px,72%);height:auto;display:block;}}
+a{{color:{sec};font-size:12px;text-decoration:none;}}
+a:hover{{text-decoration:underline;}}
+</style>
+</head>
+<body>
+<a href="{page_url}" target="_blank" rel="noopener">
+  <img src="/badges/{stem}.svg" alt="{esc(module_title)} — {ISSUER} credential badge"
+       loading="lazy" decoding="async">
+</a>
+<a href="{page_url}" target="_blank" rel="noopener">View credential &rarr;</a>
+</body>
+</html>
+"""
+
+
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
     os.makedirs(out, exist_ok=True)
     data = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
     for rec in data:
-        html = _page_html(rec)
-        # encoding pinned: the template always carries non-ASCII (em dash,
-        # middot), so a C/POSIX-locale build must not fall back to a lossy codec.
-        open(os.path.join(out, f"{rec['course_id']}.{rec['slt_hash']}.html"),
-             "w", encoding="utf-8").write(html)
-    print(f"wrote {len(data)} badge pages -> {os.path.relpath(out, HERE)}/")
+        stem = f"{rec['course_id']}.{rec['slt_hash']}"
+        # encoding pinned: the templates carry non-ASCII (em dash, arrow), so a
+        # C/POSIX-locale build must not fall back to a lossy codec.
+        open(os.path.join(out, f"{stem}.html"),
+             "w", encoding="utf-8").write(_page_html(rec))
+        open(os.path.join(out, f"{stem}.embed.html"),
+             "w", encoding="utf-8").write(_embed_html(rec))
+    print(f"wrote {len(data)} badge pages + {len(data)} embed variants -> "
+          f"{os.path.relpath(out, HERE)}/")
 
 
 if __name__ == "__main__":

@@ -80,14 +80,26 @@ def test_orphan_pruned_across_all_types():
     d = _mkdir_badges({
         f"{STEM_A}.svg": "s",
         f"{STEM_B}.svg": "s", f"{STEM_B}.png": "p", f"{STEM_B}.og.png": "o",
-        f"{STEM_B}.html": "h",
+        f"{STEM_B}.html": "h", f"{STEM_B}.embed.html": "e",
     })
     orphans = reconcile.reconcile(d, expected=expected, delete=True, log=lambda *_: None)
     assert set(orphans) == {f"{STEM_B}.svg", f"{STEM_B}.png", f"{STEM_B}.og.png",
-                            f"{STEM_B}.html"}, orphans
-    for suffix in (".svg", ".png", ".og.png", ".html"):
+                            f"{STEM_B}.html", f"{STEM_B}.embed.html"}, orphans
+    for suffix in (".svg", ".png", ".og.png", ".html", ".embed.html"):
         assert not os.path.exists(os.path.join(d, f"{STEM_B}{suffix}"))
-    print("  ✅ dropped credential pruned across svg/png/og.png/html")
+    print("  ✅ dropped credential pruned across svg/png/og.png/html/embed.html")
+
+
+def test_embed_html_stem_not_misclassified_as_html():
+    """.embed.html must match its own suffix (longest-first), classifying to the
+    bare stem — not misparse via the shorter .html suffix."""
+    parsed = reconcile.split_stem(f"{STEM_A}.embed.html")
+    assert parsed is not None and parsed[0] == STEM_A and parsed[1] == ".embed.html"
+    # an in-registry embed variant is kept
+    d = _mkdir_badges({f"{STEM_A}.embed.html": "e"})
+    orphans = reconcile.reconcile(d, expected={STEM_A}, delete=True, log=lambda *_: None)
+    assert orphans == [] and os.path.exists(os.path.join(d, f"{STEM_A}.embed.html"))
+    print("  ✅ .embed.html classified to bare stem (longest-match), in-registry kept")
 
 
 def test_protected_names_never_deleted():
