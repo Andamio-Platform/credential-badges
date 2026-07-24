@@ -56,6 +56,16 @@ def main():
         open(os.path.join(out, f"{rec['course_id']}.{rec['slt_hash']}.svg"), "w").write(svg)
     print(f"wrote {len(data)} badges -> {os.path.relpath(out, HERE)}/")
 
+    # Self-pruning (#31): the additive write above never removes art for records
+    # dropped from credentials.json. Reconcile the output tree against the
+    # registry so a dropped credential's artifacts (svg + the v1.2 png/og.png)
+    # cannot linger on the forever-public host. Imported lazily to avoid a
+    # circular import (reconcile imports SKIP_COURSES from this module).
+    import reconcile
+    pruned = reconcile.reconcile(out, delete=True)
+    if pruned:
+        print(f"pruned {len(pruned)} orphan artifact(s) with no credentials.json record")
+
 
 if __name__ == "__main__":
     main()
