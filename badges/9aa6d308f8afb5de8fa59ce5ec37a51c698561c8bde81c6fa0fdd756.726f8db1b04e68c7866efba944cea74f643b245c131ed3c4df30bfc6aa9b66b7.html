@@ -65,6 +65,8 @@ a{color:var(--sec);}
     <a class="btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2F9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756.726f8db1b04e68c7866efba944cea74f643b245c131ed3c4df30bfc6aa9b66b7" target="_blank" rel="noopener">Share on LinkedIn</a>
     <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
     <button class="btn" type="button" data-share-embed data-embed="&lt;iframe src=&quot;https://credentials.andamio.io/badges/9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756.726f8db1b04e68c7866efba944cea74f643b245c131ed3c4df30bfc6aa9b66b7.embed&quot; width=&quot;340&quot; height=&quot;380&quot; style=&quot;border:0&quot; loading=&quot;lazy&quot; title=&quot;Andamio credential badge&quot;&gt;&lt;/iframe&gt;" hidden>Copy embed code</button>
+    <button class="btn" type="button" data-share-embed-wc data-embed="&lt;script type=&quot;module&quot; src=&quot;https://credentials.andamio.io/embed/andamio-badge.js&quot;&gt;&lt;/script&gt;
+&lt;andamio-badge stem=&quot;9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756.726f8db1b04e68c7866efba944cea74f643b245c131ed3c4df30bfc6aa9b66b7&quot; module-title=&quot;I will understand what Andamio is and its core offering&quot; course-title=&quot;Business Lead Generation&quot;&gt;&lt;/andamio-badge&gt;" hidden>Copy web-component embed</button>
     <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=I%20will%20understand%20what%20Andamio%20is%20and%20its%20core%20offering&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2F9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756.726f8db1b04e68c7866efba944cea74f643b245c131ed3c4df30bfc6aa9b66b7&amp;certId=9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756.726f8db1b04e68c7866efba944cea74f643b245c131ed3c4df30bfc6aa9b66b7" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
   <p class="actions-note">Download the <strong>SVG</strong> — it carries this credential's data, anchored on-chain. (Signed verifiable-credential baking, checkable by DI-capable OB 3.0 / VC verifiers, is rolling out; the PNG is for display.)</p>
@@ -90,6 +92,9 @@ a{color:var(--sec);}
   var emb=document.querySelector('[data-share-embed]');
   if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
     copyTo(emb,emb.getAttribute('data-embed'),'Embed copied!');});}
+  var embw=document.querySelector('[data-share-embed-wc]');
+  if(embw&&navigator.clipboard){embw.hidden=false;embw.addEventListener('click',function(){
+    copyTo(embw,embw.getAttribute('data-embed'),'Embed copied!');});}
   var ws=document.querySelector('[data-share-web]');
   if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
     navigator.share({title:document.title,url:location.href}).catch(function(){});});}

@@ -31,6 +31,8 @@
 !generator/**
 !public/
 !public/**
+!embed/
+!embed/**
 !issuer-service/
 !issuer-service/**
 issuer-service/node_modules

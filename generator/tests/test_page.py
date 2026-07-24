@@ -144,6 +144,31 @@ def test_download_controls_present():
     print("  ✅ download SVG/PNG controls present")
 
 
+def test_web_component_snippet_baked_aware():
+    """The <andamio-badge> snippet (#74) carries the real per-badge attributes and
+    gates `signed` on baked state — an unbaked badge's snippet must not mark the
+    element signed (no overclaim), the flagship's must."""
+    unbaked = page._web_component_snippet(STEM, REC["module_title"], REC["course_title"], False)
+    assert f'src="{page.HOST}/embed/andamio-badge.js"' in unbaked, "loads the component from our origin"
+    assert f'stem="{STEM}"' in unbaked and "andamio-badge" in unbaked
+    assert "signed" not in unbaked, "unbaked snippet must not mark the element signed"
+    baked = page._web_component_snippet(FLAGSHIP_STEM, "About", "Andamio Issuer", True)
+    assert "><andamio-badge" in baked or "<andamio-badge" in baked
+    assert " signed>" in baked, "flagship snippet marks the element signed"
+    print("  ✅ web-component snippet is baked-aware (signed gated on baked state)")
+
+
+def test_web_component_control_in_page():
+    """The badge page offers the web-component copy control with the snippet in a
+    data-* container (escaped), alongside the iframe embed."""
+    html = page._page_html(REC)
+    assert "data-share-embed-wc" in html, "web-component copy control missing"
+    # the snippet is double-escaped into the data attribute; its escaped script src appears
+    assert "/embed/andamio-badge.js" in html, "component script src missing from the page"
+    assert "Copy web-component embed" in html
+    print("  ✅ badge page carries the web-component embed control")
+
+
 def test_verifiability_copy_is_baked_aware():
     """Only a signed/baked badge may claim its SVG *is* a checkable verifiable
     credential (CONCEPTS: Flagship Badge). The presentation-only majority must

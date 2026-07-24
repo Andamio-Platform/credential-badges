@@ -141,6 +141,13 @@ jobs:
           holder_api=$(curl -s -o /dev/null -w '%{http_code}' "${URL}/holder-api/users/james/state")
           echo "/holder-api/users/james/state -> $holder_api (expected non-404 — proxy wired)"
           test "$holder_api" != "404"
+          # v1.2 web component (#74): the embed bundle is a new served surface —
+          # probe it on the deployed revision so an LB misroute on /embed/ is
+          # caught here, not just in the CI docker smoke. Real content-shape check.
+          embed_ct=$(curl -sI "${URL}/embed/andamio-badge.js" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "/embed/andamio-badge.js Content-Type: $embed_ct"
+          echo "$embed_ct" | grep -qi javascript || { echo "deployed andamio-badge.js not served as javascript"; exit 1; }
+          curl -sf "${URL}/embed/andamio-badge.js" | grep -q 'customElements.define("andamio-badge"' || { echo "deployed embed bundle missing component definition"; exit 1; }
 
       - name: Verify served context bytes on the public host (freeze pin, end to end)
         # The freeze-pin step above proves the tagged checkout matches the

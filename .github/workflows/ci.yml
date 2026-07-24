@@ -118,6 +118,22 @@ jobs:
         working-directory: imaging
         run: node --experimental-strip-types check-artifacts.ts
 
+  web-component:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: "andamio-badge web component (#74) — pure-render tests (attributes, URLs, baked-aware state gate, escaping). Dependency-free vanilla ESM, no install."
+        run: node --experimental-strip-types --test web-component/andamio-badge.test.ts
+      - name: "Served bundle is byte-identical to the npm source — `make web-component` regenerates embed/andamio-badge.js; a drift means someone edited one copy. cmp pins them equal."
+        run: cmp web-component/andamio-badge.js embed/andamio-badge.js
+      - name: "npm pack sanity — the published tarball is exactly andamio-badge.js + README (no stray files); catches a broken files/exports manifest before a real wc-v* tag publishes."
+        working-directory: web-component
+        run: |
+          npm pack --dry-run --json | node -e "const f=JSON.parse(require('fs').readFileSync(0)).flatMap(x=>x.files.map(y=>y.path)).sort(); console.log(f); const want=['README.md','andamio-badge.js','package.json'].sort(); if(JSON.stringify(f)!==JSON.stringify(want)){console.error('unexpected package contents (test/source files must not ship)',f);process.exit(1);}"
+
   docker-build:
     runs-on: ubuntu-latest
     steps:
@@ -242,6 +258,14 @@ jobs:
           page_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.0000000000000000000000000000000000000000000000000000000000000000")
           echo "/badges/<miss> (extensionless) -> $page_404 (expected 404)"
           test "$page_404" = "404"
+          # v1.2 web component (#74): the embed bundle is served at
+          # /embed/andamio-badge.js as javascript (mime varies text/ vs
+          # application/ across nginx versions — match loosely), with real content.
+          embed_ct=$(curl -sI "http://localhost:8080/embed/andamio-badge.js" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "/embed/andamio-badge.js Content-Type: $embed_ct"
+          echo "$embed_ct" | grep -qi javascript || { echo "andamio-badge.js not served as javascript"; exit 1; }
+          curl -sf "http://localhost:8080/embed/andamio-badge.js" | grep -q 'customElements.define("andamio-badge"' || { echo "embed bundle missing component definition"; exit 1; }
+          echo "/embed/andamio-badge.js serves the web component"
           assert_ct /design/             text/html
           assert_ct /                    text/plain
           # /design must 301 to exactly /design/ — index.html loads assets

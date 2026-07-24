@@ -96,6 +96,24 @@ git tag vrender-0.1.0
 git push origin vrender-0.1.0
 ```
 
+**Web component to npm (`@andamio/andamio-badge`, #74):**
+
+```
+# bump web-component/package.json version to match, then:
+git tag wc-v0.1.0
+git push origin wc-v0.1.0
+```
+
+`.github/workflows/publish-web-component.yml` triggers **only** on `wc-v*` tags
+(non-overlapping with `v[0-9]*.*.*`, `vrender-*`, `service-v*`). It authenticates
+to **npm** (not GCP), so no WIF is involved. **Prerequisites (one-time, external):**
+the `@andamio` npm org exists, and an **`NPM_TOKEN`** repo secret with publish
+rights is set. The workflow asserts the tag version matches `package.json` and
+publishes `--access public --provenance`. Until `NPM_TOKEN` is set, a `wc-v*`
+push fails loud at the publish step (npm 401) — it never silently succeeds. The
+served copy at `/embed/andamio-badge.js` ships on the normal static `v*` deploy;
+`make web-component` regenerates it and CI pins it byte-identical to the source.
+
 `.github/workflows/deploy.yml` triggers **only** on `v[0-9]*.*.*` tags;
 `.github/workflows/deploy-render.yml` triggers **only** on `vrender-*` tags. The static-host flow:
 

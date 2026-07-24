@@ -8,7 +8,9 @@ IMG := imaging
 # this protects local badges/png/og-card regeneration.
 export PYTHONDONTWRITEBYTECODE := 1
 
-.PHONY: help badges verify fetch fonts reconcile pngs og-cards pages explainers holder
+WC := web-component
+
+.PHONY: help badges verify fetch fonts reconcile pngs og-cards pages explainers holder web-component
 
 help:
 	@echo "Credential badge generator:"
@@ -18,6 +20,7 @@ help:
 	@echo "  make pages     - generate the display/share page (*.html) + embed variant (*.embed.html) per badge"
 	@echo "  make explainers- generate the two explainers -> badges/how-to-share.html, how-to-check.html"
 	@echo "  make holder    - generate the holder viewer shell + registry -> badges/_holder.html, _registry.json"
+	@echo "  make web-component - copy the andamio-badge source -> embed/andamio-badge.js (served bundle; byte-identical, CI-pinned)"
 	@echo "  make reconcile - prune badges/ artifacts (svg/png/og.png/html/embed.html) with no credentials.json record"
 	@echo "  make verify    - round-trip a built badge's rings back to its on-chain hashes"
 	@echo "  make fetch     - refresh $(GEN)/credentials.json from chain (needs network + authed 'andamio' CLI)"
@@ -42,6 +45,12 @@ explainers:
 
 holder:
 	$(PY) $(GEN)/holder.py
+
+# The served embed bundle is a byte-identical copy of the web-component source
+# (dependency-free vanilla ESM — no transpile). CI pins them equal (`cmp`).
+web-component:
+	@mkdir -p embed
+	cp $(WC)/andamio-badge.js embed/andamio-badge.js
 
 reconcile:
 	$(PY) $(GEN)/reconcile.py

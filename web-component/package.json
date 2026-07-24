@@ -1,0 +1,41 @@
+{
+  "name": "@andamio/andamio-badge",
+  "version": "0.1.0",
+  "description": "The <andamio-badge> web component: embed an Andamio credential badge on any site with a script tag and one element. Renders the badge card, shows honest baked-aware verified state, and links back to the credential's display page.",
+  "type": "module",
+  "main": "./andamio-badge.js",
+  "module": "./andamio-badge.js",
+  "exports": {
+    ".": "./andamio-badge.js"
+  },
+  "files": [
+    "andamio-badge.js",
+    "README.md"
+  ],
+  "sideEffects": [
+    "./andamio-badge.js"
+  ],
+  "keywords": [
+    "web-component",
+    "custom-element",
+    "open-badges",
+    "verifiable-credentials",
+    "cardano",
+    "andamio",
+    "credential-badge"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andamio-Platform/credential-badges.git",
+    "directory": "web-component"
+  },
+  "homepage": "https://credentials.andamio.io",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -96,7 +96,23 @@ def _embed_snippet(stem):
             f'</iframe>')
 
 
-def _share_controls(stem, module_title, page_url, baked):
+def _web_component_snippet(stem, module_title, course_title, baked):
+    """The <andamio-badge> web-component snippet (#74) — the upgrade path from the
+    iframe embed. A third party loads the component from OUR origin and drops one
+    element; it renders the badge card + honest baked-aware state + a link back.
+    Attribute-driven: the component runs cross-origin and can't fetch our host, so
+    the titles + signed flag travel in the snippet. ``baked`` gates the ``signed``
+    attribute — never present for a presentation-only badge, so the component can't
+    overclaim a signature. Inner titles are HTML-escaped for the snippet's own
+    attribute context; the whole snippet is escaped again when it lands in the
+    data-* container (see _share_controls)."""
+    signed = " signed" if baked else ""
+    return (f'<script type="module" src="{HOST}/embed/andamio-badge.js"></script>\n'
+            f'<andamio-badge stem="{stem}" module-title="{esc(module_title)}" '
+            f'course-title="{esc(course_title)}"{signed}></andamio-badge>')
+
+
+def _share_controls(stem, module_title, course_title, page_url, baked):
     """The share-actions region: downloads + copy + social + Web Share + embed +
     LinkedIn add-to-profile. Downloads and social links are plain anchors (work
     with JS disabled); copy-link / Web Share / copy-embed are buttons revealed by
@@ -115,6 +131,7 @@ def _share_controls(stem, module_title, page_url, baked):
               f"&name={_q(module_title)}&{org}&certUrl={_q(page_url)}"
               f"&certId={_q(stem)}")
     embed = esc(_embed_snippet(stem))    # HTML-attribute-escaped for data-embed
+    embed_wc = esc(_web_component_snippet(stem, module_title, course_title, baked))
     return f"""<div class="actions" data-slot="share-actions">
     <a class="btn" href="/badges/{stem}.svg" download>Download SVG</a>
     <a class="btn" href="/badges/{stem}.png" download>Download PNG</a>
@@ -123,6 +140,7 @@ def _share_controls(stem, module_title, page_url, baked):
     <a class="btn" href="{esc(li_share)}" target="_blank" rel="noopener">Share on LinkedIn</a>
     <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
     <button class="btn" type="button" data-share-embed data-embed="{embed}" hidden>Copy embed code</button>
+    <button class="btn" type="button" data-share-embed-wc data-embed="{embed_wc}" hidden>Copy web-component embed</button>
     <a class="btn" href="{esc(li_add)}" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
   <p class="actions-note">{_svg_note(baked)}</p>"""
@@ -157,6 +175,9 @@ _SHARE_SCRIPT = """<script>
   var emb=document.querySelector('[data-share-embed]');
   if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
     copyTo(emb,emb.getAttribute('data-embed'),'Embed copied!');});}
+  var embw=document.querySelector('[data-share-embed-wc]');
+  if(embw&&navigator.clipboard){embw.hidden=false;embw.addEventListener('click',function(){
+    copyTo(embw,embw.getAttribute('data-embed'),'Embed copied!');});}
   var ws=document.querySelector('[data-share-web]');
   if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
     navigator.share({title:document.title,url:location.href}).catch(function(){});});}
@@ -264,7 +285,7 @@ a{{color:var(--sec);}}
   <p class="course">{esc(course_title)}</p>
   <p class="issuer">Issued by {ISSUER}</p>
 
-  {_share_controls(stem, module_title, page_url, baked)}
+  {_share_controls(stem, module_title, course_title, page_url, baked)}
   <div class="explainers" data-slot="explainers">
     <a class="explainer" href="/badges/how-to-share">How do I share this?</a>
     <a class="explainer" href="/badges/how-to-check">How do I check this?</a>
