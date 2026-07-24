@@ -127,6 +127,20 @@ server {
     location ^~ /badges/ {
         add_header Cache-Control "public, max-age=86400";
         try_files $uri @render;
+
+        # v1.2 raster artifacts (#69): the download PNG ({stem}.png) and the
+        # 1200x630 Open Graph card ({stem}.og.png) are BUILD-TIME output —
+        # committed and baked into the image, never rendered on demand. Scope
+        # the @render fallback to SVG by handling .png here with a static-only
+        # try_files: a .png miss returns a clean 404 instead of proxying to the
+        # render service (which only speaks .svg via BADGE_RE) and surfacing a
+        # 502. Nested location: it owns .png requests under /badges/, so .svg
+        # still falls through to the outer @render fallback unchanged. png
+        # resolves to image/png from stock mime.types (no types{} needed).
+        location ~ \.png$ {
+            add_header Cache-Control "public, max-age=86400";
+            try_files $uri =404;
+        }
     }
 
     # On-demand render fallback target (#33, KTD-4). RENDER_UPSTREAM is injected

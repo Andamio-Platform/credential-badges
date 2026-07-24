@@ -96,6 +96,24 @@ jobs:
           python3 generator/tests/test_render_parity.py
           python3 generator/tests/test_render.py
           python3 generator/tests/test_api_client.py
+          python3 generator/tests/test_reconcile.py
+          python3 generator/tests/test_og.py
+
+  imaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: "Imaging suite (#69) — rasterize badge SVGs to PNG + compose 1200x630 OG cards with resvg (@resvg/resvg-js pinned). Covers the CSS-custom-property inlining and embedded-font handling the spot-check required. Isolated npm package so the stdlib-only generator-tests job stays hermetic."
+        working-directory: imaging
+        run: |
+          npm ci
+          npm test
+      - name: "Raster coverage — every committed badge SVG has a matching 1024x1024 PNG and 1200x630 OG card. Existence + dimensions only, NOT byte-identity: resvg raster is not guaranteed byte-stable across platforms; the SVG byte-parity test owns visual correctness. Pairs with the #31 orphan guard to pin the 1:1:1 svg:png:og.png mapping."
+        working-directory: imaging
+        run: node --experimental-strip-types check-artifacts.ts
 
   docker-build:
     runs-on: ubuntu-latest
@@ -132,6 +150,18 @@ jobs:
           echo "/status/no-such-epoch.json -> $status_404 (expected 404)"
           test "$status_404" = "404"
           assert_ct /badges/_placeholder.svg image/svg+xml
+          # v1.2 raster artifacts (#69): the download PNG and the 1200x630 OG
+          # card are served statically as image/png (the .png extension resolves
+          # from stock mime.types). Uses a real committed stem so the file
+          # exists on disk in the image.
+          STEM=ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db
+          assert_ct /badges/$STEM.png    image/png
+          assert_ct /badges/$STEM.og.png image/png
+          # A .png MISS returns a clean 404 — the @render fallback is SVG-only
+          # (#69 KTD-7); build-time raster artifacts are never rendered on demand.
+          png_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/$STEM.nope.png")
+          echo "/badges/<miss>.png -> $png_404 (expected 404, not a 502 render-proxy error)"
+          test "$png_404" = "404"
           assert_ct /design/             text/html
           assert_ct /                    text/plain
           # /design must 301 to exactly /design/ — index.html loads assets
