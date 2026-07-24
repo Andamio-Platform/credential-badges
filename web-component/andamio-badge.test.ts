@@ -30,11 +30,30 @@ test("badgeModel honors a valid https host override", () => {
   assert.equal(m.pageUrl, `https://staging.andamio.io/badges/${STEM}`);
 });
 
-test("badgeModel rejects a non-https / injection host and falls back to default", () => {
-  for (const bad of ["javascript:alert(1)", "http://evil.test", "https://x.io/path", "\" onmouseover=x"]) {
+test("badgeModel rejects a non-https / injection / non-andamio host and falls back", () => {
+  for (const bad of [
+    "javascript:alert(1)", "http://evil.test", "https://x.io/path", "\" onmouseover=x",
+    // Trust bound: a look-alike or foreign origin must NOT become the card's
+    // image/link target, or a "Signed & verifiable" card could point at an attacker.
+    "https://credentials.andamio.io.evil.com", "https://phish.tld",
+    "https://evilandamio.io", "https://andamio.io.attacker.net",
+  ]) {
     const m = badgeModel({ stem: STEM, host: bad });
     assert.equal(m.host, DEFAULT_HOST, `host ${bad} should fall back to default`);
   }
+  // andamio.io itself and its subdomains ARE allowed.
+  assert.equal(badgeModel({ stem: STEM, host: "https://andamio.io" }).host, "https://andamio.io");
+  assert.equal(badgeModel({ stem: STEM, host: "https://staging.andamio.io" }).host, "https://staging.andamio.io");
+});
+
+test("signed=\"false\" does NOT render a signed state (no overclaim footgun)", () => {
+  const el = {
+    getAttribute: (n: string) => ({ stem: STEM, signed: "false" } as any)[n] ?? null,
+    hasAttribute: (n: string) => n === "stem" || n === "signed",
+  };
+  const a = readAttrs(el as any);
+  assert.equal(a.signed, false, 'signed="false" must read as not signed');
+  assert.equal(badgeModel(a).stateLabel, "Anchored on-chain");
 });
 
 test("badgeModel invalidates a malformed stem (inert, never a broken card)", () => {

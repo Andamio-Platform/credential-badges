@@ -33,6 +33,20 @@ jobs:
         working-directory: web-component
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so the on-main ancestor check below works
+
+      # Supply-chain guard: only publish code that was reviewed on main. A tag
+      # pushed to an arbitrary off-main commit (or a compromised push) is refused
+      # here even though provenance would still sign it — provenance attests
+      # origin, not review. (Belt-and-suspenders with repo tag/branch protection.)
+      - name: Assert the tagged commit is on main
+        run: |
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" FETCH_HEAD || {
+            echo "tag commit $GITHUB_SHA is not an ancestor of origin/main — refusing to publish unreviewed code";
+            exit 1;
+          }
 
       - uses: actions/setup-node@v4
         with:

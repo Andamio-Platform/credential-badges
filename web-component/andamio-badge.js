@@ -21,9 +21,14 @@
 
 export const DEFAULT_HOST = "https://credentials.andamio.io";
 const STEM_RE = /^[0-9a-f]{56}\.[0-9a-f]{64}$/;
-// An https origin with no path/query/fragment — never `javascript:` or a URL that
-// could smuggle markup into an href/src.
-const HOST_RE = /^https:\/\/[a-z0-9.-]+(?::\d+)?$/i;
+// An https origin under andamio.io (the credential host or a subdomain), with no
+// path/query/fragment. This is a TRUST bound, not just an injection bound: the
+// card is Andamio-branded and the "View credential" link is its trust anchor, so
+// the host must be an Andamio origin — otherwise an embedder could point a
+// "Signed & verifiable" card's image + link at an attacker origin
+// (`credentials.andamio.io.evil.com` etc.). A non-andamio.io host falls back to
+// the default. Injection-shaped hosts (javascript:, breakout) never match either.
+const HOST_RE = /^https:\/\/([a-z0-9-]+\.)*andamio\.io(?::\d+)?$/i;
 
 /** HTML-escape a value for safe interpolation into markup (text or attribute). */
 export function esc(s) {
@@ -39,8 +44,12 @@ export function readAttrs(el) {
     stem: get("stem"),
     moduleTitle: get("module-title"),
     courseTitle: get("course-title"),
-    // Boolean attribute: present (any value incl. "") => signed. Absent => not.
-    signed: el.hasAttribute ? el.hasAttribute("signed") : !!el.signed,
+    // Boolean attribute: present => signed, EXCEPT the explicit `signed="false"`
+    // footgun — a good-faith embedder writing that must not get "Signed &
+    // verifiable" (the KTD-4 no-overclaim rule). Absent => not signed.
+    signed: el.hasAttribute
+      ? el.hasAttribute("signed") && el.getAttribute("signed") !== "false"
+      : !!el.signed && el.signed !== "false",
     host: get("host"),
   };
 }
@@ -72,7 +81,7 @@ export function badgeModel({ stem, moduleTitle, courseTitle, signed, host } = {}
 }
 
 const STYLE = `
-  :host{display:inline-block;--deep:#0C1325;--ink:#121A2D;--raised:#1B2540;--prim:#EE6C3A;--sec:#5BB8D4;--sec-lt:#9ED8E8;--bone:#EAE6DD;--slate:#6E7A98;--hair:#2C3858;}
+  :host{display:inline-block;--deep:#0C1325;--ink:#121A2D;--sec:#5BB8D4;--sec-lt:#9ED8E8;--bone:#EAE6DD;--slate:#6E7A98;--hair:#2C3858;}
   .card{box-sizing:border-box;width:300px;background:var(--ink);border:1px solid var(--hair);border-radius:14px;padding:16px;color:var(--bone);font-family:"Helvetica Neue",Arial,sans-serif;line-height:1.4;}
   .card img{display:block;width:100%;height:auto;border-radius:8px;background:var(--deep);}
   .mt{font-size:15px;font-weight:700;margin:12px 0 2px;}
