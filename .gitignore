@@ -51,3 +51,7 @@ spike/screencast-script.md
 # python build artifacts
 generator/__pycache__/
 *.pyc
+
+# OG card composition intermediates (imaging/og.py -> temp SVGs); only the
+# rasterized badges/*.og.png is committed.
+imaging/.og-build/
