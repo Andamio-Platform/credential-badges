@@ -65,6 +65,8 @@ a{color:var(--sec);}
     <a class="btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2F661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402.f35049791ea858176292a6c1104ab0d67cc2a1bd338cce9b3e997a1498991c58" target="_blank" rel="noopener">Share on LinkedIn</a>
     <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
     <button class="btn" type="button" data-share-embed data-embed="&lt;iframe src=&quot;https://credentials.andamio.io/badges/661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402.f35049791ea858176292a6c1104ab0d67cc2a1bd338cce9b3e997a1498991c58.embed&quot; width=&quot;340&quot; height=&quot;380&quot; style=&quot;border:0&quot; loading=&quot;lazy&quot; title=&quot;Andamio credential badge&quot;&gt;&lt;/iframe&gt;" hidden>Copy embed code</button>
+    <button class="btn" type="button" data-share-embed-wc data-embed="&lt;script type=&quot;module&quot; src=&quot;https://credentials.andamio.io/embed/andamio-badge.js&quot;&gt;&lt;/script&gt;
+&lt;andamio-badge stem=&quot;661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402.f35049791ea858176292a6c1104ab0d67cc2a1bd338cce9b3e997a1498991c58&quot; module-title=&quot;Generate a self-signed certificate, create a Kubernetes TLS secret&quot; course-title=&quot;Run GovTool Locally (Minikube + K8s)&quot;&gt;&lt;/andamio-badge&gt;" hidden>Copy web-component embed</button>
     <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=Generate%20a%20self-signed%20certificate%2C%20create%20a%20Kubernetes%20TLS%20secret&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2F661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402.f35049791ea858176292a6c1104ab0d67cc2a1bd338cce9b3e997a1498991c58&amp;certId=661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402.f35049791ea858176292a6c1104ab0d67cc2a1bd338cce9b3e997a1498991c58" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
   <p class="actions-note">Download the <strong>SVG</strong> — it carries this credential's data, anchored on-chain. (Signed verifiable-credential baking, checkable by DI-capable OB 3.0 / VC verifiers, is rolling out; the PNG is for display.)</p>
@@ -90,6 +92,9 @@ a{color:var(--sec);}
   var emb=document.querySelector('[data-share-embed]');
   if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
     copyTo(emb,emb.getAttribute('data-embed'),'Embed copied!');});}
+  var embw=document.querySelector('[data-share-embed-wc]');
+  if(embw&&navigator.clipboard){embw.hidden=false;embw.addEventListener('click',function(){
+    copyTo(embw,embw.getAttribute('data-embed'),'Embed copied!');});}
   var ws=document.querySelector('[data-share-web]');
   if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
     navigator.share({title:document.title,url:location.href}).catch(function(){});});}

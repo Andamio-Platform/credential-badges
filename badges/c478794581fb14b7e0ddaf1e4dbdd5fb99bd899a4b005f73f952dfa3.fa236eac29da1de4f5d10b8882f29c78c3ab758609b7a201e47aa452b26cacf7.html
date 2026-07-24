@@ -65,6 +65,8 @@ a{color:var(--sec);}
     <a class="btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fc478794581fb14b7e0ddaf1e4dbdd5fb99bd899a4b005f73f952dfa3.fa236eac29da1de4f5d10b8882f29c78c3ab758609b7a201e47aa452b26cacf7" target="_blank" rel="noopener">Share on LinkedIn</a>
     <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
     <button class="btn" type="button" data-share-embed data-embed="&lt;iframe src=&quot;https://credentials.andamio.io/badges/c478794581fb14b7e0ddaf1e4dbdd5fb99bd899a4b005f73f952dfa3.fa236eac29da1de4f5d10b8882f29c78c3ab758609b7a201e47aa452b26cacf7.embed&quot; width=&quot;340&quot; height=&quot;380&quot; style=&quot;border:0&quot; loading=&quot;lazy&quot; title=&quot;Andamio credential badge&quot;&gt;&lt;/iframe&gt;" hidden>Copy embed code</button>
+    <button class="btn" type="button" data-share-embed-wc data-embed="&lt;script type=&quot;module&quot; src=&quot;https://credentials.andamio.io/embed/andamio-badge.js&quot;&gt;&lt;/script&gt;
+&lt;andamio-badge stem=&quot;c478794581fb14b7e0ddaf1e4dbdd5fb99bd899a4b005f73f952dfa3.fa236eac29da1de4f5d10b8882f29c78c3ab758609b7a201e47aa452b26cacf7&quot; module-title=&quot;Content Writer Apprentice&quot; course-title=&quot;Course Content Creator&quot;&gt;&lt;/andamio-badge&gt;" hidden>Copy web-component embed</button>
     <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=Content%20Writer%20Apprentice&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fc478794581fb14b7e0ddaf1e4dbdd5fb99bd899a4b005f73f952dfa3.fa236eac29da1de4f5d10b8882f29c78c3ab758609b7a201e47aa452b26cacf7&amp;certId=c478794581fb14b7e0ddaf1e4dbdd5fb99bd899a4b005f73f952dfa3.fa236eac29da1de4f5d10b8882f29c78c3ab758609b7a201e47aa452b26cacf7" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
   <p class="actions-note">Download the <strong>SVG</strong> — it carries this credential's data, anchored on-chain. (Signed verifiable-credential baking, checkable by DI-capable OB 3.0 / VC verifiers, is rolling out; the PNG is for display.)</p>
@@ -90,6 +92,9 @@ a{color:var(--sec);}
   var emb=document.querySelector('[data-share-embed]');
   if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
     copyTo(emb,emb.getAttribute('data-embed'),'Embed copied!');});}
+  var embw=document.querySelector('[data-share-embed-wc]');
+  if(embw&&navigator.clipboard){embw.hidden=false;embw.addEventListener('click',function(){
+    copyTo(embw,embw.getAttribute('data-embed'),'Embed copied!');});}
   var ws=document.querySelector('[data-share-web]');
   if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
     navigator.share({title:document.title,url:location.href}).catch(function(){});});}
