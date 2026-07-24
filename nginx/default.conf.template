@@ -124,20 +124,46 @@ server {
     # cached but explicitly NOT immutable. The render service emits the same
     # `Cache-Control: public, max-age=86400`, so the header is identical
     # whether a badge is served from disk or freshly rendered.
+    # `^~` owns /badges/ and short-circuits the generic image regex below. The
+    # extension decides what's served (nested regex locations select by suffix;
+    # a nested match runs ONLY its own directives, so each behavior is isolated):
+    #   {stem}         (extensionless) -> the static display/share page (#70)
+    #   {stem}.svg     -> the badge image, static-first + @render fallback (#33)
+    #   {stem}.png / .og.png -> committed raster, static-only, clean 404 (#69)
+    #   {stem}.html    -> the page file directly, static-only
+    # The .svg/.png/.og.png URLs are byte-for-byte unchanged — an OB 3.0
+    # credential references its image URL forever, so it must not move.
     location ^~ /badges/ {
         add_header Cache-Control "public, max-age=86400";
-        try_files $uri @render;
+        # Default (extensionless {stem}): serve the generated page. try_files
+        # internally redirects to {stem}.html, so the type resolves to text/html
+        # from stock mime.types; a missing page is a clean 404 (never @render).
+        try_files $uri $uri.html =404;
+
+        # Badge image (#33, KTD-4): a baked/cached badge serves straight from
+        # disk; on a miss, @render proxies to the on-demand render service (it
+        # checks the GCS cache, renders, persists, returns the SVG). Badge art is
+        # MUTABLE (the credential references the URL, not the bytes; the on-chain
+        # anchor is identity), so cached but explicitly NOT immutable.
+        location ~ \.svg$ {
+            add_header Cache-Control "public, max-age=86400";
+            try_files $uri @render;
+        }
 
         # v1.2 raster artifacts (#69): the download PNG ({stem}.png) and the
         # 1200x630 Open Graph card ({stem}.og.png) are BUILD-TIME output —
-        # committed and baked into the image, never rendered on demand. Scope
-        # the @render fallback to SVG by handling .png here with a static-only
-        # try_files: a .png miss returns a clean 404 instead of proxying to the
-        # render service (which only speaks .svg via BADGE_RE) and surfacing a
-        # 502. Nested location: it owns .png requests under /badges/, so .svg
-        # still falls through to the outer @render fallback unchanged. png
-        # resolves to image/png from stock mime.types (no types{} needed).
+        # committed, never rendered on demand. Static-only: a .png miss returns a
+        # clean 404 instead of proxying to the render service (which only speaks
+        # .svg via BADGE_RE) and surfacing a 502. png resolves to image/png from
+        # stock mime.types (no types{} needed).
         location ~ \.png$ {
+            add_header Cache-Control "public, max-age=86400";
+            try_files $uri =404;
+        }
+
+        # Direct .html access to the page file (the canonical URL is the
+        # extensionless form above; this serves the same bytes for a direct hit).
+        location ~ \.html$ {
             add_header Cache-Control "public, max-age=86400";
             try_files $uri =404;
         }
