@@ -18,22 +18,25 @@ fetch.py   →  credentials.json   →  build.py    →  ../badges/<course_id>.<
                                                   ├→ rasterize.ts  → ../badges/<stem>.png     (1024x1024)
                                      og.py ───────┼→ compose-og.ts → ../badges/<stem>.og.png  (1200x630)
                                      (imaging/, resvg)
-                                     page.py ─────┴→ ../badges/<stem>.html  (display/share page, served at /badges/<stem>)
+                                     page.py ─────┴→ ../badges/<stem>.html        (display/share page, served at /badges/<stem>)
+                                                  └→ ../badges/<stem>.embed.html  (minimal embed variant, served at /badges/<stem>.embed)
 ```
 
-Per credential, `badges/` holds four artifacts: the **SVG** (the badge, and the
+Per credential, `badges/` holds five artifacts: the **SVG** (the badge, and the
 verifiable-credential carrier), a **download PNG**, a **1200x630 Open Graph
-card** for social unfurls, and a static **display/share page** (`.html`). The
-SVG is the source of truth; the PNGs are raster presentation output; the page is
-a human landing surface served at the extensionless `/badges/{stem}` URL.
+card** for social unfurls, a static **display/share page** (`.html`, served at
+the extensionless `/badges/{stem}`), and a minimal **embed variant**
+(`.embed.html`, served at `/badges/{stem}.embed` — the iframe target). The SVG is
+the source of truth; the PNGs are raster presentation output; the page and embed
+are human/third-party surfaces.
 
 | Command | What it does | Needs |
 |---|---|---|
 | `make badges` | Render every badge from `credentials.json`, then self-prune orphans. Deterministic + offline. | Python 3 |
 | `make pngs` | Rasterize `badges/*.svg` → `badges/*.png` (1024x1024) via resvg. | Node ≥ 24, `npm ci` in `../imaging/` |
 | `make og-cards` | Compose + rasterize 1200x630 Open Graph cards → `badges/*.og.png`. | Node ≥ 24, `npm ci` in `../imaging/` |
-| `make pages` | Generate the static display/share page per badge → `badges/*.html`, with server-delivered Open Graph tags. | Python 3 |
-| `make reconcile` | Prune `badges/` artifacts (svg/png/og.png/html) with no `credentials.json` record. | Python 3 |
+| `make pages` | Generate the display/share page (`*.html`, OG tags + share actions) and the embed variant (`*.embed.html`) per badge. | Python 3 |
+| `make reconcile` | Prune `badges/` artifacts (svg/png/og.png/html/embed.html) with no `credentials.json` record. | Python 3 |
 | `make verify` | Decode a built badge's rings and check they equal its on-chain hashes. | Python 3 |
 | `make fetch`  | Refresh `credentials.json` from chain (andamioscan + Andamio CLI). | network, authed `andamio` CLI |
 | `make fonts`  | Rebuild `fonts.css` (subset, base64-embed Archivo + Spline Sans Mono). | network, `fonttools`+`brotli` |
@@ -47,7 +50,7 @@ the SVG byte-parity test owns visual correctness.
 **Self-pruning (#31).** `build.py` was additive-only; a credential dropped from
 `credentials.json` used to leave its art served forever. `reconcile.py` (run by
 `make badges`, or standalone via `make reconcile`) deletes any `badges/` artifact
-— across **all** types (svg/png/og.png) — whose stem has no non-skipped record,
+— across **all** types (svg/png/og.png/html/embed.html) — whose stem has no non-skipped record,
 guarding `_placeholder.svg`. `scripts/ci/check-orphans.sh` (a `--check` mode)
 fails CI on any orphan.
 
@@ -63,8 +66,8 @@ and hands resvg the decoded font buffers. See `../imaging/`.
 - `gen.py` — the SVG generator (palette-driven, ring encoder, OB3 metadata, inlines `fonts.css`).
 - `colors.py` — the 10 palettes + the light-interior transform.
 - `og.py` — composes the 1200x630 Open Graph card SVG per credential (reuses palette + fonts).
-- `page.py` — generates the static display/share page per credential (#70): server-delivered Open Graph tags in `<head>`, served at the extensionless `/badges/{stem}` URL. Reserves `/badges/{stem}/{alias}` for the holder viewer (#73).
-- `reconcile.py` — self-pruning reconciler (#31): deletes `badges/` orphans across svg/png/og.png/html.
+- `page.py` — generates the static display/share page per credential (#70): server-delivered Open Graph tags in `<head>`, served at the extensionless `/badges/{stem}` URL, with the **share actions** (#71 — download SVG/PNG, copy link, X/LinkedIn intents, Web Share, copy-embed, LinkedIn add-to-profile) filled into the page and a small inline progressive-enhancement script. Also emits the **minimal embed variant** `badges/{stem}.embed.html`, served at `/badges/{stem}.embed` (the iframe target). Reserves `/badges/{stem}/{alias}` for the holder viewer (#73).
+- `reconcile.py` — self-pruning reconciler (#31): deletes `badges/` orphans across svg/png/og.png/html/embed.html.
 - `decode.py` — ring-geometry verifier (proves a badge round-trips).
 - `fetch.py` — data refresh from chain → `credentials.json`.
 - `embed_fonts.py` — subset + base64-embed the fonts → `fonts.css`.
