@@ -74,9 +74,11 @@ def test_theme_color_matches_palette():
 def test_html_escaping():
     rec = dict(REC, module_title='A & B <script> "x"')
     html = page._page_html(rec)
-    assert "<script>" not in html, "raw markup must be escaped, never injected"
+    # The page carries a legitimate inline enhancement <script>; what must NEVER
+    # appear is the user's injected markup rendered raw.
+    assert '<script> "x"' not in html, "user markup must be escaped, never injected"
     assert "&amp;" in html and "&lt;script&gt;" in html
-    print("  ✅ interpolated text is HTML-escaped")
+    print("  ✅ interpolated user text is HTML-escaped (injection blocked)")
 
 
 def test_quote_escaped_in_attribute_context():
@@ -109,6 +111,72 @@ def test_alt_text_present_and_escaped():
     assert '<img' in html and 'alt="' in html
     assert "<Pillar>" not in html, "alt text must be escaped too"
     print("  ✅ og:image:alt + img alt present and escaped")
+
+
+def test_download_controls_present():
+    html = page._page_html(REC)
+    assert f'href="/badges/{STEM}.svg" download' in html, "download-SVG control missing"
+    assert f'href="/badges/{STEM}.png" download' in html, "download-PNG control missing"
+    assert "SVG</strong> is the verifiable credential" in html, "SVG-is-credential copy missing"
+    assert "PNG is\n     for display" in html or "PNG is for display" in html or "for display" in html
+    print("  ✅ download SVG/PNG controls with correct copy")
+
+
+def test_x_intent_link():
+    html = page._page_html(REC)
+    assert "twitter.com/intent/tweet?url=" in html
+    assert page._q(f"https://credentials.andamio.io/badges/{STEM}") in html, "page url must be percent-encoded"
+    assert "hashtags=Andamio,Cardano" in html, "hashtags comma-separated, no #"
+    assert "%23" not in html.split("hashtags=")[1][:40], "hashtags must not contain #"
+    print("  ✅ X intent link: encoded url + comma hashtags, no #")
+
+
+def test_linkedin_share_link_url_only():
+    html = page._page_html(REC)
+    assert "linkedin.com/sharing/share-offsite/?url=" in html
+    # the share-offsite href carries only url= (title/desc come from OG tags)
+    frag = html.split("share-offsite/?")[1].split('"')[0]
+    assert frag.startswith("url="), frag
+    assert "&amp;text" not in frag and "&text" not in frag, "share-offsite must be url-only"
+    print("  ✅ LinkedIn share link is url-only")
+
+
+def test_linkedin_add_to_profile_link():
+    html = page._page_html(REC)
+    assert "linkedin.com/profile/add?startTask=CERTIFICATION_NAME" in html
+    assert "organizationName=Andamio%20Teams" in html, "org falls back to name until ORG_ID set"
+    assert f"certUrl={page._q('https://credentials.andamio.io/badges/' + STEM)}" in html
+    assert f"certId={page._q(STEM)}" in html
+    print("  ✅ LinkedIn add-to-profile deep link (org name fallback, certUrl=page)")
+
+
+def test_share_encoding_no_attribute_breakout():
+    rec = dict(REC, module_title='Deploy & "the" Pillar')
+    html = page._page_html(rec)
+    # percent-encoded in the query (space -> %20, quote -> %22, & -> %26)
+    assert "%22" in html and "%20" in html
+    # the intent hrefs stay well-formed (no raw quote breaking the attribute)
+    assert 'href="https://twitter.com/intent/tweet?url=' in html
+    print("  ✅ share URLs percent-encode title; hrefs stay well-formed")
+
+
+def test_progressive_enhancement_buttons_hidden_and_script_present():
+    html = page._page_html(REC)
+    for marker in ("data-share-copy", "data-share-web", "data-share-embed"):
+        assert marker in html, f"{marker} button missing"
+    # JS-only buttons ship hidden so a no-JS client sees no dead button
+    assert 'data-share-copy hidden' in html
+    assert 'data-share-web hidden' in html
+    assert 'data-share-embed data-embed=' in html and 'hidden>' in html
+    assert "<script>" in html and "navigator.share" in html and "navigator.clipboard" in html
+    print("  ✅ JS-only controls hidden until enhanced; inline script present")
+
+
+def test_embed_data_attribute_escaped():
+    html = page._page_html(REC)
+    # the iframe snippet is HTML-escaped inside data-embed (no raw < breaking out)
+    assert f"data-embed=\"&lt;iframe src=&quot;https://credentials.andamio.io/badges/{STEM}.embed" in html
+    print("  ✅ embed snippet HTML-escaped in data-embed")
 
 
 def test_main_output_byte_identical_to_committed_pages():

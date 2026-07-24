@@ -34,8 +34,13 @@ h1{font-size:clamp(24px,5vw,34px);font-weight:800;line-height:1.15;margin:0 0 8p
 .verify{font-size:13px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto;}
 .verify a{color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}
 .verify a:hover{border-bottom-color:var(--sec);}
-/* Slots for the share actions (#71) and explainer links (#72) — populated later. */
+/* Slots for the share actions (#71) and explainer links (#72). */
 .actions:empty,.explainers:empty{display:none;}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 12px;}
+.btn{appearance:none;cursor:pointer;font:inherit;font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--bone);text-decoration:none;}
+.btn:hover{border-color:var(--sec);color:var(--sec);}
+.actions-note{font-size:12px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto 22px;}
+.actions-note strong{color:var(--bone);}
 a{color:var(--sec);}
 </style>
 </head>
@@ -49,8 +54,19 @@ a{color:var(--sec);}
   <p class="course">Cardano Go Project-Based Learning</p>
   <p class="issuer">Issued by Andamio</p>
 
-  <!-- share actions (#71) attach here -->
-  <div class="actions" data-slot="share-actions"></div>
+  <div class="actions" data-slot="share-actions">
+    <a class="btn" href="/badges/b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210.c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e.svg" download>Download SVG</a>
+    <a class="btn" href="/badges/b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210.c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e.png" download>Download PNG</a>
+    <button class="btn" type="button" data-share-copy hidden>Copy link</button>
+    <a class="btn" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fb7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210.c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e&amp;text=Interacting%20with%20the%20Cardano%20Node&amp;hashtags=Andamio,Cardano" target="_blank" rel="noopener">Share on X</a>
+    <a class="btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fb7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210.c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e" target="_blank" rel="noopener">Share on LinkedIn</a>
+    <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
+    <button class="btn" type="button" data-share-embed data-embed="&lt;iframe src=&quot;https://credentials.andamio.io/badges/b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210.c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e.embed&quot; width=&quot;340&quot; height=&quot;380&quot; style=&quot;border:0&quot; loading=&quot;lazy&quot; title=&quot;Andamio credential badge&quot;&gt;&lt;/iframe&gt;" hidden>Copy embed code</button>
+    <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=Interacting%20with%20the%20Cardano%20Node&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fb7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210.c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e&amp;certId=b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210.c867f0c1edfdce1d60c81ba29114fae0a276813b6666cc003b98546513e6913e" target="_blank" rel="noopener">Add to LinkedIn profile</a>
+  </div>
+  <p class="actions-note">The <strong>SVG</strong> is the verifiable credential —
+     download it and check it with DI-capable OB 3.0 / VC verifiers. The PNG is
+     for display.</p>
   <!-- explainer links (#72) attach here -->
   <div class="explainers" data-slot="explainers"></div>
 
@@ -59,5 +75,19 @@ a{color:var(--sec);}
      self-contained credential you can download and check with DI-capable
      OB 3.0 / VC verifiers — no need to trust Andamio.</p>
 </main>
+<script>
+(function(){
+  function flash(b,m){var t=b.textContent;b.textContent=m;setTimeout(function(){b.textContent=t;},1500);}
+  var copy=document.querySelector('[data-share-copy]');
+  if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',function(){
+    navigator.clipboard.writeText(location.href).then(function(){flash(copy,'Copied!');});});}
+  var emb=document.querySelector('[data-share-embed]');
+  if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
+    navigator.clipboard.writeText(emb.getAttribute('data-embed')).then(function(){flash(emb,'Embed copied!');});});}
+  var ws=document.querySelector('[data-share-web]');
+  if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
+    navigator.share({title:document.title,url:location.href}).catch(function(){});});}
+})();
+</script>
 </body>
 </html>

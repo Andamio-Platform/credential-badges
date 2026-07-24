@@ -26,6 +26,7 @@ Usage:
 import json
 import os
 import sys
+from urllib.parse import quote
 
 import colors
 from gen import esc
@@ -42,6 +43,79 @@ HOST = "https://credentials.andamio.io"
 ISSUER = "Andamio"
 
 OG_W, OG_H = 1200, 630
+
+# Share-action config (#71). LinkedIn add-to-profile targets the Andamio Teams
+# org: the numeric organizationId is an external input (a Page admin reads it
+# from the admin console) — until it is captured, LinkedIn accepts the
+# organizationName fallback, so the deep link works now and upgrades in place
+# when ORG_ID is set. HASHTAGS are comma-separated with NO '#' (X intent format).
+ORG_NAME = "Andamio Teams"
+ORG_ID = None                    # numeric LinkedIn organizationId — TBD (external)
+HASHTAGS = "Andamio,Cardano"
+EMBED_W, EMBED_H = 340, 380      # iframe embed variant dimensions
+
+
+def _q(s):
+    """Percent-encode a query-string value (encode everything non-alphanumeric,
+    including '/'), so it is safe inside a share-intent URL."""
+    return quote(str(s), safe="")
+
+
+def _embed_snippet(stem):
+    """The iframe embed snippet a third party pastes into their own page. Points
+    at the minimal embed variant (U2), served at the extensionless
+    /badges/{stem}.embed by the #70 routing."""
+    src = f"{HOST}/badges/{stem}.embed"
+    return (f'<iframe src="{src}" width="{EMBED_W}" height="{EMBED_H}" '
+            f'style="border:0" loading="lazy" title="Andamio credential badge">'
+            f'</iframe>')
+
+
+def _share_controls(stem, module_title, page_url):
+    """The share-actions region: downloads + copy + social + Web Share + embed +
+    LinkedIn add-to-profile. Downloads and social links are plain anchors (work
+    with JS disabled); copy-link / Web Share / copy-embed are buttons revealed by
+    the inline script only when their browser API exists (no dead buttons)."""
+    x_url = (f"https://twitter.com/intent/tweet?url={_q(page_url)}"
+             f"&text={_q(module_title)}&hashtags={HASHTAGS}")
+    li_share = f"https://www.linkedin.com/sharing/share-offsite/?url={_q(page_url)}"
+    org = f"organizationId={ORG_ID}" if ORG_ID else f"organizationName={_q(ORG_NAME)}"
+    li_add = (f"https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME"
+              f"&name={_q(module_title)}&{org}&certUrl={_q(page_url)}"
+              f"&certId={_q(stem)}")
+    embed = esc(_embed_snippet(stem))    # HTML-attribute-escaped for data-embed
+    return f"""<div class="actions" data-slot="share-actions">
+    <a class="btn" href="/badges/{stem}.svg" download>Download SVG</a>
+    <a class="btn" href="/badges/{stem}.png" download>Download PNG</a>
+    <button class="btn" type="button" data-share-copy hidden>Copy link</button>
+    <a class="btn" href="{esc(x_url)}" target="_blank" rel="noopener">Share on X</a>
+    <a class="btn" href="{esc(li_share)}" target="_blank" rel="noopener">Share on LinkedIn</a>
+    <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
+    <button class="btn" type="button" data-share-embed data-embed="{embed}" hidden>Copy embed code</button>
+    <a class="btn" href="{esc(li_add)}" target="_blank" rel="noopener">Add to LinkedIn profile</a>
+  </div>
+  <p class="actions-note">The <strong>SVG</strong> is the verifiable credential —
+     download it and check it with DI-capable OB 3.0 / VC verifiers. The PNG is
+     for display.</p>"""
+
+
+# Inline progressive-enhancement script: reveals + wires the three JS-only
+# controls when their API exists. No external calls; copies location.href / the
+# embed snippet; Web Share uses the native sheet on a real click.
+_SHARE_SCRIPT = """<script>
+(function(){
+  function flash(b,m){var t=b.textContent;b.textContent=m;setTimeout(function(){b.textContent=t;},1500);}
+  var copy=document.querySelector('[data-share-copy]');
+  if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',function(){
+    navigator.clipboard.writeText(location.href).then(function(){flash(copy,'Copied!');});});}
+  var emb=document.querySelector('[data-share-embed]');
+  if(emb&&navigator.clipboard){emb.hidden=false;emb.addEventListener('click',function(){
+    navigator.clipboard.writeText(emb.getAttribute('data-embed')).then(function(){flash(emb,'Embed copied!');});});}
+  var ws=document.querySelector('[data-share-web]');
+  if(ws&&navigator.share){ws.hidden=false;ws.addEventListener('click',function(){
+    navigator.share({title:document.title,url:location.href}).catch(function(){});});}
+})();
+</script>"""
 
 
 def _description(course_title, module_title):
@@ -104,8 +178,13 @@ h1{{font-size:clamp(24px,5vw,34px);font-weight:800;line-height:1.15;margin:0 0 8
 .verify{{font-size:13px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto;}}
 .verify a{{color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}}
 .verify a:hover{{border-bottom-color:var(--sec);}}
-/* Slots for the share actions (#71) and explainer links (#72) — populated later. */
+/* Slots for the share actions (#71) and explainer links (#72). */
 .actions:empty,.explainers:empty{{display:none;}}
+.actions{{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 12px;}}
+.btn{{appearance:none;cursor:pointer;font:inherit;font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--bone);text-decoration:none;}}
+.btn:hover{{border-color:var(--sec);color:var(--sec);}}
+.actions-note{{font-size:12px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto 22px;}}
+.actions-note strong{{color:var(--bone);}}
 a{{color:var(--sec);}}
 </style>
 </head>"""
@@ -123,8 +202,7 @@ a{{color:var(--sec);}}
   <p class="course">{esc(course_title)}</p>
   <p class="issuer">Issued by {ISSUER}</p>
 
-  <!-- share actions (#71) attach here -->
-  <div class="actions" data-slot="share-actions"></div>
+  {_share_controls(stem, module_title, page_url)}
   <!-- explainer links (#72) attach here -->
   <div class="explainers" data-slot="explainers"></div>
 
@@ -133,6 +211,7 @@ a{{color:var(--sec);}}
      self-contained credential you can download and check with DI-capable
      OB 3.0 / VC verifiers — no need to trust {ISSUER}.</p>
 </main>
+{_SHARE_SCRIPT}
 </body>
 </html>
 """
