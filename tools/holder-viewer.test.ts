@@ -10,6 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   parsePath,
   b64urlToBytes,
@@ -27,9 +28,12 @@ const STEM = "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df"
 const OTHER = "203e63f457e0b8088073ec20959c4e0cc188cf90425d4f29ff3f817f"
   + ".77547ab066d5fe38038879b785551f6efae17ba38a0d6dc8475cb015e848b42b";
 
-// The real committed status list encodedList (status/key-epoch-2026-07.json) —
-// bit 0 is UNSET (the flagship is live, not suspended).
-const REAL_ENCODED = "uH4sIAAAAAAAAE-3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA";
+// The real committed status list encodedList, read from the served file itself
+// so the fixture can never drift from status/key-epoch-2026-07.json. Bit 0 is
+// UNSET (the flagship is live, not suspended).
+const REAL_ENCODED: string = JSON.parse(
+  readFileSync(new URL("../status/key-epoch-2026-07.json", import.meta.url), "utf8"),
+).credentialSubject.encodedList;
 
 async function encodeList(bytes: Uint8Array): Promise<string> {
   const cs = new CompressionStream("gzip");
@@ -180,4 +184,41 @@ test("loadHolderView degrades to 'unknown' when only the status list fails", asy
   assert.equal(view.ok, true, "holder state loaded -> view is ok");
   const flagship = view.badges.find((b: any) => b.stem === STEM);
   assert.equal(flagship.state, "unknown", "signed badge with no status read -> unknown, never silent signed");
+});
+
+// A 200 with an unparseable body (.json() throws) must fail loud, not crash.
+function resThrow() {
+  return { ok: true, status: 200, json: async () => { throw new SyntaxError("bad json"); } };
+}
+
+test("loadHolderView FAILS LOUD on a 200-with-garbage-body (json throws)", async () => {
+  const view = await loadHolderView({ stem: STEM, alias: "james", fetchImpl: stubFetch({ state: () => resThrow() }) });
+  assert.equal(view.ok, false, "unparseable holder-state body -> not ok");
+  assert.ok(!view.badges, "no badges rendered");
+});
+
+test("loadHolderView FAILS LOUD on a malformed-but-200 holder state (non-iterable)", async () => {
+  // completed_courses is a number: buildViewModel/holderStems throw — must be
+  // caught and surfaced as fail-loud, never an unhandled rejection (R6).
+  const bad = () => res({ alias: "james", completed_courses: 42 });
+  const view = await loadHolderView({ stem: STEM, alias: "james", fetchImpl: stubFetch({ state: bad }) });
+  assert.equal(view.ok, false, "malformed shape -> not ok");
+  assert.ok(!view.badges, "no badges rendered");
+});
+
+test("loadHolderView failure return always carries alias (no 'undefined' heading)", async () => {
+  const view = await loadHolderView({ stem: STEM, alias: "james", fetchImpl: stubFetch({ state: () => res(null, { ok: false, status: 502 }) }) });
+  assert.equal(view.ok, false);
+  assert.equal(view.alias, "james", "failure return includes the requested alias");
+});
+
+test("buildViewModel dedupes a repeated stem", () => {
+  const badges = buildViewModel({ holderState: holderState([STEM, STEM, OTHER]), registry: REGISTRY, keyEpochSuspended: false, arrivedStem: null });
+  assert.equal(badges.length, 2, "duplicate claimed stem collapses to one badge");
+});
+
+test("buildViewModel treats a non-boolean suspension as 'unknown', never 'signed' (R6)", () => {
+  // A future refactor passing undefined instead of null must NOT fabricate signed.
+  const badges = buildViewModel({ holderState: holderState([STEM]), registry: REGISTRY, keyEpochSuspended: undefined, arrivedStem: null });
+  assert.equal(badges[0].state, "unknown");
 });

@@ -92,11 +92,14 @@ export function buildViewModel({ holderState, registry, keyEpochSuspended, arriv
     const meta = registry?.[stem];
     if (!meta) continue; // claimed credential we have no badge art/title for
     const signed = !!meta.signed;
+    // Explicit boolean checks: only a confirmed `false` reads as "signed". null
+    // (status unavailable) OR any non-boolean falls through to "unknown" — never
+    // assume a signed/verified state we did not actually confirm (R6).
     let state;
     if (!signed) state = "anchored";
-    else if (keyEpochSuspended === null) state = "unknown"; // couldn't check suspension
-    else if (keyEpochSuspended) state = "suspended";
-    else state = "signed";
+    else if (keyEpochSuspended === true) state = "suspended";
+    else if (keyEpochSuspended === false) state = "signed";
+    else state = "unknown";
     badges.push({
       stem,
       courseTitle: meta.course_title || "",
@@ -126,29 +129,44 @@ export function certUrlFor(origin, stem, alias, moduleTitle) {
   return `https://www.linkedin.com/profile/add?${q.toString()}`;
 }
 
+/** Wrap a fetch with an abort-on-timeout so a hung upstream can't leave the view
+ *  spinning forever — an explicit bound on top of nginx's own proxy timeouts. */
+function timedFetch(fetchImpl, ms) {
+  return (url, opts = {}) => {
+    if (!ms || typeof AbortController === "undefined") return Promise.resolve(fetchImpl(url, opts));
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    return Promise.resolve(fetchImpl(url, { ...opts, signal: ctrl.signal })).finally(() => clearTimeout(t));
+  };
+}
+
 /** Resolve the holder view. Returns {ok:true, alias, badges} or {ok:false,
- *  error}. Holder-state failure is fatal (R6): never returns badges when the
- *  on-chain read failed. Suspension-list failure degrades to "unknown" per
- *  signed badge, not to a silent pass. */
-export async function loadHolderView({ stem, alias, fetchImpl = fetch, origin = "" }) {
+ *  alias, error}. Holder-state failure is fatal (R6): never returns badges when
+ *  the on-chain read failed, timed out, or returned a malformed body — and the
+ *  failure return always carries `alias` so the caller never renders "undefined".
+ *  Suspension-list failure degrades to "unknown" per signed badge, not a silent
+ *  pass. */
+export async function loadHolderView({ stem, alias, fetchImpl = fetch, origin = "", timeoutMs = 12000 }) {
+  const doFetch = timedFetch(fetchImpl, timeoutMs);
+  const fail = (error) => ({ ok: false, alias, origin, error });
   let holderState, registry;
   try {
     const [sRes, rRes] = await Promise.all([
-      fetchImpl(`/holder-api/users/${encodeURIComponent(alias)}/state`, { cache: "no-store" }),
-      fetchImpl(REGISTRY_URL),
+      doFetch(`/holder-api/users/${encodeURIComponent(alias)}/state`, { cache: "no-store" }),
+      doFetch(REGISTRY_URL),
     ]);
-    if (!sRes.ok) return { ok: false, error: `Couldn't load live state for "${alias}" (${sRes.status}).` };
-    if (!rRes.ok) return { ok: false, error: "Couldn't load the badge registry." };
+    if (!sRes.ok) return fail(`Couldn't load live state for "${alias}" (${sRes.status}).`);
+    if (!rRes.ok) return fail("Couldn't load the badge registry.");
     holderState = await sRes.json();
     registry = await rRes.json();
   } catch (e) {
-    return { ok: false, error: `Couldn't reach live credential state for "${alias}".` };
+    return fail(`Couldn't reach live credential state for "${alias}".`);
   }
 
   // Suspension is a soft dependency: a failure marks signed badges "unknown".
   let keyEpochSuspended = null;
   try {
-    const stRes = await fetchImpl(STATUS_LIST_URL, { cache: "no-store" });
+    const stRes = await doFetch(STATUS_LIST_URL, { cache: "no-store" });
     if (stRes.ok) {
       const doc = await stRes.json();
       const bits = await decodeStatusList(doc?.credentialSubject?.encodedList);
@@ -158,8 +176,15 @@ export async function loadHolderView({ stem, alias, fetchImpl = fetch, origin = 
     keyEpochSuspended = null;
   }
 
-  const badges = buildViewModel({ holderState, registry, keyEpochSuspended, arrivedStem: stem });
-  return { ok: true, alias, badges, origin };
+  // buildViewModel parses the externally-owned holder-state shape; a malformed
+  // 200 body (e.g. a non-iterable completed_courses) throws here — catch it so
+  // it fails loud too, never leaving the caller with an unhandled rejection (R6).
+  try {
+    const badges = buildViewModel({ holderState, registry, keyEpochSuspended, arrivedStem: stem });
+    return { ok: true, alias, badges, origin };
+  } catch (e) {
+    return fail(`Live credential state for "${alias}" was malformed.`);
+  }
 }
 
 // ---- DOM bootstrap (browser only) ----------------------------------------
@@ -252,14 +277,25 @@ async function boot() {
   }
 
   if (!route) {
+    // The holder URL needs a badge-class stem, so the alias switcher can't
+    // function here — disable it rather than silently no-op on submit.
+    if (input) input.disabled = true;
     status.textContent =
-      "Open a holder view from a badge page, or look up a holder by alias above.";
+      "Open a holder view from a badge page to see a holder's badges.";
     list.hidden = true;
     return;
   }
 
-  const view = await loadHolderView({ stem: route.stem, alias: route.alias, origin: location.origin });
-  renderBadges(list, view);
+  // Any unexpected throw still resolves to a fail-loud UI, never a stuck spinner.
+  try {
+    const view = await loadHolderView({ stem: route.stem, alias: route.alias, origin: location.origin });
+    renderBadges(list, view);
+  } catch (e) {
+    renderBadges(list, {
+      ok: false, alias: route.alias, origin: location.origin,
+      error: `Couldn't load ${route.alias}'s credentials.`,
+    });
+  }
 }
 
 if (typeof document !== "undefined") {

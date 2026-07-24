@@ -219,12 +219,20 @@ server {
     # passes through unchanged (no error_page masking), so the client renders an
     # explicit error, never a fabricated "verified" (R6).
     location ^~ /holder-api/ {
+        # Read-only surface: the viewer only ever GETs holder state. Deny every
+        # other method so this same-origin relay can't be used to reach a
+        # mutating andamioscan endpoint (GET/HEAD are permitted).
+        limit_except GET { deny all; }
         proxy_pass ${HOLDER_UPSTREAM};
         proxy_ssl_server_name on;
         proxy_set_header Host $proxy_host;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # Explicit bounds (not stock 60s defaults) so a slow upstream fails loud
+        # quickly instead of hanging the holder view; the client also times out.
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 15s;
         add_header Cache-Control "no-store" always;
     }
 

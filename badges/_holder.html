@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Credential holder · Andamio Credentials</title>
-<meta name="description" content="A holder's Andamio credential badges with live verified and suspended state — verifiable independently, without trusting Andamio.">
+<meta name="description" content="A holder's Andamio credential badges with live on-chain and suspension state, read from Andamio's public indexer. To verify a badge without trusting Andamio, follow the independent check.">
 <meta name="theme-color" content="#0C1325">
 <meta name="robots" content="noindex">
 <style>
@@ -50,7 +50,8 @@ noscript{display:block;margin:16px 0;color:var(--prim-lt);}
 <p class="eyebrow">Credential holder</p>
 <h1>Badges held by <span class="alias" data-holder-alias>this holder</span></h1>
 <p class="lead">A live view of one holder's Andamio credential badges — each shown
-   with its current on-chain and suspension state, verifiable independently.</p>
+   with its current on-chain and suspension state, read live from Andamio's
+   public indexer.</p>
 
 <form class="resolve" data-holder-form>
   <input type="text" data-holder-input placeholder="Look up a holder by alias"
@@ -88,10 +89,12 @@ noscript{display:block;margin:16px 0;color:var(--prim-lt);}
       a statement that the holder did not earn the credential. The chain remains
       authoritative.</li>
 </ul>
-<p class="note"><strong>Status.</strong> This viewer confirms the on-chain anchor
-   and the suspension state directly in your browser. It does not itself assert a
-   signature is cryptographically valid — for that, check a signed badge with an
-   independent verifier as described in the
+<p class="note"><strong>Status.</strong> This viewer reads live state from
+   Andamio's own public indexer — it is a convenience view, not an independent
+   verifier, and it does not itself assert a signature is cryptographically
+   valid. To confirm a badge <strong>without trusting Andamio</strong> — chase
+   its on-chain anchor on a public explorer and check any signature with a
+   DI-capable OB 3.0 / VC verifier — follow the
    <a href="https://credentials.andamio.io/badges/how-to-check">guide to checking a badge</a>. If live state can't be
    loaded, this page says so plainly rather than showing anything as verified.</p>
 

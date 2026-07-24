@@ -74,7 +74,13 @@ def test_shell_does_not_overclaim_signature():
     assert "does not itself assert a signature" in norm
     assert "DI-capable OB 3.0 / VC verifier" in norm
     assert "any OB3 verifier" not in norm
-    print("  ✅ shell is signature-honest (no universal-verification overclaim)")
+    # The viewer reads Andamio's own indexer — it must NOT claim it independently
+    # verifies "without trusting Andamio"; that belongs to the how-to-check path.
+    assert "convenience view, not an independent verifier" in norm, \
+        "viewer must not overclaim independent verification"
+    assert "verifiable independently, without trusting" not in norm, \
+        "the no-trust claim belongs to how-to-check, not this convenience view"
+    print("  ✅ shell is signature-honest + indexer-honest (no independent-verify overclaim)")
 
 
 def test_shell_cross_links_check_page():
