@@ -41,6 +41,9 @@ h1{font-size:clamp(24px,5vw,34px);font-weight:800;line-height:1.15;margin:0 0 8p
 .btn:hover{border-color:var(--sec);color:var(--sec);}
 .actions-note{font-size:12px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto 22px;}
 .actions-note strong{color:var(--bone);}
+.explainers{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin:0 0 4px;}
+.explainer{font-size:13px;color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}
+.explainer:hover{border-bottom-color:var(--sec);}
 a{color:var(--sec);}
 </style>
 </head>
@@ -65,8 +68,10 @@ a{color:var(--sec);}
     <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=About%20Andamio%20Issuer&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db&amp;certId=ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
   <p class="actions-note">The <strong>SVG</strong> is the signed verifiable credential — download it and check it with DI-capable OB 3.0 / VC verifiers, no need to trust Andamio. The PNG is for display.</p>
-  <!-- explainer links (#72) attach here -->
-  <div class="explainers" data-slot="explainers"></div>
+  <div class="explainers" data-slot="explainers">
+    <a class="explainer" href="/badges/how-to-share">How do I share this?</a>
+    <a class="explainer" href="/badges/how-to-check">How do I check this?</a>
+  </div>
 
   <hr class="divider">
   <p class="verify">This badge is anchored on Cardano, and its SVG is a signed, self-contained credential — download it and check it with DI-capable OB 3.0 / VC verifiers, no need to trust Andamio.</p>

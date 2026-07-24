@@ -122,6 +122,18 @@ def test_alt_text_present_and_escaped():
     print("  ✅ og:image:alt + img alt present and escaped")
 
 
+def test_explainer_links_present():
+    """Covers R3 (#72). The badge page links both explainers from the (now
+    populated) explainers slot."""
+    html = page._page_html(REC)
+    assert 'href="/badges/how-to-share"' in html, "share explainer link missing"
+    assert 'href="/badges/how-to-check"' in html, "check explainer link missing"
+    assert "How do I share this?" in html and "How do I check this?" in html
+    # slot is no longer empty (the .explainers:empty hide rule no longer applies)
+    assert '<div class="explainers" data-slot="explainers">\n    <a' in html
+    print("  ✅ badge page links both explainers")
+
+
 def test_download_controls_present():
     html = page._page_html(REC)
     assert f'href="/badges/{STEM}.svg" download' in html, "download-SVG control missing"

@@ -41,6 +41,9 @@ h1{font-size:clamp(24px,5vw,34px);font-weight:800;line-height:1.15;margin:0 0 8p
 .btn:hover{border-color:var(--sec);color:var(--sec);}
 .actions-note{font-size:12px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto 22px;}
 .actions-note strong{color:var(--bone);}
+.explainers{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin:0 0 4px;}
+.explainer{font-size:13px;color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}
+.explainer:hover{border-bottom-color:var(--sec);}
 a{color:var(--sec);}
 </style>
 </head>
@@ -65,8 +68,10 @@ a{color:var(--sec);}
     <a class="btn" href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;name=Mint%20Access%20Token%20and%20Commit%20to%20Assignment&amp;organizationName=Andamio%20Teams&amp;certUrl=https%3A%2F%2Fcredentials.andamio.io%2Fbadges%2Fab5d9217bbbac409ffbe7c8c65d9b358932245079a7f8547a28bc755.1b37e6b411bc614e9da67943124219053eafa717793e5424f4a33765e42328a3&amp;certId=ab5d9217bbbac409ffbe7c8c65d9b358932245079a7f8547a28bc755.1b37e6b411bc614e9da67943124219053eafa717793e5424f4a33765e42328a3" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
   <p class="actions-note">Download the <strong>SVG</strong> — it carries this credential's data, anchored on-chain. (Signed verifiable-credential baking, checkable by DI-capable OB 3.0 / VC verifiers, is rolling out; the PNG is for display.)</p>
-  <!-- explainer links (#72) attach here -->
-  <div class="explainers" data-slot="explainers"></div>
+  <div class="explainers" data-slot="explainers">
+    <a class="explainer" href="/badges/how-to-share">How do I share this?</a>
+    <a class="explainer" href="/badges/how-to-check">How do I check this?</a>
+  </div>
 
   <hr class="divider">
   <p class="verify">This badge is anchored on Cardano — the on-chain record is the proof. Signed verifiable-credential baking, checkable by DI-capable OB 3.0 / VC verifiers, is rolling out.</p>
