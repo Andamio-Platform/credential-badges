@@ -167,6 +167,21 @@ server {
             add_header Cache-Control "public, max-age=86400";
             try_files $uri =404;
         }
+
+        # Holder viewer (#73): the per-holder credential view at
+        # /badges/{stem}/{alias} — the subpath KTD-7 of the #70 plan reserved.
+        # A single committed static shell (_holder.html) whose client JS reads
+        # {stem}+{alias} from location.pathname, resolves live on-chain +
+        # suspension state (via the /holder-api/ proxy below and the same-origin
+        # /status/ list), and renders it. Nested regex owns the two-segment path;
+        # a malformed stem/alias never matches, so it falls through to the outer
+        # try_files =404. The .svg/.png/.html sibling routes are untouched (the
+        # holder path carries no such extension), so credential-referenced image
+        # URLs never move (R3).
+        location ~ "^/badges/[0-9a-f]{56}\.[0-9a-f]{64}/[A-Za-z0-9_-]{1,64}$" {
+            add_header Cache-Control "public, max-age=86400";
+            try_files /badges/_holder.html =404;
+        }
     }
 
     # On-demand render fallback target (#33, KTD-4). RENDER_UPSTREAM is injected
@@ -190,6 +205,27 @@ server {
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Holder-state proxy (#73, KTD-2). andamioscan.io sends NO CORS headers, so a
+    # browser cross-origin fetch from this host is blocked; the holder viewer
+    # reads a holder's live on-chain state SAME-ORIGIN through here. Mirrors
+    # @render: HOLDER_UPSTREAM is the andamioscan `/api/v2/` base, injected at
+    # deploy (envsubst); the default is an IP-literal discard so nginx always
+    # boots and an un-wired deploy fails LOUD (502 connection-refused), never a
+    # silent fake-OK. `proxy_ssl_server_name on` sends SNI for the HTTPS upstream.
+    # Live state must not cache — `no-store` on the proxied response, and the
+    # client also fetches with cache:"no-store". Fail-loud: an upstream non-2xx
+    # passes through unchanged (no error_page masking), so the client renders an
+    # explicit error, never a fabricated "verified" (R6).
+    location ^~ /holder-api/ {
+        proxy_pass ${HOLDER_UPSTREAM};
+        proxy_ssl_server_name on;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        add_header Cache-Control "no-store" always;
     }
 
     # Non-badge imagery (if any is ever served outside /badges/). Cached, not
