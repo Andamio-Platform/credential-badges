@@ -89,13 +89,34 @@ for (const svg of svgs) {
   }
 }
 
+// The two explainers (#72) are general editorial pages (non-hex stems), so the
+// per-credential orphan guard is blind to them — check them here so a deleted
+// explainer fails CI. how-to-check must carry the non-Andamio verification path.
+for (const name of ["how-to-share.html", "how-to-check.html"]) {
+  const path = join(BADGES, name);
+  if (!existsSync(path)) {
+    problems.push(`missing ${name} (explainer)`);
+    continue;
+  }
+  const html = readFileSync(path, "utf8");
+  if (html.length < 800) problems.push(`${name}: ${html.length} bytes — likely blank/truncated`);
+}
+const check = join(BADGES, "how-to-check.html");
+if (existsSync(check)) {
+  const html = readFileSync(check, "utf8");
+  if (!html.includes("without trusting") || !html.includes("did:web:credentials.andamio.io")) {
+    problems.push("how-to-check.html: missing the non-Andamio verification path");
+  }
+}
+
 console.error(
   `checked ${svgs.length} badges — png/og-card existence + dimensions + byte-floor, ` +
-    `and page (.html) existence (not byte-identity; resvg raster is not byte-stable cross-platform).`,
+    `page (.html) + embed (.embed.html) existence, and the two explainers ` +
+    `(not byte-identity; resvg raster is not byte-stable cross-platform).`,
 );
 if (problems.length) {
   console.error(`FAIL: ${problems.length} problem(s):`);
   for (const p of problems) console.error(`  ${p}`);
   process.exit(1);
 }
-console.error(`OK: every badge has a 1024x1024 .png, a 1200x630 .og.png (all >= ${MIN_BYTES}B), a .html page, and a .embed.html variant`);
+console.error(`OK: every badge has a 1024x1024 .png, a 1200x630 .og.png (all >= ${MIN_BYTES}B), a .html page, and a .embed.html variant; both explainers present`);

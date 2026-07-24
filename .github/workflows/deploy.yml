@@ -113,6 +113,9 @@ jobs:
           # v1.2 embed variant (#71): a new served URL under the same
           # try_files-to-.html routing — probe it on the deployed revision too.
           assert_ct "/badges/$STEM.embed"  text/html
+          # v1.2 explainers (#72): two new served URLs — probe them too.
+          assert_ct "/badges/how-to-share" text/html
+          assert_ct "/badges/how-to-check" text/html
 
       - name: Verify served context bytes on the public host (freeze pin, end to end)
         # The freeze-pin step above proves the tagged checkout matches the
