@@ -1,0 +1,21 @@
+{
+  "name": "credential-badges-imaging",
+  "version": "0.0.1",
+  "description": "v1.2 build-time image pipeline (#69): rasterize badge SVGs to PNG and compose 1200x630 Open Graph cards with resvg (deterministic, offline, no Chromium/system-font dependency). Build output is committed alongside the SVGs; no runtime service.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "pngs": "node --experimental-strip-types rasterize.ts",
+    "og-cards": "node --experimental-strip-types compose-og.ts",
+    "test": "node --experimental-strip-types --test rasterize.test.ts"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "2.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
