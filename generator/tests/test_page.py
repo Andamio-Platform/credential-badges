@@ -11,6 +11,7 @@ No third-party test framework — runnable directly:
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -170,6 +171,17 @@ def test_web_component_control_in_page():
 
 
 SIGNED_CLAIM = "the SVG you can download is signed"
+BAKED_SVG_CLAIM = "is the signed credential itself"
+
+# A signature claim in ANY phrasing, not just the two the copy happens to use.
+# Anchoring the R7 guard on literal sentences let an unbaked badge claim a
+# signature in different words with the whole suite green — both an unbaked
+# .verify reading "its SVG is signed" and an unbaked .actions-note reading "is
+# the signed credential itself" slipped through. Matches "is signed", "is a
+# signed …", "is the signed …", "are signed"; deliberately does NOT match the
+# legitimate unbaked hedge "A signed copy … is rolling out", where the verb
+# attaches to the roll-out, not to this badge.
+SIGNATURE_CLAIM_RE = re.compile(r"\b(?:is|are)\s+(?:(?:a|the)\s+)?signed\b")
 
 
 def test_verifiability_copy_is_baked_aware():
@@ -190,15 +202,55 @@ def test_verifiability_copy_is_baked_aware():
         costs the #82 plain-language rewrite nothing."""
     unbaked = page._page_html(REC)              # REC is unbaked
     assert SIGNED_CLAIM not in unbaked, "must not overclaim a signature for unbaked"
+    assert BAKED_SVG_CLAIM not in unbaked, "unbaked download note must not claim a signature"
     assert "anchored on-chain" in unbaked, "unbaked must still state the on-chain anchor"
     assert page._is_baked(STEM) is False
 
     baked = page._page_html(FLAGSHIP_REC)       # flagship carries proofValue
     assert page._is_baked(FLAGSHIP_STEM) is True, "flagship should read as baked"
     assert SIGNED_CLAIM in baked, "flagship claims its SVG is signed"
+    assert BAKED_SVG_CLAIM in baked, "flagship download note names the signed credential"
     # wording gate holds in both
     assert "any OB3 verifier" not in unbaked and "any OB3 verifier" not in baked
     print("  ✅ verifiability copy gated on baked/signed state (no overclaim)")
+
+
+def test_unbaked_copy_never_claims_a_signature_in_any_phrasing():
+    """The R7 guard above anchors on the exact sentences today's copy uses, so
+    it only catches a regression that keeps that phrasing. This one catches the
+    claim itself however it is worded — the failure mode that matters, since a
+    copy edit is exactly how an unbaked badge would start implying a signature.
+
+    Both notes are checked: the caveat and the download note are the two places
+    a signature claim can appear, and the #82 split moved copy between them."""
+    unbaked = page._svg_note(False) + " " + page._verify_note(False)
+    hit = SIGNATURE_CLAIM_RE.search(unbaked)
+    assert hit is None, (
+        f"unbaked copy claims a signature: {hit.group(0)!r} in {unbaked!r}")
+    # The roll-out hedge is what keeps the unbaked signature mention honest —
+    # without it, "a signed copy you can check" reads as available today.
+    assert "rolling out" in page._verify_note(False), (
+        "unbaked copy must hedge the signed copy as still rolling out")
+    # ...and the guard is not vacuous: the baked copy DOES trip the pattern.
+    assert SIGNATURE_CLAIM_RE.search(page._verify_note(True)) is not None, (
+        "pattern must actually match a real signature claim, else it guards nothing")
+    print("  ✅ unbaked copy claims no signature in any phrasing")
+
+
+def test_verifier_class_mentions_stay_qualified():
+    """The wording gate's negative list only catches phrasings someone
+    enumerated. This asserts the structural invariant instead: wherever the page
+    names the OB 3.0 / VC verifier class — today only the baked page's meta and
+    OG descriptions — the 'DI-capable' qualifier travels with it. Dropping that
+    qualifier is the realistic regression, and no substring blacklist sees it."""
+    for rec in (REC, FLAGSHIP_REC):
+        html = page._page_html(rec)
+        for m in re.finditer(r"OB ?3\.?0? ?/ ?VC verifier", html):
+            window = html[max(0, m.start() - 24):m.start()]
+            assert "DI-capable" in window, (
+                f"unqualified verifier-class mention at offset {m.start()}: "
+                f"{html[max(0, m.start() - 60):m.end() + 20]!r}")
+    print("  ✅ every verifier-class mention keeps its DI-capable qualifier")
 
 
 def test_x_intent_link():
@@ -390,11 +442,19 @@ def test_inline_caveat_link_differs_from_explainer_label():
 
 
 def test_verify_note_differs_by_baked_state():
-    """Covers R7. The two states must not converge on identical wording — a
-    presentation-only badge and a signed one make different claims."""
-    assert page._verify_note(True) != page._verify_note(False)
-    assert page._svg_note(True) != page._svg_note(False)
-    print("  ✅ verify/download copy still differs by baked state")
+    """Covers R7. A bare `baked != unbaked` inequality passes trivially — it
+    held before #82 too, so it never signalled anything. Assert the specific
+    claims that must NOT cross between the two states instead."""
+    baked_v, unbaked_v = page._verify_note(True), page._verify_note(False)
+    assert baked_v != unbaked_v and page._svg_note(True) != page._svg_note(False)
+    # The roll-out hedge belongs only to the badges still waiting on a signature.
+    assert "rolling out" in unbaked_v
+    assert "rolling out" not in baked_v, "a signed badge is not still 'rolling out'"
+    # ...and the no-trust-required claim only to the one that earns it.
+    assert "without taking" in baked_v
+    assert "without taking" not in unbaked_v, (
+        "unbaked must not claim verification without trusting the issuer")
+    print("  ✅ verify/download copy makes state-specific claims, not just different ones")
 
 
 def test_embed_badge_image_is_horizontally_centred():
@@ -478,8 +538,12 @@ def test_wording_gate():
     for rec in (REC, FLAGSHIP_REC):             # unbaked and baked
         html = page._page_html(rec)
         for phrase in OVERCLAIMS:
-            assert phrase not in html, f"page must never imply {phrase!r}"
-        verify = html.split('<p class="verify">')[1].split("</p>")[0]
+            # Word-anchored: a bare substring test flags legitimate copy that
+            # merely contains the phrase ("many verifiers" contains "any
+            # verifier"), which would fail loudly for the wrong reason.
+            assert not re.search(rf"\b{re.escape(phrase)}\b", html), (
+                f"page must never imply {phrase!r}")
+        verify = _slot(html, "verify")
         assert 'href="/badges/how-to-check"' in verify, (
             "the caveat itself must link the explainer that carries the precision")
     print("  ✅ wording gate: no overclaim, and .verify links the precise explainer")

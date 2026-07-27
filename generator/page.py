@@ -218,10 +218,14 @@ def _verify_note(baked):
         return (f"This badge is anchored on Cardano, and the SVG you can "
                 f"download is signed — check it with compatible verifier "
                 f"software, without taking {ISSUER}'s word for it. {link}")
+    # NB: no explorer-lookup invitation on this branch. An unbaked SVG carries
+    # andamio:onChainAnchor with only {network, courseId, sltHash} — no claim
+    # transaction hash and no on-chain asset — so there is nothing for a reader
+    # to look up. Only a baked credential carries the evidence entry the
+    # explainer's step 3 walks through.
     return ("This badge is anchored on Cardano — the public blockchain record "
-            "is the proof, and anyone can look it up on a public Cardano "
-            "explorer. A signed copy you can check with compatible verifier "
-            f"software is rolling out. {link}")
+            "is the proof. A signed copy you can check with compatible "
+            f"verifier software is rolling out. {link}")
 
 
 def _description(course_title, module_title, baked):
