@@ -118,11 +118,11 @@ def _share_controls(stem, module_title, course_title, page_url, baked):
     with JS disabled); copy-link / Web Share / copy-embed are buttons revealed by
     the inline script only when their browser API exists (no dead buttons).
 
-    ``baked`` gates the verifiability claim: only a signed/baked SVG *is* a
-    checkable verifiable credential (CONCEPTS: Flagship Badge). For the
-    presentation-only majority the copy stays accurate — anchored on-chain, with
-    signed verification rolling out — never overclaiming a signature that isn't
-    there."""
+    ``baked`` gates what the download note may claim: only a signed/baked SVG
+    *is* the credential itself (CONCEPTS: Flagship Badge); for the
+    presentation-only majority the SVG carries the credential's data, anchored
+    on-chain. Either way this note makes NO verification claim — that lives once,
+    in _verify_note, so the page doesn't repeat the same caveat twice (#82)."""
     x_url = (f"https://twitter.com/intent/tweet?url={_q(page_url)}"
              f"&text={_q(module_title)}&hashtags={HASHTAGS}")
     li_share = f"https://www.linkedin.com/sharing/share-offsite/?url={_q(page_url)}"
@@ -147,15 +147,23 @@ def _share_controls(stem, module_title, course_title, page_url, baked):
 
 
 def _svg_note(baked):
-    """Baked-aware download copy — never claim a signature the SVG doesn't carry."""
+    """Baked-aware download copy — a PURE DOWNLOAD AFFORDANCE (#82).
+
+    This note answers "which file do I download"; _verify_note answers "how is
+    this checked". The verification caveat used to leak into BOTH, so the page
+    carried two near-identical grey paragraphs ~100px apart, in the densest
+    technical language on a page whose primary visitor is the holder who just
+    earned the credential. The caveat now lives once, in _verify_note.
+
+    Keep it free of verification claims — no verifier class, no "rolling out".
+    The unbaked branch's "anchored on-chain" stays: that is a property of the
+    data being downloaded, not a claim about who can check it (and it is the
+    positive anchor test_verifiability_copy_is_baked_aware reads for R7)."""
     if baked:
-        return ("The <strong>SVG</strong> is the signed verifiable credential — "
-                "download it and check it with DI-capable OB 3.0 / VC verifiers, "
-                f"no need to trust {ISSUER}. The PNG is for display.")
+        return ("The <strong>SVG</strong> is the signed credential itself — "
+                "download it to keep or share. The PNG is for display.")
     return ("Download the <strong>SVG</strong> — it carries this credential's "
-            "data, anchored on-chain. (Signed verifiable-credential baking, "
-            "checkable by DI-capable OB 3.0 / VC verifiers, is rolling out; the "
-            "PNG is for display.)")
+            "data, anchored on-chain. The PNG is for display.")
 
 
 # Inline progressive-enhancement script: reveals + wires the three JS-only
@@ -186,14 +194,34 @@ _SHARE_SCRIPT = """<script>
 
 
 def _verify_note(baked):
-    """Baked-aware footer copy about how this badge is checked."""
+    """Baked-aware footer copy about how this badge is checked — the page's ONE
+    verification caveat (#82), written for the holder rather than a verifier.
+
+    The precise class name ("DI-capable OB 3.0 / VC verifiers") lives on the
+    how-to-check explainer, which this note links inline. But the BOUND it
+    carries must survive the plainer wording: dropping the qualifier entirely
+    does not narrow the claim, it removes the ceiling and lets the reader supply
+    the broadest one. That ceiling is real — the explainer warns that verifiers
+    reading only JWS-style credentials will not read this proof format, and the
+    verifier spike recorded one that structurally cannot. An employer who reads
+    "anyone can check it", runs a mainstream OB3 tool and gets a failure
+    concludes a genuine credential is fraudulent. So: "compatible verifier
+    software" — plain, but still a bound. Never "anyone", never "any verifier".
+
+    The link label deliberately differs from the .explainers slot's "How do I
+    check this?" (which sits just above the divider): identical label + href a
+    few lines apart reads as accidental duplication and announces twice to a
+    screen reader. One label per affordance — a nav item and an inline citation.
+    """
+    link = ('<a href="/badges/how-to-check">How this badge is checked</a>')
     if baked:
-        return (f"This badge is anchored on Cardano, and its SVG is a signed, "
-                f"self-contained credential — download it and check it with "
-                f"DI-capable OB 3.0 / VC verifiers, no need to trust {ISSUER}.")
-    return ("This badge is anchored on Cardano — the on-chain record is the "
-            "proof. Signed verifiable-credential baking, checkable by DI-capable "
-            "OB 3.0 / VC verifiers, is rolling out.")
+        return (f"This badge is anchored on Cardano, and the SVG you can "
+                f"download is signed — check it with compatible verifier "
+                f"software, without taking {ISSUER}'s word for it. {link}")
+    return ("This badge is anchored on Cardano — the public blockchain record "
+            "is the proof, and anyone can look it up on a public Cardano "
+            "explorer. A signed copy you can check with compatible verifier "
+            f"software is rolling out. {link}")
 
 
 def _description(course_title, module_title, baked):
@@ -306,7 +334,16 @@ def _embed_html(rec):
     to the display page — no share chrome — sized for the iframe snippet. Served
     at the extensionless /badges/{stem}.embed by the #70 routing. Root-relative
     image src resolves against the iframe's own origin (credentials.andamio.io);
-    the link breaks out of the iframe (target=_blank) to the full page."""
+    the link breaks out of the iframe (target=_blank) to the full page.
+
+    The image's ``margin:0 auto`` is load-bearing, not decoration (#81): the flex
+    ``align-items:center`` centres the ANCHORS, but the image's percentage width
+    can't resolve during intrinsic sizing, so the wrapping anchor falls back to
+    the badge's intrinsic width (1024) and clamps to the iframe width. The block
+    image then sits hard left of an anchor wider than it, offset growing with
+    width. The auto margins centre it, and resolve to 0 when the anchor
+    shrink-wraps — so they never move the working case. Mirrors the badge page's
+    own .badge rule."""
     ctx = _ctx(rec)
     stem, module_title, page_url = ctx["stem"], ctx["module_title"], ctx["page_url"]
     ink, bone, sec = ctx["pal"]["ink"], ctx["pal"]["bone"], ctx["pal"]["sec"]
@@ -319,7 +356,7 @@ def _embed_html(rec):
 <style>
 html,body{{margin:0;height:100%;}}
 body{{background:{ink};color:{bone};font-family:Archivo,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;box-sizing:border-box;}}
-img{{width:min(240px,72%);height:auto;display:block;}}
+img{{width:min(240px,72%);height:auto;display:block;margin:0 auto;}}
 a{{color:{sec};font-size:12px;text-decoration:none;}}
 a:hover{{text-decoration:underline;}}
 </style>

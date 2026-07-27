@@ -169,18 +169,33 @@ def test_web_component_control_in_page():
     print("  ✅ badge page carries the web-component embed control")
 
 
+SIGNED_CLAIM = "the SVG you can download is signed"
+
+
 def test_verifiability_copy_is_baked_aware():
-    """Only a signed/baked badge may claim its SVG *is* a checkable verifiable
-    credential (CONCEPTS: Flagship Badge). The presentation-only majority must
-    NOT overclaim a signature that isn't there."""
+    """Only a signed/baked badge may claim its SVG *is* signed (CONCEPTS:
+    Flagship Badge). The presentation-only majority must NOT overclaim a
+    signature that isn't there.
+
+    The positive anchors were re-pointed when #82 rewrote the copy — they were
+    NOT dropped. Two traps to keep in mind if this test ever needs re-anchoring
+    again:
+
+      * The discriminator must be a phrase ABSENT from the unbaked branch. Bare
+        "signed" is not: the unbaked copy says a signed copy "is rolling out",
+        so anchoring on it would make this guard a tautology that passes even
+        when an unbaked badge claims a signature. Hence the full SIGNED_CLAIM.
+      * The unbaked positive ("anchored on-chain") lives in _svg_note. Keep it
+        there — it is a property of the data, not a verification claim, so it
+        costs the #82 plain-language rewrite nothing."""
     unbaked = page._page_html(REC)              # REC is unbaked
-    assert "is the signed verifiable credential" not in unbaked, "must not overclaim for unbaked"
-    assert "anchored on-chain" in unbaked
+    assert SIGNED_CLAIM not in unbaked, "must not overclaim a signature for unbaked"
+    assert "anchored on-chain" in unbaked, "unbaked must still state the on-chain anchor"
     assert page._is_baked(STEM) is False
 
     baked = page._page_html(FLAGSHIP_REC)       # flagship carries proofValue
     assert page._is_baked(FLAGSHIP_STEM) is True, "flagship should read as baked"
-    assert "is the signed verifiable credential" in baked, "flagship claims signed VC"
+    assert SIGNED_CLAIM in baked, "flagship claims its SVG is signed"
     # wording gate holds in both
     assert "any OB3 verifier" not in unbaked and "any OB3 verifier" not in baked
     print("  ✅ verifiability copy gated on baked/signed state (no overclaim)")
@@ -303,6 +318,104 @@ def test_embed_variant_minimal_and_links_back():
     print("  ✅ embed variant: minimal, shows badge, links back to the page")
 
 
+def _slot(html, cls):
+    """Extract one paragraph's inner HTML by class — lets the #82 tests assert
+    on a specific note rather than page-wide, which is the whole point (the two
+    notes used to say the same thing)."""
+    return html.split(f'<p class="{cls}">')[1].split("</p>")[0]
+
+
+def test_caveat_appears_once_in_plain_language():
+    """Covers R3/R4 (#82). The verification caveat used to render twice ~100px
+    apart — once under the download buttons, once in the footer — in the same
+    colour and measure. It now lives only in .verify; .actions-note is a pure
+    download affordance."""
+    unbaked = page._page_html(REC)
+    # The developer-register phrase is gone from the unbaked page entirely.
+    # Scope this to unbaked ONLY: the baked page's _description() is
+    # deliberately untouched and still carries the phrase in three meta tags.
+    assert "DI-capable" not in unbaked, "unbaked page must not carry the class name"
+
+    note = _slot(unbaked, "actions-note")
+    assert "rolling out" not in note and "verifier" not in note, (
+        "the download note must make no verification claim")
+    assert "anchored on-chain" in note, "the on-chain anchor is data, not a caveat — keep it"
+
+    verify = _slot(unbaked, "verify")
+    assert verify.count("rolling out") == 1, "the caveat states the roll-out exactly once"
+    assert "anchored on Cardano" in verify
+    print("  ✅ caveat appears once, in the holder's register")
+
+
+def test_caveat_keeps_its_compatibility_bound():
+    """Covers R6 (#82's hard constraint). Plainer must not mean more generous.
+    Dropping the verifier qualifier entirely would not narrow the claim — it
+    removes the ceiling and lets the reader assume any tool works. The explainer
+    itself warns JWS-only verifiers can't read this proof format."""
+    for rec in (REC, FLAGSHIP_REC):
+        verify = _slot(page._page_html(rec), "verify")
+        assert "compatible verifier software" in verify, (
+            "the plain-language bound must survive the rewrite")
+    print("  ✅ caveat keeps a compatibility bound in both baked states")
+
+
+def test_baked_download_note_makes_no_check_claim():
+    """Covers R3 on the Flagship. The baked page is the one badge that earns the
+    strong claim, so it is the easiest place to accidentally state it twice."""
+    baked = page._page_html(FLAGSHIP_REC)
+    note = _slot(baked, "actions-note")
+    assert "check" not in note, "the baked download note must not repeat the check claim"
+    assert "PNG is for display" in note
+    verify = _slot(baked, "verify")
+    assert "check it with compatible verifier software" in verify, (
+        "the check claim belongs in .verify, once")
+    print("  ✅ Flagship states the check claim once, in .verify")
+
+
+def test_inline_caveat_link_differs_from_explainer_label():
+    """Covers R5. The caveat links its own elaboration inline, but must not
+    reuse the .explainers slot's label — that slot sits a few lines above the
+    divider, so an identical label + href reads as accidental duplication and
+    announces twice to a screen reader."""
+    for rec in (REC, FLAGSHIP_REC):
+        html = page._page_html(rec)
+        verify = _slot(html, "verify")
+        assert 'href="/badges/how-to-check"' in verify
+        assert "How this badge is checked" in verify
+        assert "How do I check this?" not in verify, (
+            "inline citation must not reuse the explainer nav label")
+        # ...and the nav link is still there, unchanged.
+        assert "How do I check this?" in html
+    print("  ✅ inline caveat link is distinct from the explainer nav label")
+
+
+def test_verify_note_differs_by_baked_state():
+    """Covers R7. The two states must not converge on identical wording — a
+    presentation-only badge and a signed one make different claims."""
+    assert page._verify_note(True) != page._verify_note(False)
+    assert page._svg_note(True) != page._svg_note(False)
+    print("  ✅ verify/download copy still differs by baked state")
+
+
+def test_embed_badge_image_is_horizontally_centred():
+    """Covers R1/R2 (#81). The embed's flex `align-items:center` centres the
+    ANCHORS, but the image's percentage width can't resolve during intrinsic
+    sizing, so the wrapping anchor takes the badge's intrinsic width and clamps
+    to the iframe width — leaving the block image hard left, with the offset
+    growing as the iframe widens. An auto horizontal margin on the image centres
+    it inside whatever width the anchor ends up with."""
+    html = page._embed_html(REC)
+    img_rule = html.split("img{")[1].split("}")[0]
+    assert "margin:0 auto" in img_rule, (
+        "embed img needs an auto horizontal margin to centre inside a wider anchor")
+    # The fix ADDS a declaration — it must not replace the sizing behaviour.
+    assert "display:block" in img_rule, "embed img must stay a block box"
+    assert "width:min(240px,72%)" in img_rule, "embed img sizing must be unchanged"
+    # ...and must not regress the anchor centring that already works.
+    assert "align-items:center" in html, "embed body must keep flex cross-axis centring"
+    print("  ✅ embed badge image centres horizontally (auto margin, sizing intact)")
+
+
 def test_main_output_byte_identical_to_committed_pages():
     """Parity guard (mirrors test_render_parity.py): regenerate every page via
     page.main() into a scratch dir and assert each is byte-identical to the
@@ -343,11 +456,33 @@ def test_out_of_subset_title_sanitized():
     print("  ✅ out-of-subset title glyphs sanitized")
 
 
+OVERCLAIMS = ("any OB3 verifier", "any OB 3.0", "any verifier",
+              "anyone can check it")
+
+
 def test_wording_gate():
-    html = page._page_html(REC)
-    assert "any OB3 verifier" not in html
-    assert "DI-capable OB 3.0 / VC verifiers" in html
-    print("  ✅ wording gate: DI-capable OB 3.0 / VC verifiers, never 'any OB3 verifier'")
+    """The wording gate asserts the INVARIANT (the page never implies broader
+    verifiability than exists), not the old proxy for it.
+
+    #82 moved the precise class name off the holder's page — it was the densest
+    term there — so the positive half now lives where the phrase lives:
+    test_explainers.py and test_holder.py assert it on those surfaces. Here the
+    page must instead prove the ROUTE to that precision still exists.
+
+    Do NOT 'restore' `assert "DI-capable OB 3.0 / VC verifiers" in html` — that
+    re-introduces developer language in front of the holder, which is the defect
+    #82 fixed. Do NOT relax the .verify-scoped link assertion to a page-wide one
+    either: page-wide is already satisfied by the .explainers slot (and by
+    test_explainer_links_present), so the inline citation could silently drop
+    with everything green. This test is deliberately narrower than that one."""
+    for rec in (REC, FLAGSHIP_REC):             # unbaked and baked
+        html = page._page_html(rec)
+        for phrase in OVERCLAIMS:
+            assert phrase not in html, f"page must never imply {phrase!r}"
+        verify = html.split('<p class="verify">')[1].split("</p>")[0]
+        assert 'href="/badges/how-to-check"' in verify, (
+            "the caveat itself must link the explainer that carries the precision")
+    print("  ✅ wording gate: no overclaim, and .verify links the precise explainer")
 
 
 def _main():
