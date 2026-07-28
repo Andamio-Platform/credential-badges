@@ -130,6 +130,46 @@ test("human-readable text says this is a definition, not an earning claim", () =
   assert.ok(!/\bhas earned\b|\bcompleted the\b/.test(prose), `prose reads as an earning claim: ${prose}`);
 });
 
+// ------------------------- OB 3.0 schema conformance ----------------------- //
+//
+// Required-field sets taken from the published OB 3.0 schema
+// (purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_achievementcredential_schema.json,
+// read 2026-07-28). Pinned here rather than fetched so the suite stays
+// hermetic; the dep-test covers what expansion does with these fields.
+
+test("carries every field the OB 3.0 AchievementCredential schema requires", () => {
+  const c = buildClassCredential(SAMPLE, NETWORK) as any;
+  for (const k of ["@context", "id", "type", "credentialSubject", "issuer", "validFrom"]) {
+    assert.ok(k in c, `OB 3.0 requires ${k} on AchievementCredential`);
+  }
+});
+
+test("AchievementSubject conforms WITHOUT an id — the identityless shape is legal", () => {
+  const c = buildClassCredential(SAMPLE, NETWORK) as any;
+  // The schema requires only type + achievement on AchievementSubject, which
+  // is what makes KTD-1 conformant rather than a stretch.
+  for (const k of ["type", "achievement"]) {
+    assert.ok(k in c.credentialSubject, `OB 3.0 requires ${k} on AchievementSubject`);
+  }
+  assert.equal("id" in c.credentialSubject, false);
+});
+
+test("the nested Achievement carries its five required fields", () => {
+  const a = (buildClassCredential(SAMPLE, NETWORK) as any).credentialSubject.achievement;
+  for (const k of ["id", "type", "criteria", "description", "name"]) {
+    assert.ok(k in a, `OB 3.0 requires ${k} on Achievement`);
+  }
+});
+
+test("validFrom is deterministic, not wall-clock", () => {
+  const a = (buildClassCredential(SAMPLE, NETWORK) as any).validFrom;
+  const b = (buildClassCredential(SAMPLE, NETWORK) as any).validFrom;
+  assert.equal(a, b);
+  assert.match(a, /^\d{4}-\d{2}-\d{2}T/);
+  // A wall-clock value would break byte-stability across re-signs (R3).
+  assert.ok(Math.abs(Date.now() - Date.parse(a)) > 60_000, "validFrom looks like wall-clock");
+});
+
 // ------------------------------ determinism -------------------------------- //
 
 test("two builds for the same badge are byte-identical (R3)", () => {

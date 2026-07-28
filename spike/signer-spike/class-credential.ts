@@ -25,11 +25,17 @@
 //                               deterministic by design (R3), so adding it
 //                               would mean either a per-badge network call at
 //                               build time or carrying owner in the registry.
-//   * `validFrom`             — a definition has no issuance moment, and any
-//                               wall-clock value would break byte-stability.
-//                               Whether OB 3.0 requires it is the specific
-//                               question the single-artifact validation in U3
-//                               is designed to answer before 57 more are signed.
+//
+// `validFrom` IS required by the OB 3.0 AchievementCredential schema (checked
+// against the published schema on 2026-07-28: required = @context, id, type,
+// credentialSubject, issuer, validFrom). A definition has no issuance moment
+// and a wall-clock value would break byte-stability (R3), so it is pinned to
+// the signing-key epoch — deterministic, stable across re-signs under the same
+// key, and honest: this is when Andamio published this definition under this
+// key. The same constant dates the proof.
+//
+// The identityless shape is schema-valid, not a stretch: AchievementSubject
+// requires only `type` and `achievement`, so omitting `id` conforms.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -41,6 +47,10 @@ import { statusListEntry } from "./status-list.ts";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
 const REGISTRY_PATH = path.join(REPO, "generator", "credentials.json");
+
+/** The signing-key epoch this definition is published under. Deterministic by
+ *  design — see the `validFrom` note in the module header. */
+export const KEY_EPOCH_PUBLISHED = "2026-07-01T00:00:00Z";
 
 const COURSE_ID_RE = /^[0-9a-f]{56}$/;
 const SLT_HASH_RE = /^[0-9a-f]{64}$/;
@@ -111,6 +121,9 @@ export function buildClassCredential(rec: BadgeRecord, network: string): unknown
       description:
         "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means.",
     },
+    // Required by the OB 3.0 schema. Pinned to the signing-key epoch rather
+    // than wall-clock so re-signing is byte-stable (R3).
+    validFrom: KEY_EPOCH_PUBLISHED,
     name: moduleTitle,
     // The prose is the mitigation the machine-readable shape cannot provide.
     description:
