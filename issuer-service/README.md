@@ -134,23 +134,27 @@ discovery scan with one indexed query).
   through the same seam — the spike's loopback pattern. CI runs the full
   request path with it against recorded Andamioscan fixtures.
 
-## The ops gate — required before `service-v0.1.0` can ever be tagged
+## ✅ The ops gate — CLOSED; the service is deployed and live
 
-1. **Region decision** (us-central1 vs europe-west4; may move the KMS key,
-   which re-runs the did.json pipeline).
-2. **Sign-SA attach** — the Cloud Run service runs as the sign-only SA;
-   deploy identity and sign identity stay distinct.
-3. **Sign-only WIF** ref-constrained to `refs/tags/service-v*`,
-   non-overlapping with the static-host and render lanes.
-4. **LB delta** — external HTTPS LB URL map: `/credentials/*` → this
-   service's serverless NEG; default → static host.
-5. **KMS IAM scope-down (8b)** — the sign SA holds
-   `cloudkms.signerVerifier` + `cloudkms.publicKeyViewer` on the one key
-   version only; KMS Cloud Audit Logs enabled.
-6. **Repo variables** consumed by `.github/workflows/deploy-issuer.yml`
-   (`ISSUER_GCP_REGION`, `ISSUER_AR_IMAGE`, `ISSUER_WIF_PROVIDER`,
-   `ISSUER_CICD_SA`, `ISSUER_KMS_KEY_VERSION`). The workflow refuses to run
-   while any is unset.
+All six items are satisfied. `service-v0.1.0` was tagged 2026-07-21 and
+`service-v0.1.1` deployed 2026-07-23; `/credentials/*` serves publicly today.
+Re-verified read-only against `andamio-credentials` on 2026-07-28:
+
+| # | Item | Observed |
+|---|---|---|
+| 1 | Region decision | `us-central1` |
+| 2 | Sign-SA attach | runs as `credential-badges-sign-sa@…`, distinct from the deploy identity `credential-badges-issuer-cicd@…` |
+| 3 | Sign-only WIF | provider condition `assertion.repository_owner == 'Andamio-Platform' && assertion.ref.startsWith('refs/tags/service-v')`, in its own pool (`credential-badges-issuer-pool`) |
+| 4 | LB delta | `/credentials/*` returns 200 `application/ld+json`; Cloud Run ingress `internal-and-cloud-load-balancing`, so the LB is the only path |
+| 5 | KMS IAM scope-down | sole binding on `vc-sign-ed25519` is the sign SA → `roles/cloudkms.signerVerifier`; keyring policy empty; `cloudkms` DATA_READ + DATA_WRITE audit logs enabled. **Deviation:** the binding is on the *key*, not the *key version* the plan specifies — benign at one version, but a new version would inherit sign rights automatically ([#87](https://github.com/Andamio-Platform/credential-badges/issues/87)) |
+| 6 | Repo variables | all five set |
+
+> **This section previously read "required before `service-v0.1.0` can ever be
+> tagged" and was left unedited after the deploy.** That staleness propagated:
+> the Phase 3 design work (#93) read it, concluded the service was undeployable,
+> and deferred a `/verify` endpoint as "dead code behind an LB route that does
+> not exist." The route exists. Keep this section current — it is load-bearing
+> for anything reasoning about what the service can host.
 
 ## Local run (ephemeral signer — no KMS, no GCP)
 
