@@ -2,7 +2,7 @@
 type: plan
 status: completed
 created: 2026-07-10
-origin: ../../../02-areas/andamio/docs/plans/2026-07-10-credential-badges-rung4-attestationhost.md
+origin: design-decided handoff, authored in a private planning vault (not team-accessible)
 target_repo: credential-badges
 tags:
   - plan
@@ -282,13 +282,13 @@ Additive and trivial. Revert `issuer/profile.jsonld` and the `context/v0.jsonld`
 
 ## Boundary & Lifecycle
 
-Executes entirely in `credential-badges` via compound engineering — **not** an orch PR. On merge, report the "Verified When" results back so orch ticks Rung 4 in the slice-ladder overlay (`../../../02-areas/andamio/docs/plans/2026-07-09-credential-badges-ob3-signing-slice-ladder.md`) and the origin single-rung doc is deleted (its residue lives in this PR + the overlay + a handback). This repo-local plan remains as the durable implementation record.
+Executes entirely in `credential-badges` via compound engineering — **not** an orch PR. On merge, report the "Verified When" results back so orch ticks Rung 4 in the slice-ladder overlay (a design-decided handoff authored outside this repo) and the origin single-rung doc is deleted (its residue lives in this PR + the overlay + a handback). This repo-local plan remains as the durable implementation record.
 
 ---
 
 ## Sources & Research
 
-- **Origin spec:** `../../../02-areas/andamio/docs/plans/2026-07-10-credential-badges-rung4-attestationhost.md` (the single-rung brief this plan formalizes).
+- **Origin spec:** a design-decided handoff authored outside this repo (the single-rung brief this plan formalizes).
 - **Deployment plan:** `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md` (Unit 2, Decision 2 — `issuer.id = did:web`).
 - **Rung 3 plan:** `docs/plans/2026-07-10-001-feat-rung3-did-web-resolves-plan.md` (DID now resolves; CODEOWNERS `/.well-known/**` gate + reservation comment for Rung 4).
 - **Spike-proven shapes:** `spike/verifier-spike/publish/context/v0.jsonld` (the `AttestationHost` / `OnChainCredentialAnchor` term definitions); the spike credential that passed spruce (VALID 0/0) + the 1EdTech validator.

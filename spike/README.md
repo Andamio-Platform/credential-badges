@@ -16,7 +16,7 @@ This is a **reference artifact** — not production code. Throwaway keys, narrow
 ## Quick start
 
 ```bash
-cd 020-areas/strategy/ob3-prototype
+cd <the ob3-prototype spike directory>
 npm install
 npm run build
 npm run generate    # writes out/ + sample-credential.jsonld
