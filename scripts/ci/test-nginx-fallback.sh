@@ -61,6 +61,17 @@ for i in $(seq 1 20); do
   sleep 0.5
 done
 
+# A successful reload proves the MASTER is running and accepted the signal — it
+# does not prove a worker has bound :80 and is serving the new config. Without
+# this second wait the app can proxy to a stub that is still reloading, and the
+# hop assertions fail with "connect() failed (111: Connection refused)" while
+# static-first passes. Probe until the stub actually returns the sentinel.
+for i in $(seq 1 30); do
+  docker exec "$STUB" wget -q -O- http://127.0.0.1/ 2>/dev/null | grep -q "$SENTINEL" && break
+  [ "$i" = 30 ] && { echo "FAIL: stub nginx never served the sentinel"; docker logs "$STUB"; exit 1; }
+  sleep 0.5
+done
+
 # Real static host, with the render fallback pointed at the stub.
 docker run -d --name "$APP" --network "$NET" \
   -e RENDER_UPSTREAM="http://$STUB:80" \

@@ -128,8 +128,9 @@ that resolves live on-chain and suspension state client-side.
 - [x] `docs/runbooks/key-compromise.md` (Rung 8.6 — subsumes the planned `status-flip.md`: trigger criteria, flip containment, cross-verifier read, DID-doc response, re-issuance)
 - [x] `docs/verifier-guidance.md` written with worked example (#19, #52) — including the `proof.created` block-time convention
 - [ ] **The signature-bearing states.** The viewer ships 2 states (verified / suspended) against the plan's 5, and by design it "does not itself assert a signature is cryptographically valid" — it reads on-chain + suspension state and points at an independent verifier. `anchored+signature-valid`, `anchored+signature-unavailable`, and `indeterminate` are the gap.
-- [ ] Multi-party process visible in rendered output: courseOwner pseudonym, assessor pseudonym, on-chain anchor with explorer link
-- [ ] **Per-holder baked artifacts.** Exactly 1 of 58 badge SVGs carries a signed VC, and 0 PNGs do. Baking the rest is blocked on a shape decision — see [Baked artifacts](#baked-artifacts-blocked-on-a-shape-decision) below.
+- [x] Multi-party process visible in rendered output — shipped in #93: courseOwner pseudonym per badge, the verified andamioscan course link, and the assessor named as absent rather than blank-filled
+- [x] **Class artifacts baked — 58 of 58.** Every rendered badge now carries a signed, holder-free Class Achievement, validated **VALID 13/13** against the 1EdTech OB30Inspector (both as a signed artifact and extracted from a baked SVG). The flagship no longer misreports: its shared file carried one holder's credential on a coordinate with six holders.
+- [ ] **Per-holder baked artifacts.** The holder half of the same work — a pre-baked artifact per badge-holder pair (215 today), cached rather than committed. Plan: [`docs/plans/2026-07-28-004-feat-fully-baked-badges-plan.md`](docs/plans/2026-07-28-004-feat-fully-baked-badges-plan.md). PNGs remain unbaked (0 of 116).
 
 ## Phase 4 — Hygiene + design-not-built (Unit 6)
 
@@ -154,42 +155,30 @@ published to npm (#80). Refinements in #83. Released `v1.2.0`.
 
 ---
 
-# Baked artifacts: blocked on a shape decision
+# ✅ Baked artifacts: the shape decision, resolved 2026-07-28
 
-OB 3.0 baking (Rung 7, #56) is proven — `tools/bake-signed-vc.ts` embeds a signed
-VC byte-for-byte into an SVG's `<openbadges:credential>` hook, and
-`extract(bake(svg, vc)) === vc`. But it has been applied to exactly **one** badge,
-and scaling it hits a structural conflict that has to be resolved before the other
-57 are baked:
+The conflict was real: **a badge image is keyed `(course_id, slt_hash)`; a
+credential is keyed `(course_id, slt_hash, holder)`.** The reference badge has
+six on-chain holders, so the one baked file asserted that one named person had
+earned it — wrong for the other five, and reachable from their own badge pages.
 
-**A badge image is keyed `(course_id, slt_hash)`. A credential is keyed
-`(course_id, slt_hash, recipient)`.** These are not the same object. The reference
-badge alone has **five** distinct on-chain holders (verified live 2026-07-21:
-james, sebastianpabon, njuguna, dcm, Newman5).
+**Resolved by splitting the artifact in two.** A shared badge carries a
+**Class Achievement** — holder-free, describing what the badge means. A
+**Holder Artifact** — asserting that a named person earned it — is a separate
+object at a per-holder address. See `CONCEPTS.md`.
 
-So the one baked badge — the shared, publicly served
-`/badges/ae192632…e9b53431….svg` — currently carries a credential whose
-`credentialSubject.id` is `urn:andamio:mainnet:recipient:gjames`. Anyone who
-extracts it gets a signed assertion that **gjames** earned it, regardless of which
-holder's page they arrived from. That is wrong for the other four holders today,
-not just at scale.
+The class half shipped: all 58 rendered badges baked and validated 13/13. The
+holder half is planned but not built — pre-baked per badge-holder pair (215
+today), cached rather than committed, because holder identity in public git
+history is permanent and un-purgeable.
 
-The shape decision, roughly:
+One finding worth carrying forward: the first class shape omitted
+`credentialSubject.id`, which the OB 3.0 implementation guide **recommends** and
+the published schema **permits**. The reference validator rejected it anyway.
+Validating a single artifact before batching caught it for the price of one
+signature. Evidence: [`spike/signer-spike/validation/README.md`](spike/signer-spike/validation/README.md).
 
-1. **Bake per-holder, at the per-holder route.** `/badges/{stem}/{alias}` already
-   exists for the holder viewer, so a baked artifact has a natural home there;
-   the shared `/badges/{stem}.svg` stays unbaked and presentation-only. Costs a
-   render/bake per holder and an nginx route.
-2. **Bake on demand** through the render service, which can call the live issuer
-   for `(stem, alias)` and bake in-flight. No new static artifacts; adds the
-   issuer to the render path's dependency graph.
-3. **Leave shared images unbaked.** Cheapest, and honest — the badge page and
-   holder viewer already link the verifiable credential. Baking is then only ever
-   for downloaded, holder-specific artifacts.
-
-Whatever is chosen, the currently-baked shared SVG needs unbaking or re-scoping,
-and the PNG path (`tools/bake-png-vc.ts`, 0 of 116 baked) follows the same
-decision.
+Procedure: [`docs/runbooks/class-artifact-signing.md`](docs/runbooks/class-artifact-signing.md).
 
 ## Where to dig deeper
 

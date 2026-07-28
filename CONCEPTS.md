@@ -8,10 +8,16 @@ Shared domain vocabulary for this project — entities, named processes, and sta
 The versioned JSON-LD vocabulary that credentials reference by URL to define Andamio's extension terms. Exactly one version is *current* (referenced by everything newly signed); every previously published version keeps serving byte-identical content forever, because credentials in the wild reference their version for life and verifier document caches never expire. Vocabulary changes ship as a new version, never as an edit.
 
 ### Flagship Badge
-The badge designated as the end-to-end proof artifact — its embedded credential carries a cryptographic proof and is the one exercised against third-party verifiers. A badge without such a proof is *presentation-only*: it carries the credential's data and its on-chain anchor, and proves itself by that anchor rather than by a signature. Signing rolls out badge by badge, so the two states coexist and copy must distinguish them (see Wording Gate).
+The badge designated as the end-to-end proof artifact — the one exercised against third-party verifiers. Every rendered badge now carries a signed Class Achievement, so *presentation-only* no longer describes any committed badge; the term and the distinction are retained because a badge can still be rendered before it is signed, and copy must never claim a signature that is not there (see Wording Gate). The flagship previously carried a Holder Artifact at its shared address, which is why it read as true for one of its holders and false for the rest — resolved by giving every shared badge a holder-free Class Achievement.
 
 ### Baking
-Embedding a signed credential byte-transparently into a badge SVG's credential block, replacing the unsigned hook the generator emits. Regenerating a badge un-bakes it, so a bake must follow any regeneration of a signed badge. Extraction must round-trip byte-identical to the signed artifact.
+Embedding a signed object byte-transparently into a badge SVG's credential block, replacing the unsigned hook the generator emits. The embedded object is either a Class Achievement or a Holder Artifact — the two are never interchangeable. Regenerating a badge un-bakes it, so a bake must follow any regeneration of a signed badge. Extraction must round-trip byte-identical to the signed artifact.
+
+### Class Achievement
+The signed, holder-free object describing what a badge *means* — its achievement, issuer, and on-chain anchor — with no subject identity and no assertion that anyone earned it. One per badge, immutable (a badge's identity commits to its content, so changed content is a different badge), and safe to publish at a shared address because it names nobody.
+
+### Holder Artifact
+The signed credential asserting that one named holder earned one specific badge. Identified by badge *and* holder, because a badge coordinate alone does not identify a credential — a single badge routinely has many holders. Carries the holder's Access Token alias by necessity; a shared, holder-agnostic address can never serve one truthfully.
 
 ### Key-Epoch Status List
 The revocation/suspension status credential covering everything signed under one signing-key epoch. Mutable **by design** — the key-compromise kill-switch flips its bits in an emergency — so it is deliberately excluded from byte-freeze invariants that protect other published artifacts.

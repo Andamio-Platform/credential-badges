@@ -1,0 +1,71 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v1.jsonld"
+  ],
+  "id": "urn:andamio:badge:mainnet:9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756:96944b7ea709d8fc296a150ee1c021ef13457e7584f8743df7f4ef7cac85d39b",
+  "type": [
+    "VerifiableCredential",
+    "OpenBadgeCredential"
+  ],
+  "issuer": {
+    "id": "did:web:credentials.andamio.io",
+    "type": [
+      "Profile",
+      "AttestationHost"
+    ],
+    "name": "Andamio",
+    "url": "https://credentials.andamio.io",
+    "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
+  },
+  "validFrom": "2026-07-01T00:00:00Z",
+  "name": "I can define the role and responsibilities of the lead generator",
+  "description": "Defines the \"I can define the role and responsibilities of the lead generator\" credential of the \"Business Lead Generation\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "credentialSubject": {
+    "id": "urn:andamio:course:9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756:96944b7ea709d8fc296a150ee1c021ef13457e7584f8743df7f4ef7cac85d39b",
+    "type": [
+      "AchievementSubject"
+    ],
+    "achievement": {
+      "id": "urn:andamio:course:9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756:96944b7ea709d8fc296a150ee1c021ef13457e7584f8743df7f4ef7cac85d39b",
+      "type": [
+        "Achievement"
+      ],
+      "name": "I can define the role and responsibilities of the lead generator",
+      "description": "I can define the role and responsibilities of the lead generator — Business Lead Generation",
+      "criteria": {
+        "narrative": "This credential is defined by the \"Business Lead Generation\" course on Andamio (Cardano mainnet). It is awarded for the \"I can define the role and responsibilities of the lead generator\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "id": "https://andamioscan.io/courses/9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756",
+      "type": [
+        "OnChainCredentialAnchor",
+        "Evidence"
+      ],
+      "name": "Cardano on-chain anchor",
+      "network": "mainnet",
+      "policyId": "9aa6d308f8afb5de8fa59ce5ec37a51c698561c8bde81c6fa0fdd756"
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "created": "2026-07-01T00:00:00Z",
+      "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z3E8VpEx9TCoHm9jbJp2Ert3y5e83DbwnAFmTngoiL9rN7gay5WNbZ79VWkvNqs4HKGgUxTWVTPydY1BXwxcBKUAe"
+    }
+  ]
+}

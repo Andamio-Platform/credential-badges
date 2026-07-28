@@ -152,9 +152,14 @@ def test_registry_shape_and_signed_flag():
         assert set(meta) == {"course_title", "module_title", "signed"}, f"bad entry: {stem}"
         assert isinstance(meta["signed"], bool)
     assert reg[FLAGSHIP]["signed"] is True, "flagship must be signed"
+    # Every committed badge now carries a signed class artifact, so the flag
+    # should read True across the board. This asserted the opposite while the
+    # rollout was partial; the flag's *derivation* is still exercised, and the
+    # presentation-only rendering path is covered by the synthetic fixture in
+    # test_page.py rather than by depending on an unsigned badge existing.
     unsigned = [s for s, m in reg.items() if not m["signed"]]
-    assert unsigned, "presentation-only badges must exist (not all signed)"
-    print(f"  ✅ registry: 58 badges, valid stems, flagship signed, {len(unsigned)} presentation-only")
+    assert not unsigned, f"expected every badge signed, {len(unsigned)} are not: {unsigned[:3]}"
+    print(f"  ✅ registry: 58 badges, valid stems, all signed")
 
 
 def test_registry_excludes_skip_courses():

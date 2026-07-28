@@ -57,6 +57,7 @@ jobs:
         run: |
           npm ci
           npm run test:expansion-pin
+          npm run test:class-expansion
 
   issuer-service:
     runs-on: ubuntu-latest
@@ -101,6 +102,9 @@ jobs:
           python3 generator/tests/test_page.py
           python3 generator/tests/test_explainers.py
           python3 generator/tests/test_holder.py
+          python3 generator/tests/test_bake.py
+          python3 scripts/tests/test_alias_gate.py
+          python3 scripts/tests/test_cache_admin.py
 
   imaging:
     runs-on: ubuntu-latest

@@ -64,3 +64,10 @@
 /.dockerignore                 @workshop-maybe
 /nginx/default.conf.template   @workshop-maybe
 /scripts/ci/check-allowlist.sh @workshop-maybe
+
+# Alias safety gate (plan KTD-5). Aliases are untrusted on-chain data written
+# into SVG, a format browsers execute — the live holder set contains an XSS
+# payload. This allowlist is the only control between that input and a
+# generated artifact, so widening its charset gets a deliberate review.
+/scripts/alias_gate.py            @workshop-maybe
+/scripts/tests/test_alias_gate.py @workshop-maybe

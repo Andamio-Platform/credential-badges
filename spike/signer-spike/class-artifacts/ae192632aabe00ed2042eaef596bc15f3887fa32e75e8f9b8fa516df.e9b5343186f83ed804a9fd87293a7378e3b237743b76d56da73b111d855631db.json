@@ -1,0 +1,71 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v1.jsonld"
+  ],
+  "id": "urn:andamio:badge:mainnet:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",
+  "type": [
+    "VerifiableCredential",
+    "OpenBadgeCredential"
+  ],
+  "issuer": {
+    "id": "did:web:credentials.andamio.io",
+    "type": [
+      "Profile",
+      "AttestationHost"
+    ],
+    "name": "Andamio",
+    "url": "https://credentials.andamio.io",
+    "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
+  },
+  "validFrom": "2026-07-01T00:00:00Z",
+  "name": "About Andamio Issuer",
+  "description": "Defines the \"About Andamio Issuer\" credential of the \"Andamio Issuer\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "credentialSubject": {
+    "id": "urn:andamio:course:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",
+    "type": [
+      "AchievementSubject"
+    ],
+    "achievement": {
+      "id": "urn:andamio:course:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",
+      "type": [
+        "Achievement"
+      ],
+      "name": "About Andamio Issuer",
+      "description": "About Andamio Issuer — Andamio Issuer",
+      "criteria": {
+        "narrative": "This credential is defined by the \"Andamio Issuer\" course on Andamio (Cardano mainnet). It is awarded for the \"About Andamio Issuer\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "id": "https://andamioscan.io/courses/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
+      "type": [
+        "OnChainCredentialAnchor",
+        "Evidence"
+      ],
+      "name": "Cardano on-chain anchor",
+      "network": "mainnet",
+      "policyId": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df"
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "created": "2026-07-01T00:00:00Z",
+      "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "zyiuHZpUaiaWk3RLeEQgJRM8CQqBRo6tztdXsD5BcZoLELtRG3zDGM7gCrSkFoyn1xMDvKvU88NyH7kX2muEEQXn"
+    }
+  ]
+}
