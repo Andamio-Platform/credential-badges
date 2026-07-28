@@ -8,9 +8,16 @@ route (KTD-7 of the #70 plan reserved this subpath). Its client JS
 (``badges/_holder.js``) reads {stem}+{alias} from ``location.pathname``, resolves
 the holder's LIVE on-chain state (same-origin via the ``/holder-api/`` proxy,
 because andamioscan.io sends no CORS headers) and the suspension status list
-(same-origin ``/status/``), then renders each badge with honest verified /
-suspended / couldn't-verify state. This viewer OWNS the human-facing
+(same-origin ``/status/``), then renders an explicit VERDICT for the badge named
+in the URL plus every badge the holder holds. This viewer OWNS the human-facing
 suspension-rendering UX (v1.1 tradeoff P1bis-02).
+
+Phase 3 (docs/plans/2026-07-28-003-feat-phase3-verification-states-plan.md) gave
+the shell the verdict region and the named-state legend. The states it can
+honestly produce are anchored / anchored-signature-not-checked / suspended /
+not-found / indeterminate. It never produces "signature valid" (nothing here
+checks a Data Integrity proof) and never produces "revoked" (absence and indexer
+lag are indistinguishable from the browser) — the legend says both out loud.
 
 Two artifacts, both ``_``-prefixed so the reconciler / orphan-guard skip them:
   - ``_holder.html``   the branded shell (byte-parity tested, like explainers)
@@ -101,6 +108,15 @@ strong{{color:var(--bone);}}
 .wallet{{background:transparent;color:var(--slate);border:1px solid var(--hair);cursor:not-allowed;}}
 .status{{border-left:2px solid var(--hair);padding:10px 14px;margin:16px 0;color:var(--slate);font-size:14px;}}
 .status.error{{border-color:var(--prim);color:var(--prim-lt);}}
+.verdict{{border:1px solid var(--hair);border-left-width:3px;border-radius:12px;padding:16px 18px;margin:18px 0 6px;background:rgba(27,37,64,.5);}}
+.verdict .vlabel{{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin:0 0 6px;}}
+.verdict .vhead{{font-size:17px;font-weight:700;color:var(--bone);margin:0 0 6px;opacity:1;}}
+.verdict .vdetail{{font-size:14px;color:var(--slate);margin:0;}}
+.verdict .vlink{{font-size:13px;margin:10px 0 0;}}
+.verdict.anchored,.verdict.signature-unavailable{{border-left-color:var(--sec);}}
+.verdict.suspended{{border-left-color:var(--prim);}}
+.verdict.not-found{{border-left-color:var(--prim);}}
+.verdict.indeterminate{{border-left-color:var(--slate);}}
 .badges{{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:12px;}}
 .badge{{display:flex;gap:14px;align-items:center;background:rgba(27,37,64,.5);border:1px solid var(--hair);border-radius:12px;padding:12px 14px;}}
 .badge img{{width:64px;height:64px;flex:none;border-radius:8px;background:var(--ink);}}
@@ -109,9 +125,12 @@ strong{{color:var(--bone);}}
 .badge .ct{{font-size:13px;color:var(--slate);margin:0;}}
 .state{{display:inline-block;font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-top:6px;}}
 .state.anchored{{background:rgba(91,184,212,.15);color:var(--sec-lt);}}
-.state.signed{{background:rgba(91,184,212,.22);color:var(--sec-lt);}}
+.state.signature-unavailable{{background:rgba(91,184,212,.22);color:var(--sec-lt);}}
 .state.suspended{{background:rgba(238,108,58,.16);color:var(--prim-lt);}}
-.state.unknown{{background:rgba(110,122,152,.16);color:var(--slate);}}
+.state.indeterminate{{background:rgba(110,122,152,.16);color:var(--slate);}}
+.badge .owner,.badge .anchor{{font-size:12px;color:var(--slate);margin:6px 0 0;}}
+.badge .pseudonym{{color:var(--sec-lt);}}
+.badge code.cid{{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;word-break:break-all;}}
 .badge .li{{font-size:12px;margin-top:6px;display:inline-block;}}
 .note{{font-size:13px;color:var(--slate);border-left:2px solid var(--hair);padding-left:14px;margin:26px 0;}}
 .back{{display:inline-block;margin-top:30px;font-size:13px;color:var(--sec);text-decoration:none;}}
@@ -125,6 +144,11 @@ noscript{{display:block;margin:16px 0;color:var(--prim-lt);}}
 <p class="lead">A live view of one holder's Andamio credential badges — each shown
    with its current on-chain and suspension state, read live from Andamio's
    public indexer.</p>
+
+<!-- Arrival verdict: the explicit answer to the question this URL asks — does
+     THIS holder hold THIS credential? Filled by _holder.js on load; hidden
+     until then so no state is ever implied before the live read completes. -->
+<div class="verdict indeterminate" data-holder-verdict role="status" aria-live="polite" hidden></div>
 
 <form class="resolve" data-holder-form>
   <input type="text" data-holder-input placeholder="Look up a holder by alias"
@@ -146,14 +170,17 @@ noscript{{display:block;margin:16px 0;color:var(--prim-lt);}}
 
 <ul class="badges" data-holder-list hidden></ul>
 
-<h2>What "verified" and "suspended" mean here</h2>
-<p>Each badge is checked against live public data when this page loads:</p>
+<h2>What each state means here</h2>
+<p>Each badge is checked against live public data when this page loads, and lands
+   in exactly one of these states:</p>
 <ul>
   <li><strong>Anchored on-chain</strong> — this holder's on-chain state records
       the credential. That anchor is the identity; it needs no trust in
-      {ISSUER}.</li>
-  <li><strong>Signed</strong> — the badge additionally carries a cryptographic
-      Data Integrity proof you can verify with an independent
+      {ISSUER}. This badge carries no cryptographic signature yet, so the chain
+      is the proof.</li>
+  <li><strong>Anchored · signature not checked here</strong> — the anchor is
+      recorded <em>and</em> the badge carries a Data Integrity proof. This page
+      does <em>not</em> check that proof. To check it, take the badge to a
       DI-capable OB 3.0 / VC verifier. Most badges are presentation-only for now
       and prove themselves by their anchor; signing is rolling out.</li>
   <li><strong>Suspended (key-version)</strong> — the signing key that covers this
@@ -161,6 +188,41 @@ noscript{{display:block;margin:16px 0;color:var(--prim-lt);}}
       <strong>key-version</strong> signal (the key-compromise kill-switch), <em>not</em>
       a statement that the holder did not earn the credential. The chain remains
       authoritative.</li>
+  <li><strong>Not found for this holder</strong> — this holder's live on-chain
+      state does not record the credential named in the address bar. That is
+      <em>not</em> proof it was never earned: a very recently claimed credential
+      can take time to appear in the indexer, and the chain overrides anything
+      this page says.</li>
+  <li><strong>Indeterminate</strong> — live state could not be read, so this page
+      cannot answer. Nothing is shown as verified. Retry, or read the chain
+      directly.</li>
+</ul>
+<p>Two states you will never see here, deliberately. <strong>"Signature
+   valid"</strong> — nothing on this page checks a signature, so it never claims
+   one checks out. <strong>"Revoked"</strong> — a credential missing from live
+   state and a credential delayed by indexer lag look identical from here, and
+   showing a genuine credential as revoked would be worse than saying nothing;
+   absence is reported as <em>not found</em>, never as revoked.</p>
+
+<h2>Who stands behind each credential</h2>
+<p>An Andamio credential is produced by four parties, and this view names the ones
+   the chain actually records:</p>
+<ul>
+  <li><strong>The course owner</strong> — the pseudonymous person who created the
+      course and stands behind what its credentials mean. Shown on each badge
+      below, read live from the chain, and omitted rather than guessed if it
+      cannot be read.</li>
+  <li><strong>The assessor</strong> — the person who evaluated the work.
+      <strong>Not recorded on-chain for these credentials</strong>, so this view
+      does not name one. A course's teacher roster is not the same fact as "who
+      assessed this credential", and {ISSUER} will not present it as if it were.</li>
+  <li><strong>The chain</strong> — Cardano, the immutable record of what happened
+      and when. Each badge below carries its on-chain course id, which is the
+      course's minting policy: look it up on any public Cardano explorer, or open
+      it on andamioscan.</li>
+  <li><strong>{ISSUER}</strong> — anchors the credential on-chain and signs the
+      portable copy. It attests that the on-chain record is real, not that the
+      achievement is significant.</li>
 </ul>
 <p class="note"><strong>Status.</strong> This viewer reads live state from
    Andamio's own public indexer — it is a convenience view, not an independent

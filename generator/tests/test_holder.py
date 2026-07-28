@@ -47,9 +47,64 @@ def test_shell_carries_client_js_hooks():
     html = holder._shell()
     assert 'src="/badges/_holder.js"' in html, "must load _holder.js by absolute path"
     for hook in ("data-holder-alias", "data-holder-status", "data-holder-list",
-                 "data-holder-form", "data-holder-input"):
+                 "data-holder-form", "data-holder-input", "data-holder-verdict"):
         assert hook in html, f"missing client hook: {hook}"
     print("  ✅ shell carries the client-JS hooks + absolute module src")
+
+
+def test_verdict_region_starts_hidden():
+    """The verdict is the answer to 'does THIS holder hold THIS credential?'. It
+    must be empty + hidden until the live read completes — a pre-filled or
+    visible region would imply a state before anything was read."""
+    html = holder._shell()
+    m = re.search(r"<div class=\"verdict[^\"]*\" data-holder-verdict[^>]*>(.*?)</div>",
+                  html, re.S)
+    assert m, "verdict region missing or not a <div> with the hook"
+    assert "hidden" in m.group(0), "verdict region must start hidden"
+    assert m.group(1).strip() == "", "verdict region must start empty (JS fills it)"
+    print("  ✅ verdict region starts empty + hidden")
+
+
+def test_legend_names_every_surfaced_state():
+    """Deployment plan Unit 5 wants designed copy per state, not raw state names.
+    The legend must describe every state the client can render."""
+    norm = " ".join(holder._shell().split())
+    for phrase in ("Anchored on-chain",
+                   "signature not checked here",
+                   "Suspended (key-version)",
+                   "Not found for this holder",
+                   "Indeterminate"):
+        assert phrase in norm, f"legend does not describe: {phrase}"
+    print("  ✅ legend describes all five surfaced states")
+
+
+def test_legend_disclaims_the_two_states_it_cannot_produce():
+    """The honesty core of Phase 3: this page never checks a Data Integrity proof
+    (so no 'signature valid'), and absence is indistinguishable from indexer lag
+    here (so no 'revoked'). Both are said out loud, not merely omitted."""
+    norm = " ".join(holder._shell().split())
+    assert "Two states you will never see here" in norm
+    assert "nothing on this page checks a signature" in norm
+    assert "absence is reported as <em>not found</em>, never as revoked" in norm
+    assert "indexer lag" in norm
+    print("  ✅ legend disclaims 'signature valid' and 'revoked' explicitly")
+
+
+def test_shell_makes_the_multi_party_process_visible():
+    """Unit 5: courseOwner + assessor + chain + Andamio visible in the rendered
+    output. The assessor is NOT derivable from any on-chain surface, so it is
+    named as absent rather than dropped — and the teacher roster must not be
+    passed off as the assessor."""
+    norm = " ".join(holder._shell().split())
+    assert "Who stands behind each credential" in norm
+    assert "The course owner" in norm
+    assert "The assessor" in norm
+    assert "Not recorded on-chain for these credentials" in norm, \
+        "the assessor's absence must be stated, not silently dropped"
+    assert "teacher roster is not the same fact" in norm, \
+        "must refuse to present the teacher roster as the assessor"
+    assert "minting policy" in norm, "the on-chain course id must be explained"
+    print("  ✅ multi-party process is visible, with the assessor named as absent")
 
 
 def test_shell_owns_suspension_framing():

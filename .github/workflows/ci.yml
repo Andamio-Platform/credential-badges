@@ -227,6 +227,16 @@ jobs:
           echo "$holder_body" | grep -q 'data-holder-list' || { echo "holder shell missing render hook"; exit 1; }
           echo "$holder_body" | grep -q 'src="/badges/_holder.js"' || { echo "holder shell missing client module"; exit 1; }
           echo "/badges/$STEM/james serves the holder viewer shell"
+          # Phase 3 verification states: the shell ships the arrival-verdict
+          # region (the explicit answer to "does THIS holder hold THIS
+          # credential?") and the legend that names not-found/indeterminate AND
+          # disclaims the two states this surface can never produce.
+          echo "$holder_body" | grep -q 'data-holder-verdict' || { echo "holder shell missing the arrival-verdict region"; exit 1; }
+          echo "$holder_body" | grep -q 'Not found for this holder' || { echo "holder shell missing the not-found state copy"; exit 1; }
+          echo "$holder_body" | grep -q 'Two states you will never see here' || { echo "holder shell missing the no-overclaim disclaimer"; exit 1; }
+          echo "$holder_body" | grep -q 'Not recorded on-chain for these credentials' || { echo "holder shell missing the assessor-absent statement"; exit 1; }
+          echo "/badges/$STEM/james carries the verdict region + honest state legend"
+          curl -sf "http://localhost:8080/badges/_holder.js" | grep -q 'arrivalVerdict' || { echo "_holder.js missing the verdict logic"; exit 1; }
           # The client module + registry are served static (underscore-protected).
           # nginx mime.types maps .js to text/javascript OR application/javascript
           # across versions — match loosely on "javascript" rather than pin one.
