@@ -1,7 +1,7 @@
 {
   "name": "signer-spike",
   "version": "0.0.1",
-  "description": "Rung 6: one cryptographically signed OB3 VC for a real mainnet Andamio credential — KMS Ed25519, hard-gated on a live on-chain anchor check.",
+  "description": "Rung 6: one cryptographically signed OB3 VC for a real mainnet Andamio credential \u2014 KMS Ed25519, hard-gated on a live on-chain anchor check.",
   "type": "module",
   "private": true,
   "scripts": {
@@ -13,7 +13,8 @@
     "verify": "node --experimental-strip-types verify-loopback.ts",
     "resign-check": "node --experimental-strip-types resign-check.ts",
     "test": "node --experimental-strip-types --test *.test.ts",
-    "test:expansion-pin": "node --experimental-strip-types --test expansion-pin.dep-test.ts"
+    "test:expansion-pin": "node --experimental-strip-types --test expansion-pin.dep-test.ts",
+    "test:class-expansion": "node --experimental-strip-types --test class-credential.dep-test.ts"
   },
   "dependencies": {
     "@digitalbazaar/data-integrity": "^2.5.0",

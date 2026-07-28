@@ -57,6 +57,7 @@ jobs:
         run: |
           npm ci
           npm run test:expansion-pin
+          npm run test:class-expansion
 
   issuer-service:
     runs-on: ubuntu-latest
