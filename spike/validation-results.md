@@ -103,7 +103,7 @@ Documented as a follow-up — appropriate for Phase 2 once the credential servic
 ## Reproducing
 
 ```bash
-cd 020-areas/strategy/ob3-prototype
+cd <the ob3-prototype spike directory>
 npm install && npm run build
 npm run generate                        # produces sample-credential.jsonld + out/*
 npm run validate                        # writes out/automated-results.md
