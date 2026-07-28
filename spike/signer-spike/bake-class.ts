@@ -23,7 +23,7 @@
 //   npm run bake:class -- --badge <courseId>.<sltHash>
 //   npm run bake:class -- --all
 
-import { promises as fs } from "node:fs";
+import { existsSync, promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -86,6 +86,12 @@ async function bakeOne(rec: BadgeRecord): Promise<{ badgeId: string; bytes: numb
   }
   assertProductionArtifactFor(rec, vc);
 
+  if (!existsSync(svgPath)) {
+    throw new Error(
+      `${id}: no badge art at ${path.relative(REPO, svgPath)} — this badge is ` +
+      `withheld from rendering (generator/build.py SKIP_COURSES) and cannot be baked`,
+    );
+  }
   const svg = await fs.readFile(svgPath, "utf8");
   const baked = bakeSignedVc(svg, vc);
 
@@ -117,7 +123,18 @@ async function main() {
     process.exit(2);
   }
 
-  const targets = all ? registry() : registry().filter((r) => badgeId(r) === badge);
+  // Same scoping as signing: `--all` is every badge that has art. A registry
+  // entry withheld from rendering has nothing to bake into.
+  const withheld = registry().filter(
+    (r) => !existsSync(path.join(BADGES_DIR, `${badgeId(r)}.svg`)),
+  );
+  const targets = all
+    ? registry().filter((r) => !withheld.includes(r))
+    : registry().filter((r) => badgeId(r) === badge);
+
+  if (all && withheld.length) {
+    console.log(`skipping ${withheld.length} registered badge(s) with no committed art`);
+  }
   if (targets.length === 0) {
     console.error(`badge not in registry: ${badge}`);
     process.exit(1);

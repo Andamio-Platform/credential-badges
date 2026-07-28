@@ -48,6 +48,7 @@ import {
 import { makeCheckStatus } from "./check-status.ts";
 import { clearContextCache, makeDocumentLoader } from "./document-loader.ts";
 import { buildClassCredential, registry, type BadgeRecord } from "./class-credential.ts";
+import { existsSync } from "node:fs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
@@ -213,9 +214,24 @@ async function main() {
   }
 
   const all_ = registry();
+  // `--all` means every badge that HAS art. Some registry entries are
+  // deliberately withheld from rendering (generator/build.py SKIP_COURSES), and
+  // signing one would spend a production signature on an artifact that can
+  // never be baked. Keyed off the committed SVG rather than a duplicated skip
+  // list, so this self-corrects if a withheld course is later rendered.
+  const withheld = all_.filter(
+    (r) => !existsSync(path.join(REPO, "badges", `${badgeId(r)}.svg`)),
+  );
   const targets: BadgeRecord[] = all
-    ? all_
+    ? all_.filter((r) => !withheld.includes(r))
     : all_.filter((r) => badgeId(r) === badge);
+
+  if (all && withheld.length) {
+    console.log(
+      `skipping ${withheld.length} registered badge(s) with no committed art: ` +
+      `${withheld.map(badgeId).map((b) => b.slice(0, 12) + "…").join(", ")}`,
+    );
+  }
   if (targets.length === 0) {
     console.error(`badge not in registry: ${badge} — refusing (registry gate)`);
     process.exit(1);
