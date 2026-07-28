@@ -8,10 +8,16 @@ Shared domain vocabulary for this project — entities, named processes, and sta
 The versioned JSON-LD vocabulary that credentials reference by URL to define Andamio's extension terms. Exactly one version is *current* (referenced by everything newly signed); every previously published version keeps serving byte-identical content forever, because credentials in the wild reference their version for life and verifier document caches never expire. Vocabulary changes ship as a new version, never as an edit.
 
 ### Flagship Badge
-The single signed badge — the end-to-end proof artifact whose embedded credential carries a cryptographic proof and is exercised against third-party verifiers. All other badges are presentation-only until a signed credential is baked into them.
+The single signed badge — the end-to-end proof artifact whose embedded credential carries a cryptographic proof and is exercised against third-party verifiers. It is a Holder Artifact sitting at a shared badge address, which is why it reads as true for one of its holders and false for the rest; every other badge is presentation-only.
 
 ### Baking
-Embedding a signed credential byte-transparently into a badge SVG's credential block, replacing the unsigned hook the generator emits. Regenerating a badge un-bakes it, so a bake must follow any regeneration of a signed badge. Extraction must round-trip byte-identical to the signed artifact.
+Embedding a signed object byte-transparently into a badge SVG's credential block, replacing the unsigned hook the generator emits. The embedded object is either a Class Achievement or a Holder Artifact — the two are never interchangeable. Regenerating a badge un-bakes it, so a bake must follow any regeneration of a signed badge. Extraction must round-trip byte-identical to the signed artifact.
+
+### Class Achievement
+The signed, holder-free object describing what a badge *means* — its achievement, issuer, and on-chain anchor — with no subject identity and no assertion that anyone earned it. One per badge, immutable (a badge's identity commits to its content, so changed content is a different badge), and safe to publish at a shared address because it names nobody.
+
+### Holder Artifact
+The signed credential asserting that one named holder earned one specific badge. Identified by badge *and* holder, because a badge coordinate alone does not identify a credential — a single badge routinely has many holders. Carries the holder's Access Token alias by necessity; a shared, holder-agnostic address can never serve one truthfully.
 
 ### Key-Epoch Status List
 The revocation/suspension status credential covering everything signed under one signing-key epoch. Mutable **by design** — the key-compromise kill-switch flips its bits in an emergency — so it is deliberately excluded from byte-freeze invariants that protect other published artifacts.
