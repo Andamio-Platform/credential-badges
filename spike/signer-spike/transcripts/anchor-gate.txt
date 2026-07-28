@@ -7,7 +7,7 @@ ANCHOR GATE PASSED
   blockTime:    2026-06-17T12:08:25Z
   courseOwner:  james
   badge:        https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg (200)
-  wrote:        /Users/james/projects/01-projects/credential-badges/.worktrees/rung6/spike/signer-spike/out/anchor.json
+  wrote:        .worktrees/rung6/spike/signer-spike/out/anchor.json
 
 --- tampered-subject refusal (slt_hash zeroed):
 ANCHOR GATE FAILED: claim event credentials [e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db] does not include slt_hash 0000000000000000000000000000000000000000000000000000000000000000

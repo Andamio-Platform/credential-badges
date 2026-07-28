@@ -9,4 +9,4 @@ KMS asymmetric-sign calls: 1
 KMS SIGN + LIVE-DID VERIFY OK (status list credential)
 proof.verificationMethod = did:web:credentials.andamio.io#key-2026-07
 proof.proofValue         = z61ZhgecHuePSTma5V3vtNvm5C22jGqPUiPFV2ZnBQprA7c5C7zMAhyXf3ZL8q57hukmA7P2x7Z5QWa2oFTYd8L1c
-wrote /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-crypto/status/key-epoch-2026-07.json
+wrote .worktrees/rung8-crypto/status/key-epoch-2026-07.json

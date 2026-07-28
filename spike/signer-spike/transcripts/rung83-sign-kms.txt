@@ -12,4 +12,4 @@ checkStatus: using COMMITTED status/key-epoch-2026-07.json for https://credentia
 KMS SIGN + LIVE-DID VERIFY OK
 proof.verificationMethod = did:web:credentials.andamio.io#key-2026-07
 proof.proofValue         = z5hsxeJrVFpLaE4wFt5e2rM78xzg81vPKfiUucaAd2PfdBobVEypNYkpk133yXTEjNBC3vU1cuWt6WSctD2W1Fiaw
-wrote /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-crypto/spike/signer-spike/signed-credential.json
+wrote .worktrees/rung8-crypto/spike/signer-spike/signed-credential.json

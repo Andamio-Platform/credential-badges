@@ -16,7 +16,7 @@ ANCHOR GATE PASSED
   blockTime:    2026-06-17T12:08:25Z
   courseOwner:  james
   badge:        https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg (200)
-  wrote:        /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-hardening/spike/signer-spike/out/anchor.json
+  wrote:        .worktrees/rung8-hardening/spike/signer-spike/out/anchor.json
 
 $ npm run sign:local
 
@@ -26,7 +26,7 @@ $ npm run sign:local
 anchor gate PASSED: ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db claimed by james in tx 7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03 (slot 190131814; 3 SLT texts hash-verified)
 signer seam invocations: 1
 LOOPBACK SIGN+VERIFY OK (ephemeral key, custom-signer seam validated)
-wrote /Users/james/projects/01-projects/credential-badges/.worktrees/rung8-hardening/spike/signer-spike/out/credential-local.json
+wrote .worktrees/rung8-hardening/spike/signer-spike/out/credential-local.json
 
 $ npm run verify   # committed artifact, live did:web resolution through the hardened loader
 
