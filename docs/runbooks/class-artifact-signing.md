@@ -58,22 +58,31 @@ was invoked exactly once for that artifact.
 
 ## Phase 3 — Validate the shape externally
 
-The validator fetches the credential by URI, so it must be publicly reachable.
-Everything else it dereferences already resolves live, so **only the credential
-JSON needs hosting** — a raw gist or GitHub Pages is enough, the same way the
-Phase 0 verifier spike did it. **A production deploy is not required here.**
+**No hosting required.** The validator accepts a direct multipart upload, so a
+shape can be checked before anything is published. (The Phase 0 spike used the
+URI form, which meant publishing first; the upload form is strictly better for a
+pre-release gate.) Everything the validator dereferences from inside the
+credential — the DID document, issuer Profile, signing context, key-epoch status
+list — already resolves live.
 
 ```bash
-npm run validate:1edtech -- <public-url-of-the-artifact>
+npm run validate:1edtech -- class-artifacts/<badgeId>.json
 ```
 
 **Pass criterion:** `VALID`, **0 errors and 0 warnings** — the Phase 0 bar
 (`spike/verifier-spike/results/onedtech.md`), not merely "no errors".
 
 If it fails, stop. Do not batch-sign. The response is saved under
-`spike/signer-spike/out/validation/`; the likely causes are a missing required
-field or a term that did not survive expansion, both of which are cheaper to fix
-than to re-sign around.
+`spike/signer-spike/out/validation/`.
+
+**This gate has already caught one refuted design decision.** The first shape
+omitted `credentialSubject.id` — the identityless form the OB 3.0 implementation
+guide recommends and the published schema permits — and the validator errored
+with `no id in credentialSubject` (CredentialSubjectProbe). The guide and the
+validator disagree; the validator wins. Evidence and the fix are in
+[`../../spike/signer-spike/validation/README.md`](../../spike/signer-spike/validation/README.md).
+Treat "the spec says this is fine" as a hypothesis this gate tests, not a
+reason to skip it.
 
 ## Phase 4 — Sign the rest, then bake
 

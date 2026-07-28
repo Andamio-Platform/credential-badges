@@ -1,0 +1,36 @@
+{
+  "id" : "3769c276-2396-4ca2-9c32-86b4b0e73e07",
+  "generated" : "2026-07-28T16:34:54",
+  "generator" : "OB30Inspector",
+  "input" : {
+    "name" : "203e63f457e0b8088073ec20959c4e0cc188cf90425d4f29ff3f817f.77547ab066d5fe38038879b785551f6efae17ba38a0d6dc8475cb015e848b42b.json",
+    "type" : "JSON"
+  },
+  "summary" : {
+    "outcome" : "ERROR",
+    "fatals" : 0,
+    "errors" : 1,
+    "warnings" : 0,
+    "exceptions" : 0,
+    "notRun" : 0,
+    "totalRun" : 13
+  },
+  "specification" : {
+    "pid" : "ob30.pid",
+    "shortName" : "ob",
+    "version" : "3.0",
+    "title" : "Open Badges 3.0"
+  },
+  "fatals" : [ ],
+  "errors" : [ {
+    "message" : "no id in credentialSubject",
+    "location" : {
+      "resource" : "203e63f457e0b8088073ec20959c4e0cc188cf90425d4f29ff3f817f.77547ab066d5fe38038879b785551f6efae17ba38a0d6dc8475cb015e848b42b.json"
+    },
+    "generator" : "CredentialSubjectProbe",
+    "detailsMessage" : null
+  } ],
+  "warnings" : [ ],
+  "exceptions" : [ ],
+  "notRun" : [ ]
+}

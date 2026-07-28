@@ -1,0 +1,29 @@
+{
+  "id" : "03c0553a-bc5b-4d86-9a9c-537d6ad1cda4",
+  "generated" : "2026-07-28T16:37:48",
+  "generator" : "OB30Inspector",
+  "input" : {
+    "name" : "203e63f457e0b8088073ec20959c4e0cc188cf90425d4f29ff3f817f.77547ab066d5fe38038879b785551f6efae17ba38a0d6dc8475cb015e848b42b.json",
+    "type" : "JSON"
+  },
+  "summary" : {
+    "outcome" : "VALID",
+    "fatals" : 0,
+    "errors" : 0,
+    "warnings" : 0,
+    "exceptions" : 0,
+    "notRun" : 0,
+    "totalRun" : 13
+  },
+  "specification" : {
+    "pid" : "ob30.pid",
+    "shortName" : "ob",
+    "version" : "3.0",
+    "title" : "Open Badges 3.0"
+  },
+  "fatals" : [ ],
+  "errors" : [ ],
+  "warnings" : [ ],
+  "exceptions" : [ ],
+  "notRun" : [ ]
+}
