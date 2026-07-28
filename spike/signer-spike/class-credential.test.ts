@@ -58,14 +58,14 @@ function allKeys(node: unknown, out: string[] = []): string[] {
 
 // ------------------------- no identity, anywhere --------------------------- //
 
-test("credentialSubject carries NO id — the identityless shape (KTD-1)", () => {
+test("credentialSubject.id is the ACHIEVEMENT, never a person", () => {
   const c = buildClassCredential(SAMPLE, NETWORK) as any;
-  assert.ok(c.credentialSubject, "credentialSubject must exist");
-  assert.equal(
-    Object.prototype.hasOwnProperty.call(c.credentialSubject, "id"),
-    false,
-    "credentialSubject.id must be absent, not empty",
-  );
+  const subj = c.credentialSubject;
+  assert.ok(subj.id, "the 1EdTech CredentialSubjectProbe errors on a missing id");
+  // The subject must be the thing being defined, not someone who earned it.
+  assert.equal(subj.id, subj.achievement.id);
+  assert.match(subj.id, /^urn:andamio:course:/);
+  assert.ok(!subj.id.includes(":recipient:"), "subject id must not name a holder");
 });
 
 test("no field anywhere carries a holder identifier or alias", () => {
@@ -144,14 +144,15 @@ test("carries every field the OB 3.0 AchievementCredential schema requires", () 
   }
 });
 
-test("AchievementSubject conforms WITHOUT an id — the identityless shape is legal", () => {
+test("AchievementSubject carries what the validator requires, not just the schema", () => {
   const c = buildClassCredential(SAMPLE, NETWORK) as any;
-  // The schema requires only type + achievement on AchievementSubject, which
-  // is what makes KTD-1 conformant rather than a stretch.
-  for (const k of ["type", "achievement"]) {
-    assert.ok(k in c.credentialSubject, `OB 3.0 requires ${k} on AchievementSubject`);
+  // The published schema requires only type + achievement. The 1EdTech
+  // reference validator additionally errors on a missing id
+  // ("no id in credentialSubject", CredentialSubjectProbe, verified against a
+  // real signed artifact on 2026-07-28), so the stricter of the two wins.
+  for (const k of ["type", "achievement", "id"]) {
+    assert.ok(k in c.credentialSubject, `AchievementSubject must carry ${k}`);
   }
-  assert.equal("id" in c.credentialSubject, false);
 });
 
 test("the nested Achievement carries its five required fields", () => {

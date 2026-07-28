@@ -1,22 +1,33 @@
 // class-credential.ts — builds the CLASS artifact: what a badge *means*,
 // with nobody claimed to have earned it.
 //
-// Why this shape (plan KTD-1). OB 3.0 has no container for a signed
-// Achievement definition — the implementation guide is explicit that signing
-// a definition standalone falls outside the spec's scope. What the spec *does*
-// bless is omitting `credentialSubject.id`, recommended for badges delivered
-// by URL sharing and download. So the class artifact is an identityless
-// `OpenBadgeCredential`: a real OB 3.0 badge that validators recognise, rather
-// than a bespoke type no verifier understands.
+// Why this shape (plan KTD-1, as revised by validation). OB 3.0 has no
+// container for a signed Achievement definition, so the class artifact is an
+// ordinary `OpenBadgeCredential` whose SUBJECT IS THE ACHIEVEMENT rather than a
+// person.
 //
-// The cost is semantic. The spec's intent for identityless is "an earner we
-// cannot name", not "nobody earned this", and the machine-readable shape
-// cannot express the difference. Two mitigations, both asserted by the test
-// suite: no field anywhere carries a holder identifier, and the human-readable
-// prose says plainly that no person is being claimed.
+// The first attempt omitted `credentialSubject.id` entirely — the "identityless"
+// shape the OB 3.0 implementation guide explicitly recommends for badges
+// delivered by URL sharing and download, and which the published JSON schema
+// permits (AchievementSubject requires only `type` and `achievement`). The
+// 1EdTech reference validator rejects it anyway:
+//
+//   ERROR  "no id in credentialSubject"  — CredentialSubjectProbe
+//   (verifybadge.org / OB30Inspector, 2026-07-28, on a real KMS-signed artifact)
+//
+// The guide and the validator disagree, and the validator is what the ecosystem
+// actually runs. So the subject carries an id — the achievement's own URN. That
+// satisfies the probe while keeping the property that matters: the subject is a
+// definition, not a person, and no holder identifier appears anywhere.
+//
+// The residual wrinkle, stated plainly rather than hidden: an AchievementSubject
+// whose id is the achievement reads a little circularly. It is still the most
+// honest option available — omitting the id means "an earner we cannot name",
+// which is a claim about a person we are deliberately not making. The
+// human-readable prose carries the rest of the meaning, and the test suite
+// asserts no person-identifier reaches the signed bytes.
 //
 // Deliberately NOT carried here, and each omission is a decision:
-//   * `credentialSubject.id`  — the whole point; see above.
 //   * `asset` / `claimTxHash` — both name a specific earning event.
 //   * `assessor`              — names a person, and the chain does not expose
 //                               it anyway (holder dialect omits it too).
@@ -131,7 +142,10 @@ export function buildClassCredential(rec: BadgeRecord, network: string): unknown
       `This describes what the credential means and does not assert that any person holds it. ` +
       `A credential naming its holder is issued separately, per holder.`,
     credentialSubject: {
-      // NO `id` — identityless by construction (KTD-1).
+      // The subject is the ACHIEVEMENT, not a person. Required by the 1EdTech
+      // CredentialSubjectProbe, which errors on a missing id regardless of what
+      // the schema permits — see the module header.
+      id: `urn:andamio:course:${courseId}:${sltHash}`,
       type: ["AchievementSubject"],
       achievement: {
         id: `urn:andamio:course:${courseId}:${sltHash}`,
