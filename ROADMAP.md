@@ -92,7 +92,7 @@ claim-tx slot (#18), and the comprehension gate ran and closed (#19–#21).
 - [x] Allowlist + MIME plumbing for `/.well-known/did.json` and `/status/*` (plus the `/did.json` bare-domain alias, #57)
 - [x] `/issuer` Profile typed `["Profile", "AttestationHost"]`
 - [x] CODEOWNERS on the trust-critical paths — **document-only**, deliberately not backed by branch-protection required reviewers (plan P1bis-09)
-- [ ] `docs/runbooks/issuer-provisioning.md` — only the destructive half exists, as `docs/runbooks/key-compromise.md`; the **additive-rotation half was never written** → [#87](https://github.com/Andamio-Platform/credential-badges/issues/87)
+- [x] `docs/runbooks/issuer-provisioning.md` — additive rotation (this file) + compromise kill-switch (`docs/runbooks/key-compromise.md`). Writing it surfaced a **prerequisite nobody had noticed: `tools/gen-did-json.ts` cannot emit a two-key DID document**, so no additive rotation is currently possible → [#87](https://github.com/Andamio-Platform/credential-badges/issues/87)
 
 ## ✅ Phase 2 — Production service (Units 3–4): closed 2026-07-23
 
