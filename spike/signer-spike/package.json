@@ -15,7 +15,9 @@
     "test": "node --experimental-strip-types --test *.test.ts",
     "test:expansion-pin": "node --experimental-strip-types --test expansion-pin.dep-test.ts",
     "test:class-expansion": "node --experimental-strip-types --test class-credential.dep-test.ts",
-    "sign:class": "node --experimental-strip-types sign-class.ts"
+    "sign:class": "node --experimental-strip-types sign-class.ts",
+    "bake:class": "node --experimental-strip-types bake-class.ts",
+    "validate:1edtech": "node --experimental-strip-types validate-1edtech.ts"
   },
   "dependencies": {
     "@digitalbazaar/data-integrity": "^2.5.0",
