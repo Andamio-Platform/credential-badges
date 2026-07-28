@@ -78,6 +78,14 @@ Two consequences for verifiers:
 - **Suspended.** The signing key version is flagged. This is a key-freshness issue, not a statement about whether the credential was earned. The chain remains authoritative.
 - **Indeterminate.** Verification could not complete. Retry, or read the chain directly.
 
+### Which of these can an Andamio-hosted page tell you?
+
+Fewer than all of them, on purpose. **No Andamio-hosted surface asserts that a signature is cryptographically valid.** Checking an `eddsa-rdfc-2022` proof requires JSON-LD canonicalization, which the static credential host does not do; a page that inferred validity from the mere presence of a `proof` block would be telling you something it had not checked. So "anchored, signature valid" is a result you get from *your own* verifier, not from us.
+
+The holder view at `credentials.andamio.io/badges/{course_id}.{slt_hash}/{alias}` answers one narrow question live: does this holder's current on-chain state record this credential? It reports **anchored** (with an explicit note when a signature is present but unchecked), **suspended**, **not found**, or **indeterminate** — and it never reports **revoked**. Absence from the current on-chain state and a lag in the indexer look identical from a browser, and showing a genuine credential as revoked would be worse than saying nothing, so absence is reported as *not found*, with the chain named as authoritative.
+
+The practical reading: use the hosted view to see whether the anchor is there right now, and use a DI-capable verifier plus a public Cardano explorer to reach "anchored, signature valid" yourself. That is the split this whole document describes — the chain and the signature are two independent layers, and only you can check both at once.
+
 ## What does a real credential look like?
 
 Take an Andamio credential for the "Andamio Issuer" course, held by the alias `james`.
