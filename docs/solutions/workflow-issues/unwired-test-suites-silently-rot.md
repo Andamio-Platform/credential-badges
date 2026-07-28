@@ -60,3 +60,4 @@ node --experimental-strip-types --test spike/signer-spike/*.test.ts  # spike sui
 - `generator/tests/test_render_parity.py` — the suite that caught (but only manually) the #65 badge-set divergence
 - `docs/solutions/conventions/never-mutate-published-jsonld-context.md` — whose freeze test shows the wired-at-birth pattern done right
 - `.github/workflows/ci.yml` — where the generator job belongs
+- `docs/solutions/conventions/never-delete-a-qualifier-that-bounds-a-claim.md` — the same failure one layer in: there a suite stopped protecting because it was never wired into CI; there a wired, green guard stopped protecting because its subject moved and its assertion no longer discriminated. Wiring is necessary, not sufficient

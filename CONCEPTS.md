@@ -8,7 +8,7 @@ Shared domain vocabulary for this project — entities, named processes, and sta
 The versioned JSON-LD vocabulary that credentials reference by URL to define Andamio's extension terms. Exactly one version is *current* (referenced by everything newly signed); every previously published version keeps serving byte-identical content forever, because credentials in the wild reference their version for life and verifier document caches never expire. Vocabulary changes ship as a new version, never as an edit.
 
 ### Flagship Badge
-The single signed badge — the end-to-end proof artifact whose embedded credential carries a cryptographic proof and is exercised against third-party verifiers. It is a Holder Artifact sitting at a shared badge address, which is why it reads as true for one of its holders and false for the rest; every other badge is presentation-only.
+The badge designated as the end-to-end proof artifact — the one exercised against third-party verifiers. Every rendered badge now carries a signed Class Achievement, so *presentation-only* no longer describes any committed badge; the term and the distinction are retained because a badge can still be rendered before it is signed, and copy must never claim a signature that is not there (see Wording Gate). The flagship previously carried a Holder Artifact at its shared address, which is why it read as true for one of its holders and false for the rest — resolved by giving every shared badge a holder-free Class Achievement.
 
 ### Baking
 Embedding a signed object byte-transparently into a badge SVG's credential block, replacing the unsigned hook the generator emits. The embedded object is either a Class Achievement or a Holder Artifact — the two are never interchangeable. Regenerating a badge un-bakes it, so a bake must follow any regeneration of a signed badge. Extraction must round-trip byte-identical to the signed artifact.
@@ -39,6 +39,11 @@ The refusal to sign a credential unless its on-chain claim is re-verified live �
 
 ### Deterministic Re-sign
 A same-key re-issue whose outcome is predicted before signing and enforced after: when nothing canonically visible changed, the new signature must be byte-identical to the old, expansion pins must not move, and the artifact diff must be exactly the intended lines. Any deviation stops the line. Distinct from key-compromise re-issuance, which uses a new key.
+
+### Wording Gate
+The invariant that public copy never implies broader verifiability than the artifact actually supports — a presentation-only badge must not read as signed, and no surface may imply that arbitrary verifier tooling can check a Data Integrity proof.
+
+The qualifier naming which verifiers apply is a ceiling, not decoration: deleting it widens the claim rather than simplifying it, because a reader supplies the broadest reading in its absence. Plainer wording is always permitted; an unbounded claim is not, and precision that leaves a reader-facing surface must move to one that is linked from it rather than disappear. Enforced by asserting the shape of the claim rather than any particular sentence, since copy edits reshape sentences freely.
 
 ## Operations
 
