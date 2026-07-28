@@ -1,6 +1,6 @@
 // _holder.js — client module for the standalone holder credential viewer (#73),
 // extended with the Phase 3 verification states (plan
-// docs/plans/2026-07-28-001-feat-phase3-verification-states-plan.md).
+// docs/plans/2026-07-28-003-feat-phase3-verification-states-plan.md).
 //
 // Served static at /badges/_holder.js, loaded by the _holder.html shell. It
 // reads {stem}+{alias} from the URL, resolves the holder's LIVE state, and

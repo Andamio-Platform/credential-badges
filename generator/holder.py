@@ -12,7 +12,7 @@ because andamioscan.io sends no CORS headers) and the suspension status list
 in the URL plus every badge the holder holds. This viewer OWNS the human-facing
 suspension-rendering UX (v1.1 tradeoff P1bis-02).
 
-Phase 3 (docs/plans/2026-07-28-001-feat-phase3-verification-states-plan.md) gave
+Phase 3 (docs/plans/2026-07-28-003-feat-phase3-verification-states-plan.md) gave
 the shell the verdict region and the named-state legend. The states it can
 honestly produce are anchored / anchored-signature-not-checked / suspended /
 not-found / indeterminate. It never produces "signature valid" (nothing here
