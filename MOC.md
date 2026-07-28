@@ -59,7 +59,7 @@ Infra (out of repo): GCS cache bucket, render runtime SA (`credential-badges-ren
 | `generator/decode.py` | Ring-geometry verifier — proves a badge round-trips to its on-chain hashes (`make verify`). |
 | `generator/fetch.py` | Refresh `credentials.json` from andamioscan (public) + the Andamio CLI (authed). |
 | `generator/embed_fonts.py` · `fonts.css` | Subset + base64-embed the fonts so SVGs are self-contained. |
-| `generator/credentials.json` | Data snapshot — one row per credential (course_id, slt_hash, titles). |
+| `generator/credentials.json` | Data snapshot — one row per credential (course_id, slt_hash, titles). **The badge registry's source of truth** — see [`docs/badge-registry.md`](docs/badge-registry.md). |
 
 Not served (build tooling) — excluded from the Docker allowlist.
 
@@ -77,6 +77,9 @@ Not served (build tooling) — excluded from the Docker allowlist.
 | `ROADMAP.md` | **Living public checklist** of what's next, by phase. Tick boxes as items close. Start here if you want the "where are we right now" view. |
 | `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md` | The Andamio OB 3.0 Issuer deployment plan — the "why" behind ROADMAP. Promotes the spike into a deployed signing service (`credential-badges-issuer`) sitting next to the static host behind an external HTTPS LB. 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (resolved 2026-05-25). Prototype posture documented; production-hardening checklist tracks the upgrade path. **Status when this MOC was written:** P1bis-refined; Phase 0 pre-flight verifier spike closed (PR #12). |
 | `docs/plans/2026-06-25-002-feat-dynamic-on-demand-badge-generation-plan.md` + `…-002-on-demand-generation-RESUME.md` | The #33 on-demand render plan (U1–U8) + resume note. The "why" behind the [Render service](#render-service--on-demand-badge-generation-33) section. |
+| `docs/badge-registry.md` | **Normative.** The `badge_id` = `<course_id>.<slt_hash>` convention, where the three registry artifacts live, and 11 invariants — chiefly *the name is frozen, the picture is not* (I3/I4) and *registry membership gates signing, not rendering* (I8). Closes #11. |
+| `docs/plans/2026-07-28-001-design-per-org-issuer-dids.md` | **Designed, not built** (Phase 4 / Unit 6, issues #4 + #6). Per-org issuer identity. Headline finding: moving `issuer.id` to a per-org DID under Andamio key custody is a *downgrade* — it signals decentralization Andamio does not have. `issuer.id` stays put; per-org identity arrives as an optional org-held co-signature. Covers the `did:web` path form, the alias-as-slug choice, why the status list and the boot drift check must stay singular, the nginx/allowlist shape, and 5 open questions. |
+| `docs/plans/2026-07-28-002-design-multi-issuer-prereq-scope-pq3.md` | **Spec note** (Phase 4 / Unit 6, issue #7). PQ3 cross-issuer prereq scope vs multi-issuer: re-ratified unchanged, because `andamio:requires` references the chain, not a signature. Adds two permanent invariants (no issuer field in `requires`; prereq resolution is chain-first, DID-never). |
 
 ## Original spike — OB 3.0 prototype
 

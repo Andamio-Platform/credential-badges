@@ -42,7 +42,7 @@ Four things live at `https://credentials.andamio.io`:
 | `/issuer` | The hosted OB 3.0 issuer `Profile`, typed `["Profile","AttestationHost"]`. Its `id` is the DID `did:web:credentials.andamio.io` (`url` stays the homepage). Strict verifiers dereference `issuer.url` here and expect `application/ld+json`; `AttestationHost` is defined in `/context/v1.jsonld`. |
 | `/.well-known/did.json` | The `did:web:credentials.andamio.io` DID document — publishes the issuer signing key. Verifiers resolve the issuer's `did:web` here. Served as `application/did+ld+json`. (The key is published only; nothing signs yet.) |
 
-> **On naming:** the badge filename's first half is the credential's **course-NFT minting policy id** (56-hex). In Andamio a course is identified by its course-NFT minting policy, so that policy id *is* the course identifier, not a separate one. The second half is the SLT (credential) hash.
+> **On naming:** the badge filename's first half is the credential's **course-NFT minting policy id** (56-hex). In Andamio a course is identified by its course-NFT minting policy, so that policy id *is* the course identifier, not a separate one. The second half is the SLT (credential) hash. The full convention and its invariants — including *the name is frozen, the picture is not* — are in [`docs/badge-registry.md`](docs/badge-registry.md).
 
 ### How a badge resolves
 

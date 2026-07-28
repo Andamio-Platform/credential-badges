@@ -186,7 +186,7 @@ For the v1 shape used in `samples/`, the open questions resolve as:
 
 - **PQ1 (revocation)**: snapshot semantics — a credential remains valid even if its prereq is later revoked. Verifier hook can opt into stricter behavior.
 - **PQ2 (multiplicity)**: implicit `allOf` only. Structured `anyOf` / `allOf` blocks deferred to v2.
-- **PQ3 (cross-issuer scope)**: same-protocol Andamio credentials only (URNs in the `andamio:` namespace). Widening to arbitrary chain assets or arbitrary VCs deferred.
+- **PQ3 (cross-issuer scope)**: same-protocol Andamio credentials only (URNs in the `andamio:` namespace). Widening to arbitrary chain assets or arbitrary VCs deferred. *(Reviewed 2026-07-28 against the per-org-issuer-DID design and re-ratified unchanged — a prereq entry references the chain, not a signature, so multiplying issuer DIDs does not reopen this. See [`docs/plans/2026-07-28-002-design-multi-issuer-prereq-scope-pq3.md`](../docs/plans/2026-07-28-002-design-multi-issuer-prereq-scope-pq3.md), which adds two invariants — no issuer field in `requires`; prereq resolution is chain-first, DID-never.)*
 - **PQ4 (CLR 2.0 mapping)**: deferred. Confirm no semantic drift before emitting CLR 2.0 transcripts.
 - **PQ5 (strategic lift)**: confirmed — this is the literal "building blocks" claim from the enterprise landing page.
 - **PQ6 (publish before 1EdTech cert)**: yes. Namespaced extension is invisible to non-Andamio verifiers; certification risk low.
