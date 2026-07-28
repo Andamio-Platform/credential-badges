@@ -25,6 +25,14 @@ The unbaked files are not empty, though. Each already carries a holder-free desc
 
 ## Key Decisions
 
+> **Revised during implementation (2026-07-28).** This section proposed an
+> *identityless* credential — `credentialSubject` with no `id` — which the OB 3.0
+> implementation guide recommends and the published schema permits. The 1EdTech
+> reference validator rejects it (`no id in credentialSubject`). The decision
+> below stands in substance: the shared badge carries a holder-free object. What
+> changed is that its subject is now the **achievement's own URN** rather than
+> absent. Evidence: `spike/signer-spike/validation/README.md`.
+
 **The shared badge carries a signed Achievement, not a credential.** OB 3.0 separates the Achievement (what a credential means — criteria, issuer, anchor) from the AchievementCredential (that a named person earned it). The Achievement has no holder by construction, so Andamio can sign it while attesting only to something true. This is what makes "all badges fully baked" achievable and honest at the same time.
 
 **Per-holder artifacts are pre-baked for the whole set, not generated lazily.** The measured set is small — 215 badge-holder pairs across 59 holders. Pre-baking all of them plus the class artifacts is roughly 277 signatures, which is cheap enough that warmth can be the default rather than an optimisation. This supersedes the earlier lean toward on-demand-only recorded on issue #89.
@@ -64,7 +72,7 @@ flowchart TB
 **The class artifact**
 
 - R1. Every badge in the registry has a shared SVG carrying a signed Achievement — all 62, including the four that currently have no committed imagery, which are generated so the registry and the committed set agree.
-- R2. The class artifact names no holder and asserts that no one earned anything. It describes the achievement, its issuer, and its on-chain anchor.
+- R2. The class artifact names no holder and asserts that no one earned anything. It describes the achievement, its issuer, and its on-chain anchor. *(Satisfied with `credentialSubject.id` set to the achievement — see the revision note above.)*
 - R3. Class artifacts are committed to the repo and regenerate deterministically — the same badge produces byte-identical output on every run.
 - R4. No shared badge URL moves. Existing badge addresses keep resolving.
 - R5. Class artifacts are suspendable by the existing kill-switch, on the same key-epoch list as holder credentials — a compromised key can disown definitions as well as assertions.

@@ -12,7 +12,7 @@ origin: docs/brainstorms/2026-07-28-fully-baked-badges-requirements.md
 
 ## Summary
 
-Bake every badge twice over: a holder-free class artifact committed to the repo for all 62 registered badges, and a per-holder artifact for all 215 badge-holder pairs, pre-baked into the badge cache by a sweep that enumerates holders from chain.
+Bake every badge twice over: a holder-free class artifact committed to the repo for all 58 rendered badges, and a per-holder artifact for all 215 badge-holder pairs, pre-baked into the badge cache by a sweep that enumerates holders from chain.
 
 ---
 
@@ -22,7 +22,7 @@ Baking works and has been run once. One of 58 committed badge SVGs carries a sig
 
 The one baked file is also wrong for most of its holders. The Flagship Badge coordinate has six on-chain holders and the shared file names one of them, so the other five can download a signed assertion about someone else from their own page. That collision is why "bake the other 57" cannot work as stated: a shared file has no holder to name.
 
-Planning surfaced a constraint the brainstorm could not have known. **OB 3.0 has no signed standalone Achievement.** The implementation guide is explicit that signing an achievement definition without claiming anyone earned it falls outside the spec's scope. What the spec does bless is omitting `credentialSubject.id` — the identityless pattern, recommended for exactly our case of badges delivered for URL-based sharing and download. That shape is already what the 57 unbaked hooks contain. So the class artifact is not a new object to invent; it is the existing payload, signed, with the type claim made honest.
+Planning surfaced a constraint the brainstorm could not have known. **OB 3.0 has no signed standalone Achievement.** The implementation guide is explicit that signing an achievement definition without claiming anyone earned it falls outside the spec's scope. What the spec does bless is omitting `credentialSubject.id` — the identityless pattern, recommended for exactly our case of badges delivered for URL-based sharing and download. That shape is already what the 57 unbaked hooks contain, so the class artifact looked like the existing payload signed rather than a new object to invent. **Validation refuted that** — the reference validator requires a subject id regardless of what the guide recommends. See KTD-1.
 
 ---
 
@@ -32,7 +32,7 @@ Traced from origin (`docs/brainstorms/2026-07-28-fully-baked-badges-requirements
 
 **Class artifacts**
 
-- R1. All 62 registered badges carry a signed class artifact, including the four with no committed imagery today.
+- R1. All 58 rendered badges carry a signed class artifact. The four registry entries withheld from rendering (`generator/build.py` `SKIP_COURSES`, FCB Fan Engagement) stay withheld — see Scope Boundaries.
 - R2. The class artifact names no holder and asserts nobody earned anything.
 - R3. Class artifacts are committed and regenerate byte-identically.
 - R4. No existing badge URL moves.
@@ -62,18 +62,30 @@ Traced from origin (`docs/brainstorms/2026-07-28-fully-baked-badges-requirements
 
 Carried from origin. These are the signals that the work landed, distinct from the per-unit verification outcomes.
 
-- Every registered badge carries a signed class artifact. Today none do — the one baked file carries the wrong kind of object.
+- ✅ **Done.** Every rendered badge carries a signed class artifact — 58 of 58, validated 13/13 against the 1EdTech OB30Inspector.
 - Every eligible badge-holder pair is warm after a sweep, and a cold request for a newly-earned pair still succeeds.
-- No shared artifact names a holder. Extracting any shared badge yields an object with no subject identity.
+- ✅ **Done.** No shared artifact names a holder. Extracting any shared badge yields an object whose subject is the achievement.
 - The skip report is empty or actionable: every excluded holder traces to a specific alias problem.
 - A full regeneration from scratch reproduces the committed class artifacts byte-for-byte.
-- The identityless class shape passes the 1EdTech validator — the one success signal that cannot be self-asserted.
+- ✅ **Done.** The class shape passes the 1EdTech validator — the one success signal that cannot be self-asserted. It took two attempts; the first shape was rejected (see KTD-1).
 
 ---
 
 ## Key Technical Decisions
 
-**KTD-1. The class artifact is an identityless `OpenBadgeCredential`, not a new object type.** OB 3.0 offers no container for a signed achievement definition, but explicitly permits omitting `credentialSubject.id` for download-shared badges. Signing the payload already in the hooks keeps the class file a real OB 3.0 badge that the 1EdTech validator recognises, and avoids inventing a type no verifier understands. The cost is semantic: the spec's intent for identityless is "an earner we cannot name", not "nobody earned this". Mitigated in U2 by carrying no field that could read as subject identity and by wording the description so a human reader sees a definition.
+**KTD-1. The class artifact is an `OpenBadgeCredential` whose subject is the achievement.** *(Revised 2026-07-28 — the original decision was refuted by validation.)*
+
+The original decision was an **identityless** credential: `credentialSubject` with no `id`. That is what the OB 3.0 implementation guide explicitly recommends for badges delivered by URL sharing and download, and the published JSON schema permits it outright — `AchievementSubject` requires only `type` and `achievement`. Both were verified directly.
+
+**The 1EdTech reference validator rejects it anyway:**
+
+```
+ERROR  "no id in credentialSubject"  — CredentialSubjectProbe
+```
+
+Twelve of thirteen probes passed; this was the only failure. The guide and the validator disagree, and the validator is what the ecosystem runs. `credentialSubject.id` is therefore the achievement's own URN — the subject is the thing being *defined*, never a person, so no holder identifier appears anywhere. Re-validated: **VALID, 13/13, 0 errors, 0 warnings**, both on a signed artifact and on a credential extracted from a baked SVG.
+
+Residual wrinkle, recorded rather than hidden: a subject whose id is the achievement reads slightly circularly. It remains the most honest option available, because omitting the id means "an earner we cannot name" — a claim about a person a definition should not make. Evidence: `spike/signer-spike/validation/README.md`.
 
 **KTD-2. Class artifacts are built and signed at build time; holder artifacts at sweep time.** A badge's identity commits to its content (`badge_id` embeds `slt_hash`), so a class artifact is immutable for the life of that badge — sign once, commit, never regenerate except on a key event. Holder artifacts grow with earning and belong to a runtime pipeline.
 
@@ -97,11 +109,11 @@ Two pipelines with different lifecycles, converging on one public surface.
 
 ```mermaid
 flowchart TB
-  Reg[Badge registry<br/>62 badges] --> Gen[Generate badge art]
-  Gen --> ClassBuild[Build identityless<br/>class credential]
+  Reg[Badge registry<br/>58 rendered badges] --> Gen[Generate badge art]
+  Gen --> ClassBuild[Build class credential<br/>subject = achievement]
   ClassBuild --> ClassSign[Sign via hardened KMS path]
   ClassSign --> ClassBake[Bake into shared SVG]
-  ClassBake --> Repo[(Committed<br/>62 artifacts)]
+  ClassBake --> Repo[(Committed<br/>58 artifacts)]
 
   Reg --> Enum[Enumerate holders from chain]
   Enum --> Gate{Alias safe?}
@@ -123,7 +135,7 @@ The key asymmetry: the left pipeline runs at build time and its output is review
 
 ### U1. Generate the four missing badge artworks
 
-**Goal:** Registry and committed set agree — 62 registered badges, 62 committed SVGs.
+**Goal:** ~~Registry and committed set agree.~~ **DROPPED** — FCB stays withheld; the release scopes to the 58 rendered badges.
 
 **Requirements:** R1
 
@@ -152,7 +164,7 @@ The palette question the comment defers must be answered first: ship FCB on a cu
 
 ### U2. Class credential builder
 
-**Goal:** Produce the identityless `OpenBadgeCredential` for any registered badge — the object that gets signed and baked into the shared file.
+**Goal:** Produce the class `OpenBadgeCredential` for any registered badge — subject is the achievement, never a person. The object that gets signed and baked into the shared file.
 
 **Requirements:** R2, R5
 
@@ -207,7 +219,7 @@ Because this signs 62 artifacts through the KMS path, the exactly-once signing a
 - Extraction round-trips byte-identical to the signed input for every badge.
 - Covers AE5. Re-signing an already-signed class artifact reproduces the same `proofValue` under the same key (byte-stability; a change is a stop-the-line failure), and produces a artifact verifying under the new key after a rotation.
 - The flagship's shared file no longer contains its previous holder credential, and no committed file anywhere still references that file as a signed holder example.
-- The signed class artifact passes the 1EdTech validator, re-run because KTD-1's identityless shape has not been validated before.
+- The signed class artifact passes the 1EdTech validator. **Result: VALID 13/13** on the second shape; the first was rejected (KTD-1).
 - Every committed class artifact is covered by an expansion pin, and the pin set is derived from the registry so an unpinned badge cannot land.
 - Class signing refuses a badge absent from the registry, before any upstream read.
 - The holder-credential fixture still round-trips through the PNG bake path after the flagship SVG is re-baked.
@@ -345,7 +357,7 @@ The extensionless holder-viewer route is untouched, so the artifact address is a
 
 ### U8. Rotation and kill-switch regeneration
 
-**Goal:** A key event can be carried out against 277 artifacts rather than one, with the operational material to match.
+**Goal:** A key event can be carried out against 273 artifacts rather than one, with the operational material to match.
 
 **Requirements:** R5, R13, R14
 
@@ -353,7 +365,7 @@ The extensionless holder-viewer route is untouched, so the artifact address is a
 
 **Files:** `docs/runbooks/key-compromise.md`, `docs/runbooks/issuer-provisioning.md`, `scripts/cache-admin.py`, `scripts/tests/test_cache_admin_purge.py`
 
-**Approach:** Both runbooks currently assume the artifact population is the flagship. Rotation now means re-signing and re-committing 62 class artifacts and purging plus re-warming the holder cache, in an order that respects the existing constraint that the static host publishes before the issuer boots against it.
+**Approach:** Both runbooks currently assume the artifact population is the flagship. Rotation now means re-signing and re-committing 58 class artifacts and purging plus re-warming the holder cache, in an order that respects the existing constraint that the static host publishes before the issuer boots against it.
 
 The kill-switch gains a cache-purge step: warmed artifacts embed credentials signed under a key whose status bit has flipped, and while verifiers re-read the status list independently, leaving artifacts signed under a suspended key in a serving cache is a needless liability.
 
@@ -391,8 +403,8 @@ And the kill-switch's **detection baseline breaks**. Its trigger criterion is "a
 ## System-Wide Impact
 
 - **Retiring a deliberate exclusion.** `SKIP_COURSES` is a single source of truth consumed by twelve call sites across the generator, the render service, and the test suite. Emptying it changes what the public host serves and breaks a test that assumes the set is non-empty — a wider blast radius than "render four files".
-- **Signing volume.** The KMS path goes from one artifact to 277. The exactly-once assertion and byte-stability checks that guard the current path now run per artifact.
-- **Public surface semantics.** Every shared badge becomes a signed object. A verifier that previously saw one signed badge now sees 62, all identityless — which is why the external re-validation in U3 is load-bearing rather than a formality.
+- **Signing volume.** The KMS path goes from one artifact to 273 (58 class + 215 holder). The exactly-once assertion and byte-stability checks that guard the current path now run per artifact.
+- **Public surface semantics.** Every shared badge becomes a signed object. A verifier that previously saw one signed badge now sees 58, all holder-free — which is why the external re-validation in U3 is load-bearing rather than a formality.
 - **Cache growth and cost.** The cache gains an artifact class that grows with earning rather than with the badge set.
 - **Operational blast radius.** Any key event becomes a bulk operation. U8 exists specifically so that is written down before it is true.
 - **Failure propagation.** The sweep depends on the issuer and two upstream read surfaces. A failure in any of them must degrade to "this pair stays cold" rather than "this pair does not exist" — the serving path already distinguishes those, and the sweep must not invert it by caching a refusal.
@@ -401,8 +413,8 @@ And the kill-switch's **detection baseline breaks**. Its trigger criterion is "a
 
 ## Risks & Dependencies
 
-- **The identityless shape has never been externally validated.** KTD-1 is spec-supported but not yet proven against the 1EdTech validator in this configuration. If it fails, the class-artifact half needs a different container and the Open Question below reopens. This is why U3 validates rather than assuming.
-- **A verifier could read an identityless credential as a weak claim about an unnamed person.** Mitigated by carrying no identity-shaped field and by human-readable wording, but not eliminated — the spec has no way to say "definition" in machine-readable form.
+- ~~**The identityless shape has never been externally validated.**~~ **Retired — it was validated and it failed.** The shape was revised and re-validated to VALID 13/13 (KTD-1). The risk was real and the sign-one-then-batch gate is what caught it, for the cost of a single signature.
+- **A verifier could read the class credential as a weak claim about an unnamed person.** Reduced but not eliminated: the subject is now explicitly the achievement rather than absent, and no identity-shaped field appears anywhere, but the machine-readable shape still has no way to say "definition". The human-readable prose carries that meaning.
 - **Enumeration depends on two upstream surfaces** (course participants, per-holder claimed credentials) with no by-holder claim index to fall back on.
 - **Access Token transferability is unresolved.** If an alias can change hands, a permanent baked artifact naming it means something subtly different than it appears to. Carried from origin; not answerable in this repo.
 - **Alias hostility is proven, not theoretical.** The gate in U4 is the only thing standing between a live XSS payload and a generated SVG.
@@ -413,10 +425,12 @@ And the kill-switch's **detection baseline breaks**. Its trigger criterion is "a
 
 ## Open Questions
 
-**Deferred to implementation**
+**Resolved during execution**
 
-- **The FCB palette (U1).** `build.py`'s `SKIP_COURSES` comment defers a custom Barça palette. Retiring the exclusion forces the choice: ship FCB on a custom palette, or on the standard per-course mapping. Product-visible — how one org's badges look — so resolve before U1 starts.
-- Where the splice runs (U5). The trust-surface argument favours keeping image serving off the sign-permissioned process; the duplication argument favours reusing the existing implementation. Resolve before U5 starts.
+- ~~The FCB palette (U1)~~ — **resolved: FCB stays withheld.** U1 is dropped and the release scopes to the 58 rendered badges. The palette question is deferred with the course.
+- ~~Where the splice runs (U5)~~ — **resolved: ported to Python in the render path.** Keeping image serving off the sign-permissioned process outweighed avoiding a second implementation; drift is closed by a byte-identical parity test against the TypeScript original.
+
+**Deferred to implementation**
 - Sweep cadence, and whether a key event triggers an immediate run.
 - How the skip report reaches a human — CI output, a committed artifact, or a notification.
 
@@ -427,6 +441,6 @@ And the kill-switch's **detection baseline breaks**. Its trigger criterion is "a
 - **OB 3.0 implementation guide** — the decisive input to KTD-1. There is no normative mechanism for signing an Achievement definition standalone; omitting `credentialSubject.id` is explicitly recommended for download-shared badges. This changed the class artifact from "a new signed object" to "the existing payload, signed".
 - **Live enumeration, 2026-07-28** — 22 courses, 73 aliases, **215 badge-holder pairs** across 59 holders; 26 of 62 badges have at least one holder. Two aliases are unusable, one an XSS payload. Recorded in origin with the endpoints used.
 - **Committed artifact state** — 58 badge SVGs, 1 with a proof, 57 with the empty hook; 116 PNGs, none baked.
-- `docs/solutions/best-practices/deterministic-kms-resign.md` — byte-stability discipline that U3 must hold to across 62 artifacts.
+- `docs/solutions/best-practices/deterministic-kms-resign.md` — byte-stability discipline that U3 must hold to across 58 artifacts.
 - `docs/solutions/workflow-issues/unwired-test-suites-silently-rot.md` — relevant to U6/U7, whose suites are new and must be wired into CI to count.
 - `CONCEPTS.md` — Class Achievement, Holder Artifact, Baking, Flagship Badge are the canonical terms used throughout.
