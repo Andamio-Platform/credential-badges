@@ -115,6 +115,6 @@ When Phase 0 closes (or when the spike's data is no longer useful):
 - [ ] Delete repo `workshop-maybe/credential-badges-verifier-spike` (or
       archive it for audit-trail purposes).
 - [ ] Remove the local working tree at
-      `~/projects/01-projects/credential-badges-verifier-spike/`.
+      `$REPOS/credential-badges-verifier-spike/`.
 - [ ] Keep `spike/verifier-spike/` committed in this repo as plan evidence
       (the plan treats `spike/` as the historical source of truth).
