@@ -61,8 +61,10 @@ def _is_baked(stem):
     Flagship-style signed credential, not presentation-only (CONCEPTS: Baking /
     Flagship Badge). Reads the committed badges/ tree (DEFAULT_OUT), independent
     of the page output dir, so the baked state is a stable property of the
-    artifact. Most badges are presentation-only until a signed VC is baked in;
-    the verifiability copy must not overclaim for them."""
+    artifact. Every committed badge now carries a signed class artifact, but the
+    presentation-only branch is retained deliberately: it is what keeps the
+    Wording Gate honest for any badge rendered before it is signed, and the
+    verifiability copy must never overclaim for one."""
     try:
         with open(os.path.join(DEFAULT_OUT, f"{stem}.svg"), encoding="utf-8") as f:
             return "proofValue" in f.read()

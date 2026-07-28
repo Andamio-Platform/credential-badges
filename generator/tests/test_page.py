@@ -26,15 +26,25 @@ import page      # noqa: E402
 import colors    # noqa: E402
 import build     # noqa: E402
 
-REC = {  # an UNBAKED (presentation-only) badge — the common case
-    "course_id": "661274aa715885b4c9789aec179f9a429169eb7be73f7c29a8694402",
-    "slt_hash": "9fa3cdce9eaa801270d42154dcb12b64448bfab826971f1d0e74f9d0e87cc3e9",
-    "course_title": "Run GovTool Locally (Minikube + K8s)",
-    "module_title": "Deploy the Proposal Pillar",
+# A SYNTHETIC unbaked badge. Its stem deliberately matches no committed SVG, so
+# `page._is_baked` reads False and the presentation-only branch is exercised
+# deterministically.
+#
+# This used to point at a real committed badge, which worked only while some
+# badge was still unbaked. Every badge now carries a signed class artifact, so a
+# real-badge fixture would silently stop testing the unbaked branch — and that
+# branch is exactly where the Wording Gate lives (copy must never claim a
+# signature that is not there). Keeping it synthetic keeps the guard alive
+# permanently, independent of how much of the set is signed.
+REC = {
+    "course_id": "f" * 56,
+    "slt_hash": "0" * 64,
+    "course_title": "Synthetic Course (no committed SVG)",
+    "module_title": "Synthetic Unbaked Module",
 }
 STEM = f"{REC['course_id']}.{REC['slt_hash']}"
 
-# The flagship — the one committed badge whose SVG carries a signed VC (proofValue).
+# A really-baked badge — every committed badge now carries a signed class artifact.
 FLAGSHIP_REC = {
     "course_id": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
     "slt_hash": "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",

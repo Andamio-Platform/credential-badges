@@ -23,14 +23,24 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 // The signed subject (Rung 6) — full identifiers, never truncated.
 const COURSE_ID = "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df";
 const SLT_HASH = "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db";
-const CLAIM_TX = "7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03";
 const VERIFICATION_METHOD = "did:web:credentials.andamio.io#key-2026-07";
 
 const BADGE_PATH = join(REPO, "badges", `${COURSE_ID}.${SLT_HASH}.svg`);
-const SIGNED_VC_PATH = join(REPO, "spike", "signer-spike", "signed-credential.json");
+
+// What a committed badge carries is the CLASS artifact — the definition of the
+// badge, holder-free. `signed-credential.json` is still the committed
+// HOLDER-credential fixture (it is what the PNG bake path and the expansion pin
+// cover), it is simply no longer what lives inside a shared badge: a shared
+// badge cannot name a holder without misreporting for every other holder of the
+// same coordinate.
+const CLASS_VC_PATH = join(
+  REPO, "spike", "signer-spike", "class-artifacts", `${COURSE_ID}.${SLT_HASH}.json`,
+);
+const HOLDER_VC_PATH = join(REPO, "spike", "signer-spike", "signed-credential.json");
 
 const badgeSvg = readFileSync(BADGE_PATH, "utf8");
-const signedVc = readFileSync(SIGNED_VC_PATH, "utf8");
+const classVc = readFileSync(CLASS_VC_PATH, "utf8");
+const holderVc = readFileSync(HOLDER_VC_PATH, "utf8");
 
 // A minimal gen.py-shaped SVG (unsigned hook, verify="") for synthetic tests.
 const SYNTH_SVG =
@@ -71,8 +81,16 @@ test("bake refuses: ]]> payloads, unsigned credentials, non-JSON, missing/duplic
 
 // ---- The committed-artifact invariants ----
 
-test("committed badge embeds the signed credential BYTE-FOR-BYTE", () => {
-  assert.equal(extractVc(badgeSvg), signedVc);
+test("committed badge embeds its CLASS artifact BYTE-FOR-BYTE", () => {
+  assert.equal(extractVc(badgeSvg), classVc);
+});
+
+test("committed badge names NO holder — a shared badge is holder-free", () => {
+  const embedded = extractVc(badgeSvg);
+  assert.ok(!embedded.includes(":recipient:"), "a shared badge must not carry a recipient URN");
+  assert.ok(!embedded.includes("gjames"), "a shared badge must not name a holder");
+  // The holder credential still exists as its own committed fixture.
+  assert.ok(holderVc.includes(":recipient:"), "the holder fixture should still be holder-bearing");
 });
 
 test("committed badge element form: exactly one <openbadges:credential>, no verify attr, metadata intact", () => {
@@ -89,9 +107,9 @@ test("committed badge element form: exactly one <openbadges:credential>, no veri
   assert.ok(badgeSvg.includes('width="1024" height="1024"'));
 });
 
-test("embedded VC: proof block matches the signed credential exactly", () => {
+test("embedded VC: proof block matches the class artifact exactly", () => {
   const embedded = JSON.parse(extractVc(badgeSvg));
-  const signed = JSON.parse(signedVc);
+  const signed = JSON.parse(classVc);
   assert.deepEqual(embedded.proof, signed.proof);
   // and the proof is the Rung-6 production proof, not a stand-in
   assert.equal(embedded.proof.length, 1);
@@ -103,12 +121,9 @@ test("embedded VC: proof block matches the signed credential exactly", () => {
   assert.ok(embedded.proof[0].proofValue.startsWith("z"));
 });
 
-test("embedded VC: anchor identifiers match the signed subject exactly (Rung 8.3 flat dialect)", () => {
+test("embedded VC: anchor identifiers are the CLASS coordinate, not a claim", () => {
   const embedded = JSON.parse(extractVc(badgeSvg));
-  assert.equal(
-    embedded.id,
-    `urn:andamio:credential:mainnet:${COURSE_ID}:${SLT_HASH}:gjames`,
-  );
+  assert.equal(embedded.id, `urn:andamio:badge:mainnet:${COURSE_ID}:${SLT_HASH}`);
   assert.equal(
     embedded.credentialSubject.achievement.id,
     `urn:andamio:course:${COURSE_ID}:${SLT_HASH}`,
@@ -116,18 +131,23 @@ test("embedded VC: anchor identifiers match the signed subject exactly (Rung 8.3
   // Decision-2 FLAT evidence dialect — network/policyId/asset/claimTxHash at
   // the entry top level; the Rung-6 nested onChainAnchor/onChainAttestation
   // blocks are superseded and must be gone.
+  // The class artifact anchors to the COURSE, not to a claim transaction:
+  // asset and claimTxHash both name a specific earning event and must be absent.
   const evidence = embedded.evidence[0];
   assert.deepEqual(evidence.type, ["OnChainCredentialAnchor", "Evidence"]);
   assert.equal(evidence.network, "mainnet");
   assert.equal(evidence.policyId, COURSE_ID);
-  assert.equal(evidence.asset, "gjames");
-  assert.equal(evidence.claimTxHash, CLAIM_TX);
+  assert.ok(!("asset" in evidence), "asset names a holder's Access Token");
+  assert.ok(!("claimTxHash" in evidence), "claimTxHash names a specific earning event");
   assert.ok(!("onChainAnchor" in evidence), "nested onChainAnchor superseded by flat dialect");
   assert.ok(!("onChainAttestation" in evidence), "nested onChainAttestation superseded by flat dialect");
   assert.equal(embedded.issuer.id, "did:web:credentials.andamio.io");
-  // Multi-party attribution (P1bis-04): courseOwner present, assessor omitted
-  // (the on-chain record names none — omitted, never blank-filled).
-  assert.equal(embedded.courseOwner, "urn:andamio:mainnet:course-owner:gjames");
+  // Neither party is named on a class artifact. `assessor` is omitted for the
+  // same reason it is on holder credentials — the chain names none, and the
+  // omit-never-blank-fill rule holds. `courseOwner` is omitted because it is
+  // only available from a live chain read, and the class builder is offline and
+  // deterministic by design (R3); the holder credential still carries it.
+  assert.ok(!("courseOwner" in embedded), "class artifacts are built offline — no chain read");
   assert.ok(!("assessor" in embedded));
 });
 

@@ -1,0 +1,71 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v1.jsonld"
+  ],
+  "id": "urn:andamio:badge:mainnet:75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f:d4e7758052e420059688cd4d9419e692e6b8845d93347ec9fd0db0835ed01ce8",
+  "type": [
+    "VerifiableCredential",
+    "OpenBadgeCredential"
+  ],
+  "issuer": {
+    "id": "did:web:credentials.andamio.io",
+    "type": [
+      "Profile",
+      "AttestationHost"
+    ],
+    "name": "Andamio",
+    "url": "https://credentials.andamio.io",
+    "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
+  },
+  "validFrom": "2026-07-01T00:00:00Z",
+  "name": "I have a Cardano Browser wallet extension installed on my computer.",
+  "description": "Defines the \"I have a Cardano Browser wallet extension installed on my computer.\" credential of the \"Building on Cardano in 2026\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "credentialSubject": {
+    "id": "urn:andamio:course:75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f:d4e7758052e420059688cd4d9419e692e6b8845d93347ec9fd0db0835ed01ce8",
+    "type": [
+      "AchievementSubject"
+    ],
+    "achievement": {
+      "id": "urn:andamio:course:75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f:d4e7758052e420059688cd4d9419e692e6b8845d93347ec9fd0db0835ed01ce8",
+      "type": [
+        "Achievement"
+      ],
+      "name": "I have a Cardano Browser wallet extension installed on my computer.",
+      "description": "I have a Cardano Browser wallet extension installed on my computer. — Building on Cardano in 2026",
+      "criteria": {
+        "narrative": "This credential is defined by the \"Building on Cardano in 2026\" course on Andamio (Cardano mainnet). It is awarded for the \"I have a Cardano Browser wallet extension installed on my computer.\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "id": "https://andamioscan.io/courses/75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f",
+      "type": [
+        "OnChainCredentialAnchor",
+        "Evidence"
+      ],
+      "name": "Cardano on-chain anchor",
+      "network": "mainnet",
+      "policyId": "75bab1851d81edf2104af8081656154def0ff7df4ec9c9dbbc51b42f"
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "created": "2026-07-01T00:00:00Z",
+      "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z3C84aWD5n6Zhs7wcpbSppWBo6behmXmWhcYuG9vXkAVHq3Vjce3XcCU6yePuAxkW1A6oU7kDpJnPDb1p7bqbodd7"
+    }
+  ]
+}

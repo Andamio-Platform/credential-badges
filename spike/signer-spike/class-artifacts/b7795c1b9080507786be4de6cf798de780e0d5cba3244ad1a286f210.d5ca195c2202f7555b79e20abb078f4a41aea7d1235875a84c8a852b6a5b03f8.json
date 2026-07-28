@@ -1,0 +1,71 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v1.jsonld"
+  ],
+  "id": "urn:andamio:badge:mainnet:b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210:d5ca195c2202f7555b79e20abb078f4a41aea7d1235875a84c8a852b6a5b03f8",
+  "type": [
+    "VerifiableCredential",
+    "OpenBadgeCredential"
+  ],
+  "issuer": {
+    "id": "did:web:credentials.andamio.io",
+    "type": [
+      "Profile",
+      "AttestationHost"
+    ],
+    "name": "Andamio",
+    "url": "https://credentials.andamio.io",
+    "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
+  },
+  "validFrom": "2026-07-01T00:00:00Z",
+  "name": "Reacting to Chain Events",
+  "description": "Defines the \"Reacting to Chain Events\" credential of the \"Cardano Go Project-Based Learning\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "credentialSubject": {
+    "id": "urn:andamio:course:b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210:d5ca195c2202f7555b79e20abb078f4a41aea7d1235875a84c8a852b6a5b03f8",
+    "type": [
+      "AchievementSubject"
+    ],
+    "achievement": {
+      "id": "urn:andamio:course:b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210:d5ca195c2202f7555b79e20abb078f4a41aea7d1235875a84c8a852b6a5b03f8",
+      "type": [
+        "Achievement"
+      ],
+      "name": "Reacting to Chain Events",
+      "description": "Reacting to Chain Events — Cardano Go Project-Based Learning",
+      "criteria": {
+        "narrative": "This credential is defined by the \"Cardano Go Project-Based Learning\" course on Andamio (Cardano mainnet). It is awarded for the \"Reacting to Chain Events\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "id": "https://andamioscan.io/courses/b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210",
+      "type": [
+        "OnChainCredentialAnchor",
+        "Evidence"
+      ],
+      "name": "Cardano on-chain anchor",
+      "network": "mainnet",
+      "policyId": "b7795c1b9080507786be4de6cf798de780e0d5cba3244ad1a286f210"
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "created": "2026-07-01T00:00:00Z",
+      "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z3uHY7uJxDF2cT2sy3LstjsVRZb81Tq4iUCjNTQey6wrg3a5ALt3m6STW8JFna6fsgLNCxrEw8hyjLyvcJhJb529s"
+    }
+  ]
+}

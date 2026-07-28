@@ -1,0 +1,71 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v1.jsonld"
+  ],
+  "id": "urn:andamio:badge:mainnet:e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d:ac954a66cfeefb4e05043a15cfb557010006753e1135a27c1b4922b08e7b0809",
+  "type": [
+    "VerifiableCredential",
+    "OpenBadgeCredential"
+  ],
+  "issuer": {
+    "id": "did:web:credentials.andamio.io",
+    "type": [
+      "Profile",
+      "AttestationHost"
+    ],
+    "name": "Andamio",
+    "url": "https://credentials.andamio.io",
+    "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
+  },
+  "validFrom": "2026-07-01T00:00:00Z",
+  "name": "Writing Your First Smart Contract",
+  "description": "Defines the \"Writing Your First Smart Contract\" credential of the \"Aiken Project-Based Learning\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "credentialSubject": {
+    "id": "urn:andamio:course:e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d:ac954a66cfeefb4e05043a15cfb557010006753e1135a27c1b4922b08e7b0809",
+    "type": [
+      "AchievementSubject"
+    ],
+    "achievement": {
+      "id": "urn:andamio:course:e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d:ac954a66cfeefb4e05043a15cfb557010006753e1135a27c1b4922b08e7b0809",
+      "type": [
+        "Achievement"
+      ],
+      "name": "Writing Your First Smart Contract",
+      "description": "Writing Your First Smart Contract — Aiken Project-Based Learning",
+      "criteria": {
+        "narrative": "This credential is defined by the \"Aiken Project-Based Learning\" course on Andamio (Cardano mainnet). It is awarded for the \"Writing Your First Smart Contract\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "id": "https://andamioscan.io/courses/e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d",
+      "type": [
+        "OnChainCredentialAnchor",
+        "Evidence"
+      ],
+      "name": "Cardano on-chain anchor",
+      "network": "mainnet",
+      "policyId": "e473f1d6827b4b5d956dfae8c9e96b4c7c0aafc552ff98cc46bb1e9d"
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "created": "2026-07-01T00:00:00Z",
+      "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z5mw96dwiETjQZNxpu9TWbroH7ShENACBN2XVuUZsdzfyHxMSumMK2xHSUbTmTbcHKZzCNGrRsA8scShyZYyPYt4q"
+    }
+  ]
+}

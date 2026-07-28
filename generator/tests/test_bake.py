@@ -27,6 +27,14 @@ FLAGSHIP = os.path.join(
     REPO, "badges",
     "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df."
     "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg")
+# The committed badge now carries its CLASS artifact; signed-credential.json is
+# still the committed HOLDER-credential fixture, just no longer what lives in a
+# shared badge (a shared badge cannot name one holder without misreporting for
+# the others).
+FLAGSHIP_STEM = ("ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df."
+                 "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db")
+CLASS_VC = os.path.join(REPO, "spike", "signer-spike", "class-artifacts",
+                        f"{FLAGSHIP_STEM}.json")
 SIGNED_VC = os.path.join(REPO, "spike", "signer-spike", "signed-credential.json")
 TS_TOOL = os.path.join(REPO, "tools", "bake-signed-vc.ts")
 
@@ -37,24 +45,43 @@ def _read(p):
 
 
 def _an_unbaked_badge():
-    """Any committed badge still carrying the empty generator hook."""
+    """A committed badge with its hook reset to the generator's unsigned form.
+
+    Synthesized rather than discovered: every committed badge is baked now, and
+    a fixture that hunts for an unbaked one silently breaks the whole suite the
+    moment that becomes true. Reconstructing the pre-bake shape keeps these
+    tests independent of how much of the set has been signed.
+    """
     d = os.path.join(REPO, "badges")
     for name in sorted(os.listdir(d)):
         if not name.endswith(".svg") or name.startswith("_"):
             continue
         p = os.path.join(d, name)
         s = _read(p)
-        if 'openbadges:credential verify=""' in s:
-            return p, s
-    raise AssertionError("no unbaked badge found to use as a fixture")
+        start = s.find("<openbadges:credential")
+        end = s.find("</openbadges:credential>")
+        if start == -1 or end == -1:
+            continue
+        unbaked = (s[:start]
+                   + '<openbadges:credential verify=""><![CDATA[\n{"unsigned": true}\n]]>'
+                   + s[end:])
+        return p, unbaked
+    raise AssertionError("no badge SVG found to build a fixture from")
 
 
 # ------------------------------ round trip --------------------------------- #
 
-def test_extract_matches_committed_signed_credential():
-    """The flagship badge extracts byte-for-byte to the committed artifact."""
-    assert bake.extract_vc(_read(FLAGSHIP)) == _read(SIGNED_VC)
-    print("  ✅ flagship extract == signed-credential.json, byte-for-byte")
+def test_extract_matches_committed_class_artifact():
+    """The committed badge extracts byte-for-byte to its class artifact."""
+    assert bake.extract_vc(_read(FLAGSHIP)) == _read(CLASS_VC)
+    print("  ✅ badge extract == its class artifact, byte-for-byte")
+
+
+def test_committed_badge_names_no_holder():
+    embedded = bake.extract_vc(_read(FLAGSHIP))
+    assert ":recipient:" not in embedded, "a shared badge must not carry a recipient URN"
+    assert "gjames" not in embedded, "a shared badge must not name a holder"
+    print("  ✅ committed badge is holder-free")
 
 
 def test_round_trip_on_a_real_signed_credential():

@@ -1,0 +1,71 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v1.jsonld"
+  ],
+  "id": "urn:andamio:badge:mainnet:ada11f76e38403a5a664c02f875991d0a29a457f6d7505aeab69a7fe:0130753eef48a28dc127027a4a2af8b419b8ccd2358a318692536f5500ae2e03",
+  "type": [
+    "VerifiableCredential",
+    "OpenBadgeCredential"
+  ],
+  "issuer": {
+    "id": "did:web:credentials.andamio.io",
+    "type": [
+      "Profile",
+      "AttestationHost"
+    ],
+    "name": "Andamio",
+    "url": "https://credentials.andamio.io",
+    "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
+  },
+  "validFrom": "2026-07-01T00:00:00Z",
+  "name": "Make Your First PR",
+  "description": "Defines the \"Make Your First PR\" credential of the \"Andamio Platform Development\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "credentialSubject": {
+    "id": "urn:andamio:course:ada11f76e38403a5a664c02f875991d0a29a457f6d7505aeab69a7fe:0130753eef48a28dc127027a4a2af8b419b8ccd2358a318692536f5500ae2e03",
+    "type": [
+      "AchievementSubject"
+    ],
+    "achievement": {
+      "id": "urn:andamio:course:ada11f76e38403a5a664c02f875991d0a29a457f6d7505aeab69a7fe:0130753eef48a28dc127027a4a2af8b419b8ccd2358a318692536f5500ae2e03",
+      "type": [
+        "Achievement"
+      ],
+      "name": "Make Your First PR",
+      "description": "Make Your First PR — Andamio Platform Development",
+      "criteria": {
+        "narrative": "This credential is defined by the \"Andamio Platform Development\" course on Andamio (Cardano mainnet). It is awarded for the \"Make Your First PR\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "id": "https://andamioscan.io/courses/ada11f76e38403a5a664c02f875991d0a29a457f6d7505aeab69a7fe",
+      "type": [
+        "OnChainCredentialAnchor",
+        "Evidence"
+      ],
+      "name": "Cardano on-chain anchor",
+      "network": "mainnet",
+      "policyId": "ada11f76e38403a5a664c02f875991d0a29a457f6d7505aeab69a7fe"
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "created": "2026-07-01T00:00:00Z",
+      "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z7BcCUX3Wt4ZZ9JNVGW1WiYEoks5rjV6wCPNbw8PJwA7G4nAR2hEcEzTLuGxmWFBfU6rciFcpt3vpqe3LwRskMV3"
+    }
+  ]
+}

@@ -60,7 +60,7 @@
     "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
     "https://credentials.andamio.io/context/v1.jsonld"
   ],
-  "id": "urn:andamio:credential:mainnet:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db:gjames",
+  "id": "urn:andamio:badge:mainnet:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",
   "type": [
     "VerifiableCredential",
     "OpenBadgeCredential"
@@ -75,11 +75,11 @@
     "url": "https://credentials.andamio.io",
     "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
   },
-  "validFrom": "2026-06-17T12:08:25Z",
+  "validFrom": "2026-07-01T00:00:00Z",
   "name": "About Andamio Issuer",
-  "description": "About Andamio Issuer — Andamio Issuer. Andamio credential on Cardano mainnet, anchored by the credential_claim transaction referenced in the evidence.",
+  "description": "Defines the \"About Andamio Issuer\" credential of the \"Andamio Issuer\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
   "credentialSubject": {
-    "id": "urn:andamio:mainnet:recipient:gjames",
+    "id": "urn:andamio:course:ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df:e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db",
     "type": [
       "AchievementSubject"
     ],
@@ -91,23 +91,20 @@
       "name": "About Andamio Issuer",
       "description": "About Andamio Issuer — Andamio Issuer",
       "criteria": {
-        "narrative": "Recipient completed the \"About Andamio Issuer\" module of the \"Andamio Issuer\" course on Andamio (Cardano mainnet). The module's student learning targets: \"I can explain how the Andamio Issuer product differs from the Andamio API.\" \"I can identify the target market for the Andamio Issuer product.\" \"I can find the documentation and resources that support Andamio Issuer.\" Completion was assessed by the course's on-chain assignment flow and recorded by the credential_claim transaction in the evidence."
+        "narrative": "This credential is defined by the \"Andamio Issuer\" course on Andamio (Cardano mainnet). It is awarded for the \"About Andamio Issuer\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
       }
     }
   },
-  "courseOwner": "urn:andamio:mainnet:course-owner:gjames",
   "evidence": [
     {
-      "id": "https://andamioscan.io/api/v2/events/credential-claims/claim/7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03",
+      "id": "https://andamioscan.io/courses/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
       "type": [
         "OnChainCredentialAnchor",
         "Evidence"
       ],
       "name": "Cardano on-chain anchor",
       "network": "mainnet",
-      "policyId": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df",
-      "asset": "gjames",
-      "claimTxHash": "7cb75099e81644b8ce2442e2cacf4e6dafdba54991a8599e0f88f5432dd2cb03"
+      "policyId": "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df"
     }
   ],
   "credentialStatus": {
@@ -120,11 +117,11 @@
   "proof": [
     {
       "type": "DataIntegrityProof",
-      "created": "2026-06-17T12:08:25Z",
+      "created": "2026-07-01T00:00:00Z",
       "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
       "cryptosuite": "eddsa-rdfc-2022",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z5hsxeJrVFpLaE4wFt5e2rM78xzg81vPKfiUucaAd2PfdBobVEypNYkpk133yXTEjNBC3vU1cuWt6WSctD2W1Fiaw"
+      "proofValue": "zyiuHZpUaiaWk3RLeEQgJRM8CQqBRo6tztdXsD5BcZoLELtRG3zDGM7gCrSkFoyn1xMDvKvU88NyH7kX2muEEQXn"
     }
   ]
 }
