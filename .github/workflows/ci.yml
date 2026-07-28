@@ -101,6 +101,8 @@ jobs:
           python3 generator/tests/test_page.py
           python3 generator/tests/test_explainers.py
           python3 generator/tests/test_holder.py
+          python3 scripts/tests/test_alias_gate.py
+          python3 scripts/tests/test_cache_admin.py
 
   imaging:
     runs-on: ubuntu-latest
