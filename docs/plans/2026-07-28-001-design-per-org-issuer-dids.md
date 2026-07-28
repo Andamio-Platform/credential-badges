@@ -58,7 +58,7 @@ things you do **not** want multiplied.
 | # | Singleton | Where | Multiply it? |
 |---|---|---|---|
 | S1 | Issuer DID `did:web:credentials.andamio.io` | `issuer-service/src/config.ts` `ISSUER_DID` (build-time constant, "never derived from request input, no fallback key/DID path") | **No** — D1 |
-| S2 | KMS signing key `vc-sign-ed25519` v1, HSM, Ed25519 | ops Terraform; `KMS_KEY_VERSION_NAME` | **No** — D3 (Andamio never holds an org key) |
+| S2 | KMS signing key `vc-sign-ed25519` v1, Ed25519, `SOFTWARE` protection level ([#87](https://github.com/Andamio-Platform/credential-badges/issues/87) — the plan specifies HSM; the gap is unresolved) | ops Terraform; `KMS_KEY_VERSION_NAME` | **No** — D3 (Andamio never holds an org key) |
 | S3 | DID document at `/.well-known/did.json` (+ `/did.json` alias) | repo, CI-emitted, CODEOWNERS-gated | Add siblings under `/issuers/**` — D2 |
 | S4 | Hosted Profile at `/issuer` | `issuer/profile.jsonld`, nginx exact-match | Add siblings under `/issuers/**` — D2 |
 | S5 | Key-epoch status list `/status/key-epoch-2026-07.json`, bits 0–63 = key versions | `issuer-service/src/status-list.ts` | **No** — D4 |
