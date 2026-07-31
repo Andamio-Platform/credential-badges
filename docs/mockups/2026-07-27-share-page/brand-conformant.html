@@ -1,0 +1,192 @@
+<meta charset="utf-8">
+<title>Credential share page — brand-conformant mockup</title>
+<style>
+  :root{
+    /* §3.1 — neutrals do the work */
+    --paper:#FFFFFF; --ink:#0A0A0A;
+    --inkMuted:rgba(10,10,10,.60); --inkFaint:rgba(10,10,10,.45);
+    --inkGhost:rgba(10,10,10,.30); --cell:rgba(10,10,10,.15);
+    --grid:rgba(10,10,10,.05);
+    /* §3.1 — accents, one job each */
+    --orange:#FF6B35;            /* brand signal, sparing */
+    --blue:#2F6BFF;              /* wayfinding + data/links only, never a fill */
+    --coralTint:rgba(255,107,74,.055); /* credential-plate tint only */
+    --nav-clear:5rem;            /* §5 navClearance */
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* §7 Brand / Primary nav — full-bleed bottom border */
+  .nav{height:var(--nav-clear); border-bottom:1px solid var(--ink);
+       display:flex; align-items:center; padding:0 32px; gap:10px;}
+  .mark{width:22px;height:22px;background:var(--orange);}
+  .wordmark{font-weight:600; letter-spacing:-.045em; font-size:15px;}
+  .navnote{margin-left:auto;}
+
+  /* §7 Micro-label — mono 10px uppercase, tracking .16em */
+  .micro{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+         font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--inkFaint);}
+  .micro.link{color:var(--blue); text-decoration:none;}
+  /* §7 Kicker — mono 11px uppercase, muted, NEVER orange */
+  .kicker{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+          font-size:11px; text-transform:uppercase; letter-spacing:.16em; color:var(--inkMuted);}
+  .mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+  /* §5 — 12-col feel at ~1300px measure; §7 Full-viewport section */
+  .screen{min-height:calc(100svh - var(--nav-clear));
+          display:grid; grid-template-columns:minmax(0,6fr) minmax(0,7fr);
+          gap:0; max-width:1300px; margin:0 auto; align-items:stretch;}
+  .left{border-right:1px solid var(--cell); padding:40px 40px 32px;
+        display:flex; flex-direction:column; justify-content:center;}
+  .right{padding:40px 40px 32px; display:flex; flex-direction:column; min-width:0;}
+
+  /* §7 Specimen frame — the credential's museum frame */
+  .specimen{border:1px solid var(--ink); display:flex; flex-direction:column;}
+  .specimen-head{display:flex; align-items:center; gap:8px;
+                 padding:10px 14px; border-bottom:1px solid var(--cell);}
+  .plate{background:var(--coralTint); display:grid; place-items:center;
+         padding:18px; position:relative;}
+  .plate img{width:100%; height:auto; max-height:min(72vh,800px); object-fit:contain; display:block;}
+  /* orange "Verified" stamp — the credential artifact's own signal */
+  .stamp{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+         text-transform:uppercase; letter-spacing:.16em;
+         color:var(--orange); border:1px solid var(--orange); padding:4px 8px;}
+  .specimen-cap{padding:10px 14px; border-top:1px solid var(--cell);
+                display:flex; align-items:center; gap:10px;}
+  .specimen-cap .micro{margin-right:auto;}
+
+  /* right column */
+  h1{font-weight:600; letter-spacing:-.045em; font-size:clamp(28px,3.4vw,42px);
+     line-height:1.06; margin:6px 0 0;}
+  .issuer{display:flex; align-items:baseline; gap:8px; margin-top:18px;}
+  .issuer .name{font-weight:600; letter-spacing:-.045em; font-size:17px;}
+  .hostnote{color:var(--inkMuted); font-size:13px; margin-top:6px; line-height:1.5;}
+
+  .rule{height:1px; background:var(--cell); margin:22px 0;}
+  .rule.strong{background:var(--ink);}
+
+  /* §7 Data readouts — mono */
+  .data{display:grid; grid-template-columns:auto 1fr; gap:7px 16px; align-items:baseline;}
+  .data dt{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+           text-transform:uppercase; letter-spacing:.16em; color:var(--inkFaint);}
+  .data dd{margin:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:12px;
+           color:var(--ink); overflow-wrap:anywhere;}
+  /* never truncate a hash — wrap it. No slice, no ellipsis. */
+  .data dd.hash{font-size:11px; color:var(--inkMuted); line-height:1.5; word-break:break-all;}
+  .datablock{border:1px solid var(--cell); padding:14px 16px;}
+
+  /* §7 Stitch — connected buttons, borders overlap -1px, one stitched control */
+  .stitch{display:flex; flex-wrap:wrap;}
+  .stitch > *{margin-left:-1px; margin-top:-1px;}
+  .stitch > *:first-child{margin-left:0;}
+  .btn{appearance:none; cursor:pointer; background:var(--paper); color:var(--ink);
+       border:1px solid var(--ink); border-radius:0;   /* square — never rounded */
+       font:inherit; font-size:13px; font-weight:500; padding:10px 14px; text-decoration:none;
+       white-space:nowrap;}
+  .btn:hover{background:rgba(10,10,10,.04);}
+  .btn.ink{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  .btn.ink:hover{background:#1c1c1c;}
+  .btn.ghost{border-color:var(--cell); color:var(--inkMuted);}
+  .group{margin-top:12px;}
+  .group:first-of-type{margin-top:10px;}
+  .grouplabel{display:block; margin-bottom:7px;}
+
+  details{margin-top:4px;}
+  summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;}
+  summary::-webkit-details-marker{display:none;}
+  .plus{font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--inkFaint); font-size:11px;}
+  .embed{margin-top:12px;}
+  .foot{margin-top:auto; padding-top:18px; border-top:1px solid var(--cell);}
+  .caveat{color:var(--inkMuted); font-size:13px; line-height:1.5; margin:0 0 10px;}
+
+  @media (max-width:900px){
+    .screen{grid-template-columns:1fr; min-height:0;}
+    .left{border-right:0; border-bottom:1px solid var(--cell);}
+    .plate img{max-height:38vh;}
+  }
+</style>
+
+<div class="nav">
+  <div class="mark"></div><div class="wordmark">ANDAMIO</div>
+  <span class="micro navnote">Mockup · brand guide v1.1 · not a spec</span>
+</div>
+
+<div class="screen">
+  <!-- LEFT — §7 Specimen frame -->
+  <div class="left">
+    <div class="specimen">
+      <div class="specimen-head">
+        <span class="kicker">Credential</span>
+      </div>
+      <div class="plate">
+        <img src="https://credentials.andamio.io/badges/3ed1bca6a9301a12a6787b22ffcac5a84867f8b2c4210dbf75347d65.6f10a84189150674775cf11769a13d98291495ca54a9166a79bba82df80a491e.svg"
+             alt="Credential badge">
+      </div>
+      <div class="specimen-cap">
+        <span class="micro">Anchored on Cardano · preprod</span>
+        <span class="stamp">Verified</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT — identity, then holder actions, then developer -->
+  <div class="right">
+    <span class="kicker">Issued by</span>
+    <div class="issuer">
+      <span class="name">Gimbalabs</span>
+      <span class="micro">Course owner</span>
+    </div>
+    <h1>Getting Started at Gimbalabs</h1>
+    <p class="hostnote">
+      Verified and hosted by Andamio. Andamio anchors and verifies this credential;
+      it does not claim authority over what it means.
+    </p>
+
+    <div class="rule"></div>
+
+    <dl class="data datablock">
+      <dt>Holder</dt><dd>jamesdunseith</dd>
+      <dt>Issued</dt><dd>2026-07-14</dd>
+      <dt>Credential</dt><dd class="hash">6f10a84189150674775cf11769a13d98291495ca54a9166a79bba82df80a491e</dd>
+      <dt>Course</dt><dd class="hash">3ed1bca6a9301a12a6787b22ffcac5a84867f8b2c4210dbf75347d65</dd>
+    </dl>
+
+    <div class="rule"></div>
+
+    <span class="micro">For the person who earned this</span>
+
+    <div class="group">
+      <div class="stitch">
+        <a class="btn ink" href="#">Add to LinkedIn profile</a>
+        <a class="btn" href="#">Share</a>
+        <a class="btn" href="#">Copy link</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="stitch">
+        <a class="btn" href="#">Download SVG</a>
+        <a class="btn" href="#">Download PNG</a>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <details class="embed">
+      <summary><span class="plus">+</span><span class="micro">Embed this badge — for developers</span></summary>
+      <div class="stitch" style="margin-top:12px;">
+        <a class="btn ghost" href="#">Copy iframe</a>
+        <a class="btn ghost" href="#">Copy web component</a>
+      </div>
+    </details>
+
+    <div class="foot">
+      <p class="caveat">Anyone can check this credential without asking Andamio.
+        Signed verification is rolling out.</p>
+      <a class="micro link" href="#">How do I check this? →</a>
+    </div>
+  </div>
+</div>
