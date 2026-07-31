@@ -1,0 +1,20 @@
+{
+  "name": "credential-badges-verify-live",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Post-deploy smoke check: verify a DEPLOYED badge's embedded OB3 proof against the live context, did:web document, and status list. Never served; not part of the signing path.",
+  "scripts": {
+    "verify": "node verify-live.mjs"
+  },
+  "dependencies": {
+    "@digitalbazaar/data-integrity": "2.5.0",
+    "@digitalbazaar/ed25519-multikey": "1.3.1",
+    "@digitalbazaar/eddsa-rdfc-2022-cryptosuite": "1.3.0",
+    "@digitalbazaar/vc": "7.3.0",
+    "pako": "2.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
