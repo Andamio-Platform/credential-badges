@@ -23,6 +23,21 @@ _FONTCSS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts.css")
 FONT_FACE = (open(_FONTCSS).read() if os.path.exists(_FONTCSS)
              else "@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap');")
 
+# The CANON page faces (Inter + JetBrains Mono), a SEPARATE artifact from
+# fonts.css above. Keep them apart: FONT_FACE is inlined into every badge SVG —
+# the signed class artifacts, carrying proofValue — plus the OG cards, so a page
+# restyle that reached it would rewrite 58 signed credentials. PAGE_FONT_FACE is
+# read only by the HTML page generators. Same leaf-constant reasoning as HOST /
+# ISSUER below: explainers.py and holder.py import it from here rather than
+# coupling to page.py's heavy surface.
+#
+# page.py reads page_fonts.css directly rather than importing this, and its own
+# test pins that; unifying the two readers is a tidy-up, not a behaviour change,
+# and is deliberately left out of this change's scope.
+_PAGE_FONTCSS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page_fonts.css")
+PAGE_FONT_FACE = (open(_PAGE_FONTCSS, encoding="utf-8").read()
+                  if os.path.exists(_PAGE_FONTCSS) else "")
+
 # Forever-public host + issuer name — the shared leaf constants for every page
 # generator (page.py, explainers.py). gen.py is the common leaf both import, so
 # these live here rather than coupling explainers.py to page.py's heavy surface.
