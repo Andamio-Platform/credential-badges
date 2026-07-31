@@ -3,6 +3,11 @@
 Map of content for the `credential-badges` stack. One line per component.
 Start here when you open the repo for the first time.
 
+**Looking for the URLs rather than the components?** [`docs/sitemap.md`](docs/sitemap.md)
+lists every public route the domain serves — what produces it, whether it may
+change, and which surfaces the canon design has reached. This file maps the
+repo; that one maps the website.
+
 ## Served at `https://credentials.andamio.io`
 
 | Path | File | Mutable? | Purpose |
