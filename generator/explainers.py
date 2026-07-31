@@ -22,6 +22,7 @@ Usage:
 import os
 import sys
 
+import canon
 import gen
 from gen import esc, ISSUER
 
@@ -32,13 +33,21 @@ DEFAULT_OUT = os.path.join(HERE, "..", "badges")
 GUIDANCE_URL = ("https://github.com/Andamio-Platform/credential-badges/blob/"
                 "main/docs/verifier-guidance.md")
 
-PAL = gen.PAL_ANDAMIO   # Andamio Navy — the explainers are not per-credential
+# The explainers are general pages, never per-credential — which is why they took
+# the fixed Andamio palette rather than colors.palette_for. Under the canon that
+# distinction disappears: every surface is canon paper, so there is no palette to
+# choose. The badge SVGs these pages describe keep their per-course artwork.
 
 
 def _shell(title, description, body):
-    """The branded page shell (dark theme, badge palette + fonts, readable prose
-    column), shared by both explainers."""
-    p = PAL
+    """The branded page shell (canon paper/ink, canon type, readable prose
+    column), shared by both explainers.
+
+    Colour comes from ``canon.py`` — imported, never re-transcribed, so this page
+    and the share page cannot drift apart. Type comes from ``gen.PAGE_FONT_FACE``
+    (page_fonts.css), NOT ``gen.FONT_FACE``: the latter is inlined into every
+    signed badge SVG, so reading it here would couple a prose restyle to the
+    signed artifacts."""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -46,25 +55,29 @@ def _shell(title, description, body):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)} · {ISSUER} Credentials</title>
 <meta name="description" content="{esc(description)}">
-<meta name="theme-color" content="{p['deep']}">
+<meta name="theme-color" content="{canon.PAPER}">
 <style>
-{gen.FONT_FACE}
-:root{{--deep:{p['deep']};--ink:{p['ink']};--raised:{p['raised']};--prim:{p['prim']};--sec:{p['sec']};--bone:{p['bone']};--slate:{p['slate']};--hair:{p['hair']};}}
+{gen.PAGE_FONT_FACE}
+:root{{{canon.root_block()}}}
 *{{box-sizing:border-box;}}
 html,body{{margin:0;}}
-body{{background:radial-gradient(140% 100% at 50% 0%,var(--raised) 0%,var(--ink) 60%,var(--deep) 100%);color:var(--bone);font-family:Archivo,"Helvetica Neue",Arial,sans-serif;line-height:1.6;min-height:100vh;}}
+body{{background:var(--paper);color:var(--ink);font-family:{canon.SANS};line-height:1.6;min-height:100vh;}}
 main{{max-width:680px;margin:0 auto;padding:56px 22px 72px;}}
-.eyebrow{{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.28em;color:var(--slate);text-transform:uppercase;margin:0 0 10px;}}
-h1{{font-size:clamp(26px,5vw,36px);font-weight:800;line-height:1.15;margin:0 0 10px;}}
-h2{{font-size:20px;font-weight:700;margin:34px 0 8px;}}
+/* Sentence-case label, not the retired mono-uppercase kicker: landing deleted
+   `kickerCls` on 2026-07-02 ("No all-caps tracked eyebrows"). No orange tile
+   either — these pages spend no accent. */
+.eyebrow{{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px;}}
+h1{{font-size:clamp(26px,5vw,36px);font-weight:600;letter-spacing:{canon.DISPLAY_TRACKING};line-height:1.15;margin:0 0 10px;}}
+h2{{font-size:20px;font-weight:600;margin:34px 0 8px;}}
 .lead{{font-size:18px;margin:0 0 8px;}}
-p,li{{opacity:.92;}}
 ol,ul{{padding-left:22px;}}
 li{{margin:7px 0;}}
-a{{color:var(--sec);}}
-strong{{color:var(--bone);}}
-.note{{font-size:13px;color:var(--slate);border-left:2px solid var(--hair);padding-left:14px;margin:26px 0;}}
-.back{{display:inline-block;margin-top:36px;font-size:13px;color:var(--sec);text-decoration:none;}}
+a{{color:var(--blue);}}
+strong{{color:var(--ink);}}
+code{{font-family:{canon.MONO};overflow-wrap:anywhere;}}
+.note{{font-size:13px;color:var(--muted);border-left:2px solid var(--cell);padding-left:14px;margin:26px 0;}}
+.back{{display:inline-block;margin-top:36px;font-size:13px;color:var(--blue);text-decoration:none;}}
+:focus-visible{{outline:2px solid var(--ink);outline-offset:3px;}}
 </style>
 </head>
 <body>

@@ -25,6 +25,8 @@ BADGES = os.path.join(REPO, "badges")
 sys.path.insert(0, GEN)
 
 import holder  # noqa: E402
+import canon  # noqa: E402
+import gen  # noqa: E402
 from build import SKIP_COURSES  # noqa: E402
 
 STEM_RE = re.compile(r"^[0-9a-f]{56}\.[0-9a-f]{64}$")
@@ -186,6 +188,156 @@ def test_output_byte_identical_to_committed():
             assert os.path.exists(committed), f"no committed {name}"
             assert new == open(committed, "rb").read(), f"{name} differs from committed"
     print("  ✅ _holder.html + _registry.json byte-identical to committed")
+
+
+# --- guard helpers ----------------------------------------------------------
+# These assert on the EMITTED artifact, not on generator source text. Source
+# greps proved evadable: a docstring mentioning gen.PAGE_FONT_FACE satisfied the
+# "uses the page font artifact" check, and an `from gen import FONT_FACE as _FF`
+# alias defeated the "never inlines the signed-SVG block" check.
+
+# Only these may set a text colour. An allowlist fails closed when canon.py
+# gains a token; the previous blocklist silently permitted --orange (~2.9:1),
+# --paper (1:1) and --coral, and missed `opacity`, which this change removed
+# from both shells and is therefore the likeliest de-emphasis edit to return.
+_TEXT_OK = {"var(--ink)", "var(--muted)", "var(--blue)", "var(--on-ink)", "inherit",
+            canon.INK, canon.MUTED, canon.BLUE, canon.ON_INK}
+
+
+def _css_of(html):
+    return html.split("<style>")[1].split("</style>")[0]
+
+
+def _assert_fonts_really_embedded(html):
+    """gen.PAGE_FONT_FACE falls back to "" when page_fonts.css is absent, and
+    every other canon guard stays green on a fontless page — `"Inter" in html`
+    is satisfied by the font-family stack, and the subresource scan passes more
+    easily with zero url() matches. Byte-parity is the only dissenter, and it
+    stops dissenting the moment the artifacts are regenerated in that same
+    environment. Assert the bytes, not the name."""
+    assert gen.PAGE_FONT_FACE and "@font-face" in gen.PAGE_FONT_FACE, \
+        "page_fonts.css missing or empty — run embed_fonts.py"
+    assert "@font-face" in html, "page emitted no embedded face"
+    kb = len(gen.PAGE_FONT_FACE.encode()) / 1024
+    assert kb <= 80, f"embedded faces are {kb:.0f} KB, over the 80 KB ceiling"
+
+
+def _assert_font_isolation(html):
+    """The headline invariant: a prose restyle must never reach fonts.css, which
+    is inlined into the SIGNED badge SVGs. Asserted against the output so no
+    import alias can defeat it."""
+    assert gen.PAGE_FONT_FACE in html, "page must inline the page font artifact"
+    assert gen.FONT_FACE not in html, "page must never inline the signed-SVG font block"
+
+
+def _assert_no_foreign_subresource(html):
+    """Scoped to SUBRESOURCES — outbound <a href> to andamioscan/andamio.io is
+    legitimate. Quote-agnostic, and rejects protocol-relative //host too."""
+    assert "<link" not in html and "@import" not in html
+    for m in re.finditer(r"""(?:src|srcset|poster)\s*=\s*["']([^"']+)["']""", html):
+        v = m.group(1).strip()
+        assert v.startswith("data:") or not re.match(r"^(?:[a-z][a-z0-9+.-]*:)?//", v, re.I), \
+            f"foreign-origin subresource: {v[:60]}"
+    for m in re.finditer(r"url\(([^)]+)\)", html):
+        v = m.group(1).strip("'\"")
+        assert v.startswith("data:"), f"foreign url(): {v[:40]}"
+
+
+def _assert_text_meets_aa(html):
+    css = _css_of(html)
+    for m in re.finditer(r"(?<![-\w])color\s*:\s*([^;}]+)", css):
+        v = m.group(1).strip()
+        assert v in _TEXT_OK, f"text colour {v!r} is not an AA-safe canon step"
+    for m in re.finditer(r"opacity\s*:\s*([\d.]+)", css):
+        assert float(m.group(1)) >= 1, \
+            f"opacity:{m.group(1)} dims text past the AA-safe ink step"
+
+
+def _assert_canon_not_inlined(src):
+    """Every token, not four hand-picked ones. A wrong transcription of
+    DISPLAY_TRACKING (-0.04em for -0.045em) previously passed."""
+    code = "\n".join(l for l in src.splitlines() if not l.lstrip().startswith("#"))
+    for name, literal in canon.TOKENS.items():
+        if name in ("INK", "INK_RGB"):
+            continue          # substrings of the ramp values themselves
+        assert literal.lower() not in code.lower(), \
+            f"canon {name} ({literal}) inlined — import it from canon.py"
+
+
+# --- canon conformance (#102 U3) -------------------------------------------
+# Mirrors test_page.py and test_explainers.py so the three surfaces cannot drift.
+
+def test_canon_values_imported_not_inlined():
+    src = open(os.path.join(GEN, "holder.py"), encoding="utf-8").read()
+    _assert_canon_not_inlined(src)
+    assert "import canon" in src
+    print("  ✅ every canon token imported from canon.py, never inlined")
+
+
+def test_no_legacy_type_stack_or_dark_chrome():
+    html = holder._shell()
+    for gone in ("Archivo", "Spline Sans Mono", "radial-gradient", "border-radius"):
+        assert gone not in html, f"legacy chrome survived: {gone}"
+    assert '"Inter"' in html and f'content="{canon.PAPER}"' in html
+    print("  ✅ canon type + paper ground; no legacy chrome, no radius")
+
+
+def test_fonts_come_from_the_page_artifact_not_the_signed_svg_one():
+    for build in (holder._shell,):
+        html = build()
+        _assert_fonts_really_embedded(html)
+        _assert_font_isolation(html)
+    print("  ✅ canon faces embedded from the page artifact; signed-SVG block never inlined")
+
+
+def test_single_orange_primary_and_wallet_is_a_real_secondary():
+    """The canon permits ONE orange primary per view. The disabled wallet control
+    used to render as a second filled primary because `.resolve button` (0,1,1)
+    out-specified `.wallet` (0,1,0), so its intended transparent treatment never
+    applied — a specificity bug, not a design choice.
+
+    Pin the RULE, not an occurrence count: counting `var(--orange)` is position
+    blind, so moving one occurrence onto a second element keeps the count at two
+    while putting two orange controls on one view."""
+    css = _css_of(holder._shell())
+    assert (".resolve button{background:var(--orange);color:var(--ink);"
+            "border:1px solid var(--orange)") in css, \
+        "the one orange primary must be the alias-lookup submit button"
+    assert ".resolve button.wallet{background:transparent" in css, \
+        "the wallet secondary must out-specify .resolve button to take effect"
+    # every painted accent belongs to that one rule
+    assert css.count("var(--orange)") == 2, "orange may paint exactly one control"
+    assert "color:var(--orange)" not in css, "the accent must never be text colour"
+    assert f"color:{canon.ORANGE}" not in css
+    print("  ✅ one orange primary, pinned by rule; wallet is a real secondary")
+
+
+def test_no_foreign_origin_subresource():
+    for build in (holder._shell,):
+        _assert_no_foreign_subresource(build())
+    print("  ✅ no foreign-origin subresource (pages stay self-contained)")
+
+
+def test_no_text_below_the_muted_ink_step():
+    for build in (holder._shell,):
+        _assert_text_meets_aa(build())
+    print("  ✅ every text colour is an AA-safe canon step; no opacity dimming")
+
+
+def test_focus_visible_present_and_never_suppressed():
+    html = holder._shell()
+    assert ":focus-visible{outline:" in html
+    assert "outline:none" not in html
+    print("  ✅ visible focus state; outline never suppressed")
+
+
+def test_heading_names_the_credential_check_before_the_holder_set():
+    """The route answers two questions — does THIS holder hold THIS credential,
+    and what else do they hold. The heading used to name only the second."""
+    html = holder._shell()
+    assert "<h1>This credential, and every badge held by" in html
+    assert "data-holder-alias" in html, "the alias hook must survive the rewording"
+    print("  ✅ h1 names the credential check first, then the holder's set")
 
 
 def _main():

@@ -38,6 +38,7 @@ import json
 import os
 import sys
 
+import canon
 import gen
 from gen import HOST, ISSUER
 from build import SKIP_COURSES
@@ -51,7 +52,8 @@ DATA = os.path.join(HERE, "credentials.json")
 # mirroring the how-to-check explainer (#72).
 GUIDANCE_URL = f"{HOST}/badges/how-to-check"
 
-PAL = gen.PAL_ANDAMIO   # Andamio Navy — the viewer is not per-credential
+# The viewer is a general page, never per-credential. Under the canon there is
+# no palette to choose: every surface is canon paper (see canon.py).
 
 
 def build_registry():
@@ -73,11 +75,13 @@ def build_registry():
 
 
 def _shell():
-    """The branded holder-viewer shell (dark theme, badge palette + fonts). All
+    """The branded holder-viewer shell (canon paper/ink + canon type). All
     dynamic content is filled by /badges/_holder.js from the live state; the
     static frame carries the suspension legend + verification framing so they
-    render even before (or without) JS."""
-    p = PAL
+    render even before (or without) JS.
+
+    Colour comes from ``canon.py``; type from ``gen.PAGE_FONT_FACE``, never
+    ``gen.FONT_FACE`` — that one is inlined into the signed badge SVGs."""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -85,62 +89,76 @@ def _shell():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Credential holder · {ISSUER} Credentials</title>
 <meta name="description" content="A holder's Andamio credential badges with live on-chain and suspension state, read from Andamio's public indexer. To verify a badge without trusting Andamio, follow the independent check.">
-<meta name="theme-color" content="{p['deep']}">
+<meta name="theme-color" content="{canon.PAPER}">
 <meta name="robots" content="noindex">
 <style>
-{gen.FONT_FACE}
-:root{{--deep:{p['deep']};--ink:{p['ink']};--raised:{p['raised']};--prim:{p['prim']};--prim-lt:{p['prim_lt']};--sec:{p['sec']};--sec-lt:{p['sec_lt']};--bone:{p['bone']};--slate:{p['slate']};--hair:{p['hair']};}}
+{gen.PAGE_FONT_FACE}
+:root{{{canon.root_block()}}}
 *{{box-sizing:border-box;}}
 html,body{{margin:0;}}
-body{{background:radial-gradient(140% 100% at 50% 0%,var(--raised) 0%,var(--ink) 60%,var(--deep) 100%);color:var(--bone);font-family:Archivo,"Helvetica Neue",Arial,sans-serif;line-height:1.6;min-height:100vh;}}
+body{{background:var(--paper);color:var(--ink);font-family:{canon.SANS};line-height:1.6;min-height:100vh;}}
 main{{max-width:720px;margin:0 auto;padding:56px 22px 72px;}}
-.eyebrow{{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.28em;color:var(--slate);text-transform:uppercase;margin:0 0 10px;}}
-h1{{font-size:clamp(26px,5vw,36px);font-weight:800;line-height:1.15;margin:0 0 6px;}}
-h1 .alias{{color:var(--sec);}}
-h2{{font-size:20px;font-weight:700;margin:34px 0 8px;}}
-.lead{{font-size:17px;margin:0 0 18px;color:var(--bone);opacity:.9;}}
-p,li{{opacity:.92;}}
-a{{color:var(--sec);}}
-strong{{color:var(--bone);}}
-.resolve{{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}}
-.resolve input{{flex:1 1 200px;min-width:0;background:var(--ink);border:1px solid var(--hair);color:var(--bone);border-radius:8px;padding:10px 12px;font:inherit;}}
-.resolve button,.wallet{{background:var(--prim);color:#12131a;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;}}
-.wallet{{background:transparent;color:var(--slate);border:1px solid var(--hair);cursor:not-allowed;}}
-.status{{border-left:2px solid var(--hair);padding:10px 14px;margin:16px 0;color:var(--slate);font-size:14px;}}
-.status.error{{border-color:var(--prim);color:var(--prim-lt);}}
-.verdict{{border:1px solid var(--hair);border-left-width:3px;border-radius:12px;padding:16px 18px;margin:18px 0 6px;background:rgba(27,37,64,.5);}}
-.verdict .vlabel{{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin:0 0 6px;}}
-.verdict .vhead{{font-size:17px;font-weight:700;color:var(--bone);margin:0 0 6px;opacity:1;}}
-.verdict .vdetail{{font-size:14px;color:var(--slate);margin:0;}}
+/* Sentence-case label — the mono-uppercase kicker was retired upstream. */
+.eyebrow{{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px;}}
+h1{{font-size:clamp(26px,5vw,36px);font-weight:600;letter-spacing:{canon.DISPLAY_TRACKING};line-height:1.15;margin:0 0 6px;}}
+h1 .alias{{color:var(--blue);}}
+h2{{font-size:20px;font-weight:600;margin:34px 0 8px;}}
+.lead{{font-size:17px;margin:0 0 18px;color:var(--muted);}}
+a{{color:var(--blue);}}
+strong{{color:var(--ink);}}
+.resolve{{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px;}}
+/* The field's fill matches the page ground, so its border is the only thing
+   rendering the control. --cell (.15) composites to ~1.40:1 on paper, under
+   WCAG 1.4.11's 3:1 for UI-component boundaries; --ghost (.30) clears it. */
+.resolve input{{flex:1 1 200px;min-width:0;background:var(--paper);border:1px solid var(--ghost);color:var(--ink);padding:10px 12px;font:inherit;}}
+.resolve input:hover{{border-color:var(--ink);}}
+/* The page's ONE orange role: a single primary action (canon whitelist). */
+.resolve button{{background:var(--orange);color:var(--ink);border:1px solid var(--orange);padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;}}
+/* The wallet control is a DISABLED secondary, and it must out-specify
+   `.resolve button` to say so. It previously did not: `.resolve button` (0,1,1)
+   beat `.wallet` (0,1,0), so the intended transparent treatment never applied
+   and a disabled control rendered as a second filled primary — two orange CTAs
+   on one view, which the canon's accent whitelist does not allow. */
+.resolve button.wallet{{background:transparent;color:var(--muted);border:1px solid var(--cell);cursor:not-allowed;font-weight:400;}}
+.status{{border-left:2px solid var(--cell);padding:10px 14px;margin:16px 0;color:var(--muted);font-size:14px;}}
+.status.error{{border-left-color:var(--ink);color:var(--ink);}}
+.verdict{{border:1px solid var(--hairline);border-left-width:3px;padding:16px 18px;margin:18px 0 6px;background:var(--grid);}}
+.verdict .vlabel{{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;}}
+.verdict .vhead{{font-size:17px;font-weight:600;color:var(--ink);margin:0 0 6px;}}
+.verdict .vdetail{{font-size:14px;color:var(--muted);margin:0;}}
 .verdict .vlink{{font-size:13px;margin:10px 0 0;}}
-.verdict.anchored,.verdict.signature-unavailable{{border-left-color:var(--sec);}}
-.verdict.suspended{{border-left-color:var(--prim);}}
-.verdict.not-found{{border-left-color:var(--prim);}}
-.verdict.indeterminate{{border-left-color:var(--slate);}}
+/* State is carried by the label text and heading, which name it outright; the
+   rule weight is reinforcement, never the only signal. Attention states take
+   solid ink, settled states the neutral cell hairline — the same two-way split
+   the dark theme had, where suspended and not-found already shared one colour. */
+.verdict.anchored,.verdict.signature-unavailable{{border-left-color:var(--cell);}}
+.verdict.suspended{{border-left-color:var(--ink);}}
+.verdict.not-found{{border-left-color:var(--ink);}}
+.verdict.indeterminate{{border-left-color:var(--ghost);}}
 .badges{{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:12px;}}
-.badge{{display:flex;gap:14px;align-items:center;background:rgba(27,37,64,.5);border:1px solid var(--hair);border-radius:12px;padding:12px 14px;}}
-.badge img{{width:64px;height:64px;flex:none;border-radius:8px;background:var(--ink);}}
+.badge{{display:flex;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--hairline);padding:12px 14px;}}
+.badge img{{width:64px;height:64px;flex:none;background:var(--coral);}}
 .badge .meta{{flex:1 1 auto;min-width:0;}}
-.badge .mt{{font-weight:700;margin:0 0 2px;}}
-.badge .ct{{font-size:13px;color:var(--slate);margin:0;}}
-.state{{display:inline-block;font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-top:6px;}}
-.state.anchored{{background:rgba(91,184,212,.15);color:var(--sec-lt);}}
-.state.signature-unavailable{{background:rgba(91,184,212,.22);color:var(--sec-lt);}}
-.state.suspended{{background:rgba(238,108,58,.16);color:var(--prim-lt);}}
-.state.indeterminate{{background:rgba(110,122,152,.16);color:var(--slate);}}
-.badge .owner,.badge .anchor{{font-size:12px;color:var(--slate);margin:6px 0 0;}}
-.badge .pseudonym{{color:var(--sec-lt);}}
-.badge code.cid{{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;word-break:break-all;}}
+.badge .mt{{font-weight:600;margin:0 0 2px;}}
+.badge .ct{{font-size:13px;color:var(--muted);margin:0;}}
+.state{{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;margin-top:6px;border:1px solid var(--cell);color:var(--muted);}}
+.state.anchored,.state.signature-unavailable{{border-color:var(--cell);color:var(--ink);}}
+.state.suspended{{border-color:var(--ink);color:var(--ink);}}
+.state.indeterminate{{border-color:var(--hairline);color:var(--muted);}}
+.badge .owner,.badge .anchor{{font-size:12px;color:var(--muted);margin:6px 0 0;}}
+.badge .pseudonym{{color:var(--ink);}}
+.badge code.cid{{font-family:{canon.MONO};font-size:11px;overflow-wrap:anywhere;word-break:break-all;}}
 .badge .li{{font-size:12px;margin-top:6px;display:inline-block;}}
-.note{{font-size:13px;color:var(--slate);border-left:2px solid var(--hair);padding-left:14px;margin:26px 0;}}
-.back{{display:inline-block;margin-top:30px;font-size:13px;color:var(--sec);text-decoration:none;}}
-noscript{{display:block;margin:16px 0;color:var(--prim-lt);}}
+.note{{font-size:13px;color:var(--muted);border-left:2px solid var(--cell);padding-left:14px;margin:26px 0;}}
+.back{{display:inline-block;margin-top:30px;font-size:13px;color:var(--blue);text-decoration:none;}}
+noscript{{display:block;margin:16px 0;color:var(--ink);}}
+:focus-visible{{outline:2px solid var(--ink);outline-offset:3px;}}
 </style>
 </head>
 <body>
 <main>
 <p class="eyebrow">Credential holder</p>
-<h1>Badges held by <span class="alias" data-holder-alias>this holder</span></h1>
+<h1>This credential, and every badge held by <span class="alias" data-holder-alias>this holder</span></h1>
 <p class="lead">A live view of one holder's Andamio credential badges — each shown
    with its current on-chain and suspension state, read live from Andamio's
    public indexer.</p>
