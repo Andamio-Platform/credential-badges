@@ -23,11 +23,13 @@ Usage:
     python3 page.py            # write to ../badges/
     python3 page.py <outdir>   # write elsewhere
 """
+import base64
 import json
 import os
 import sys
 from urllib.parse import quote
 
+import canon
 import colors
 from gen import esc, HOST, ISSUER
 from render import sanitize_title
@@ -38,6 +40,45 @@ DATA = os.path.join(HERE, "credentials.json")
 DEFAULT_OUT = os.path.join(HERE, "..", "badges")
 
 OG_W, OG_H = 1200, 630
+
+# The canon page faces (Inter + JetBrains Mono), base64-embedded by
+# embed_fonts.py. DELIBERATELY NOT gen.FONT_FACE: that constant comes from
+# fonts.css, which the badge SVGs, OG cards, explainers and holder viewer all
+# inline — and the badge SVGs are the signed class artifacts. Sharing the file
+# would mean a page-styling change rewrote 58 signed credentials.
+_PAGE_FONTCSS = os.path.join(HERE, "page_fonts.css")
+PAGE_FONT_FACE = (open(_PAGE_FONTCSS, encoding="utf-8").read()
+                  if os.path.exists(_PAGE_FONTCSS) else "")
+
+# The Andamio brand mark, base64-inlined as a data: URI.
+#
+# It is a RASTER, and that is not a shortcut — no vector form of this logo
+# exists. Every "*.svg" logo in the landing repo is a base64 PNG wrapped in an
+# <svg> element (andamio-logo.svg is 8.8 MB of it), and there is no path-based
+# logo component in that repo's source either. So the choice was a raster or a
+# hand-drawn approximation, and an approximation of a brand mark is worse than a
+# faithful raster.
+#
+# Committed here at 239x44 (2x for the 22px nav) quantized to a 32-colour
+# palette: 2.4 KB, ~3.3 KB as base64. The no-external-assets invariant is about
+# where bytes come FROM, not what format they are — a data: URI ships inside the
+# page, makes no request, and beacons to nobody. The plan's U2 step 1 said
+# "inline SVG, never an <img src>"; this is an <img> whose src is a data: URI,
+# which honours the invariant's purpose while its letter assumed a vector that
+# does not exist.
+_LOGO_PNG = os.path.join(HERE, "andamio-logo.png")
+LOGO_DATA_URI = (
+    "data:image/png;base64," +
+    base64.b64encode(open(_LOGO_PNG, "rb").read()).decode()
+    if os.path.exists(_LOGO_PNG) else "")
+
+# Holder action order (#101 KTD4/Q1). With no promoted primary, whichever action
+# leads IS the page's primary call to action, so the order is stated here rather
+# than inherited from the accretion order of #71. Download SVG leads: it is
+# present regardless of JS (the copy/share controls ship hidden until their API
+# is confirmed) and it is the artifact itself rather than a pointer to it.
+# add-to-LinkedIn-profile stays last while ORG_ID is unset and the deep link
+# still names the organisation by fallback.
 
 # Share-action config (#71). LinkedIn add-to-profile targets the Andamio Teams
 # org: the numeric organizationId is an external input (a Page admin reads it
@@ -134,18 +175,31 @@ def _share_controls(stem, module_title, course_title, page_url, baked):
               f"&certId={_q(stem)}")
     embed = esc(_embed_snippet(stem))    # HTML-attribute-escaped for data-embed
     embed_wc = esc(_web_component_snippet(stem, module_title, course_title, baked))
-    return f"""<div class="actions" data-slot="share-actions">
+    # NOTE ON ATTRIBUTE ORDER: every new attribute goes BEFORE the data-* hook.
+    # test_progressive_enhancement_buttons_hidden_and_script_present asserts the
+    # literal substrings 'data-share-copy hidden' / 'data-share-web hidden' /
+    # 'data-share-embed data-embed=', so anything inserted between a hook and
+    # `hidden` fails the test with every hook intact. Same for the download
+    # anchor: .github/workflows/ci.yml greps `href="/badges/{{stem}}.svg" download`
+    # against the delivered page, a required check that lives outside this suite.
+    return f"""<p class="glabel" id="holder-actions-label">For the person who earned this</p>
+  <div class="actions" data-slot="share-actions" role="group" aria-labelledby="holder-actions-label">
     <a class="btn" href="/badges/{stem}.svg" download>Download SVG</a>
     <a class="btn" href="/badges/{stem}.png" download>Download PNG</a>
     <button class="btn" type="button" data-share-copy hidden>Copy link</button>
-    <a class="btn" href="{esc(x_url)}" target="_blank" rel="noopener">Share on X</a>
-    <a class="btn" href="{esc(li_share)}" target="_blank" rel="noopener">Share on LinkedIn</a>
     <button class="btn" type="button" data-share-web hidden>Share&hellip;</button>
-    <button class="btn" type="button" data-share-embed data-embed="{embed}" hidden>Copy embed code</button>
-    <button class="btn" type="button" data-share-embed-wc data-embed="{embed_wc}" hidden>Copy web-component embed</button>
+    <a class="btn" href="{esc(li_share)}" target="_blank" rel="noopener">Share on LinkedIn</a>
+    <a class="btn" href="{esc(x_url)}" target="_blank" rel="noopener">Share on X</a>
     <a class="btn" href="{esc(li_add)}" target="_blank" rel="noopener">Add to LinkedIn profile</a>
   </div>
-  <p class="actions-note">{_svg_note(baked)}</p>"""
+  <p class="actions-note">{_svg_note(baked)}</p>
+  <details class="embed-group">
+    <summary><span class="glabel">Embed this badge</span><span class="chev" aria-hidden="true"></span></summary>
+    <div class="actions embed-actions">
+      <button class="btn" type="button" data-share-embed data-embed="{embed}" hidden>Copy embed code</button>
+      <button class="btn" type="button" data-share-embed-wc data-embed="{embed_wc}" hidden>Copy web-component embed</button>
+    </div>
+  </details>"""
 
 
 def _svg_note(baked):
@@ -247,11 +301,10 @@ def _page_html(rec):
     baked, page_url = ctx["baked"], ctx["page_url"]
     desc = _description(course_title, module_title, baked)
 
-    pal = ctx["pal"]
-    deep, ink, raised = pal["deep"], pal["ink"], pal["raised"]
-    prim, prim_lt, sec = pal["prim"], pal["prim_lt"], pal["sec"]
-    bone, slate, hair = pal["bone"], pal["slate"], pal["hair"]
-
+    # The per-course palette no longer feeds this page's chrome (#101 KTD2). It
+    # still feeds the badge artwork, the embed variant and the OG card, so
+    # colors.palette_for stays imported and ctx["pal"] stays populated —
+    # _embed_html reads it.
     card_url = f"{HOST}/badges/{stem}.og.png"      # absolute og:image (#69 card)
     svg_url = f"/badges/{stem}.svg"                 # root-relative badge image
 
@@ -263,7 +316,7 @@ def _page_html(rec):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(module_title)} — {esc(course_title)} · {ISSUER}</title>
 <meta name="description" content="{esc(desc)}">
-<meta name="theme-color" content="{deep}">
+<meta name="theme-color" content="{canon.PAPER}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{ISSUER} Credentials">
 <meta property="og:title" content="{esc(module_title)}">
@@ -278,31 +331,87 @@ def _page_html(rec):
 <meta name="twitter:description" content="{esc(desc)}">
 <meta name="twitter:image" content="{card_url}">
 <style>
-:root{{--deep:{deep};--ink:{ink};--raised:{raised};--prim:{prim};--prim-lt:{prim_lt};--sec:{sec};--bone:{bone};--slate:{slate};--hair:{hair};}}
+{PAGE_FONT_FACE}
+:root{{{canon.root_block()}}}
 *{{box-sizing:border-box;}}
 html,body{{margin:0;}}
-body{{background:radial-gradient(120% 90% at 50% 0%,var(--raised) 0%,var(--ink) 55%,var(--deep) 100%);color:var(--bone);font-family:Archivo,"Helvetica Neue",Arial,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}}
-.card{{width:100%;max-width:560px;text-align:center;}}
-.badge{{width:min(360px,80vw);height:auto;display:block;margin:0 auto 28px;}}
-.eyebrow{{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.28em;color:var(--slate);text-transform:uppercase;margin:0 0 10px;}}
-h1{{font-size:clamp(24px,5vw,34px);font-weight:800;line-height:1.15;margin:0 0 8px;color:var(--bone);}}
-.course{{font-size:16px;color:var(--prim-lt);margin:0 0 4px;}}
-.issuer{{font-size:13px;color:var(--slate);margin:0 0 28px;}}
-.divider{{height:1px;background:var(--hair);border:0;margin:28px auto;max-width:220px;}}
-.verify{{font-size:13px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto;}}
-.verify a{{color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}}
-.verify a:hover{{border-bottom-color:var(--sec);}}
-/* Slots for the share actions (#71) and explainer links (#72). */
+/* [hidden] must beat any author display rule. The four progressive-enhancement
+   controls rely on the UA's [hidden]{{display:none}}, which an author-origin
+   `display` on .btn would silently override — shipping four dead buttons to a
+   no-JS visitor while the markup-only test stays green. Declared first, !important. */
+[hidden]{{display:none!important;}}
+body{{background:var(--paper);color:var(--ink);font-family:{canon.SANS};font-size:15px;line-height:1.55;min-height:100vh;}}
+.nav{{display:flex;align-items:center;gap:10px;padding:0 24px;height:{canon.NAV_CLEARANCE};border-bottom:1px solid var(--rule);}}
+/* Cross-host navigation off the static trust surface, same tab, deliberate
+   (#101 KTD10). The mark is inline SVG, never an <img src>: a logo pulled from
+   another origin would breach the no-external-assets invariant and make every
+   credential view beacon to a host this page's integrity does not cover. */
+.brand{{display:inline-flex;align-items:center;text-decoration:none;}}
+/* The brand mark carries brand orange — a role the canon's accent whitelist
+   permits explicitly ("Brand mark, the single primary CTA, the live pulse dot,
+   the VERIFIED stamp"). It is raster, so it is not a CSS accent: the page's one
+   stylesheet-controlled accent is still the verification tile, and nothing else
+   in this stylesheet paints orange. */
+.mark{{display:block;height:22px;width:auto;}}
+.wrap{{max-width:{canon.MEASURE};margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0;align-items:start;}}
+.specimen{{padding-right:36px;}}
+.detail{{padding-left:36px;border-left:1px solid var(--cell);min-width:0;}}
+.frame{{border:1px solid var(--hairline);}}
+.frame-head{{font-size:13px;font-weight:600;padding:10px 14px;border-bottom:1px solid var(--hairline);}}
+.plate{{background:var(--coral);padding:26px;}}
+.badge{{width:100%;max-width:320px;height:auto;display:block;margin:0 auto;}}
+.frame-cap{{font-size:13px;color:var(--muted);padding:10px 14px;border-top:1px solid var(--hairline);}}
+h1{{font-size:clamp(24px,3.2vw,34px);font-weight:600;line-height:1.15;letter-spacing:{canon.DISPLAY_TRACKING};margin:0 0 6px;}}
+.glabel{{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 8px;}}
+.course{{font-size:16px;margin:0 0 2px;}}
+.issuer{{font-size:13px;color:var(--muted);margin:0 0 22px;}}
+.divider{{height:1px;background:var(--hairline);border:0;margin:22px 0;}}
+.verify{{font-size:13px;line-height:1.6;color:var(--muted);max-width:56ch;margin:0;}}
+.verify a{{color:var(--blue);text-decoration:none;border-bottom:1px solid transparent;}}
+.verify a:hover{{border-bottom-color:var(--blue);}}
+/* The course id, adjacent to the inline verification citation and labelled with
+   the job it does — the value the explainer asks a reader to match on-chain.
+   A sibling of .verify, never inside it: _slot() splits to the first </p>. */
+.cid{{font-size:12px;color:var(--muted);max-width:56ch;margin:10px 0 0;}}
+.cid code{{font-family:{canon.MONO};overflow-wrap:anywhere;color:var(--ink);}}
 .actions:empty,.explainers:empty{{display:none;}}
-.actions{{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 12px;}}
-.btn{{appearance:none;cursor:pointer;font:inherit;font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--bone);text-decoration:none;}}
-.btn:hover{{border-color:var(--sec);color:var(--sec);}}
-.actions-note{{font-size:12px;line-height:1.6;color:var(--slate);max-width:44ch;margin:0 auto 22px;}}
-.actions-note strong{{color:var(--bone);}}
-.explainers{{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin:0 0 4px;}}
-.explainer{{font-size:13px;color:var(--sec);text-decoration:none;border-bottom:1px solid transparent;}}
-.explainer:hover{{border-bottom-color:var(--sec);}}
-a{{color:var(--sec);}}
+.actions{{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 12px;}}
+.btn{{appearance:none;cursor:pointer;font:inherit;font-size:13px;display:inline-flex;align-items:center;padding:9px 14px;border:1px solid var(--cell);background:var(--paper);color:var(--ink);text-decoration:none;}}
+.btn:hover{{border-color:var(--ink);}}
+.actions-note{{font-size:12px;line-height:1.6;color:var(--muted);max-width:56ch;margin:0 0 18px;}}
+.actions-note strong{{color:var(--ink);}}
+/* Collapse the disclosure when both its controls are hidden. :empty cannot do
+   this — the buttons are always emitted as children and merely `hidden` — and
+   revealing it from JS would mean editing _SHARE_SCRIPT, which is frozen. */
+.embed-group:not(:has(button:not([hidden]))){{display:none;}}
+.embed-group{{border-top:1px solid var(--hairline);padding-top:14px;}}
+.embed-group summary{{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;}}
+.embed-group summary::-webkit-details-marker{{display:none;}}
+.embed-group summary .glabel{{margin:0;}}
+.chev{{width:8px;height:8px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s;}}
+.embed-group[open] .chev{{transform:rotate(-135deg);}}
+.embed-actions{{margin:12px 0 0;}}
+.explainers{{display:flex;flex-wrap:wrap;gap:18px;margin:18px 0 0;}}
+.explainer{{font-size:13px;color:var(--blue);text-decoration:none;border-bottom:1px solid transparent;display:inline-flex;align-items:center;gap:8px;}}
+.explainer:hover{{border-bottom-color:var(--blue);}}
+/* The page's ONE orange accent (#101 KTD9), on the verification route — the
+   stranger's whole reason for being here. It marks the PATH, never the
+   conclusion: nothing here may read as "a signature was checked". Carried by a
+   non-text tile, never text colour — brand orange on paper is ~2.8:1 and fails
+   AA, and the canon reserves links for blue. */
+.tile{{width:8px;height:8px;background:var(--orange);flex:none;}}
+a{{color:var(--blue);}}
+:focus-visible{{outline:2px solid var(--ink);outline-offset:3px;}}
+@media (max-width:900px){{
+  .wrap{{grid-template-columns:1fr;padding:20px 18px 32px;}}
+  .specimen{{padding-right:0;}}
+  .detail{{padding-left:0;border-left:0;border-top:1px solid var(--cell);margin-top:22px;padding-top:22px;}}
+  /* Cap the specimen so the first holder action stays above the fold on a
+     phone — the holder's most likely visit, and the one viewport R3 omits. */
+  .badge{{max-width:200px;}}
+  .plate{{padding:16px;}}
+  .btn{{min-height:44px;}}
+}}
 </style>
 </head>"""
 
@@ -310,23 +419,39 @@ a{{color:var(--sec);}}
     # wording-gated verify note. #71/#72 attach into the marked slots.
     body = f"""
 <body>
-<main class="card">
-  <img class="badge" src="{svg_url}" width="360" height="360"
-       alt="{esc(module_title)} — {esc(course_title)} credential badge"
-       loading="eager" decoding="async">
-  <p class="eyebrow">Credential</p>
-  <h1>{esc(module_title)}</h1>
-  <p class="course">{esc(course_title)}</p>
-  <p class="issuer">Issued by {ISSUER}</p>
+<header class="nav">
+  <a class="brand" href="https://www.andamio.io">
+    <img class="mark" src="{LOGO_DATA_URI}" width="120" height="22" alt="{ISSUER}"
+         decoding="async"></a>
+</header>
+<main class="wrap">
+  <section class="specimen">
+    <div class="frame">
+      <div class="frame-head">Credential</div>
+      <div class="plate">
+        <img class="badge" src="{svg_url}" width="360" height="360"
+             alt="{esc(module_title)} — {esc(course_title)} credential badge"
+             loading="eager" decoding="async">
+      </div>
+      <div class="frame-cap">{esc(course_title)}</div>
+    </div>
+  </section>
+  <section class="detail">
+    <h1>{esc(module_title)}</h1>
+    <p class="course">{esc(course_title)}</p>
+    <p class="issuer">Issued by {ISSUER}</p>
 
   {_share_controls(stem, module_title, course_title, page_url, baked)}
   <div class="explainers" data-slot="explainers">
     <a class="explainer" href="/badges/how-to-share">How do I share this?</a>
-    <a class="explainer" href="/badges/how-to-check">How do I check this?</a>
+    <a class="explainer" href="/badges/how-to-check"><span class="tile"></span>How do I check this?</a>
   </div>
 
   <hr class="divider">
   <p class="verify">{_verify_note(baked)}</p>
+  <p class="cid">Course id — the value that explainer asks you to match on-chain:
+    <code>{esc(ctx["course_id"])}</code></p>
+  </section>
 </main>
 {_SHARE_SCRIPT}
 </body>

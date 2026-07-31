@@ -23,6 +23,7 @@ BADGES = os.path.join(REPO, "badges")
 sys.path.insert(0, GEN)
 
 import page      # noqa: E402
+import canon     # noqa: E402
 import colors    # noqa: E402
 import build     # noqa: E402
 
@@ -84,11 +85,44 @@ def test_badge_and_titles_rendered():
     print("  ✅ badge image + credential/course titles present")
 
 
-def test_theme_color_matches_palette():
+def test_theme_color_is_canon_paper_not_per_course():
+    """Supersedes test_theme_color_matches_palette (#101 U1 step 7). The page
+    ground is canon paper for every credential now — the per-course palette
+    stopped feeding page chrome (KTD2) — so theme-color is a constant, and two
+    credentials with different course_ids must agree on it."""
     html = page._page_html(REC)
-    pal = colors.palette_for(REC["course_id"])
-    assert f'name="theme-color" content="{pal["deep"]}"' in html
-    print("  ✅ theme-color derives from the badge palette")
+    assert f'name="theme-color" content="{canon.PAPER}"' in html
+    other = dict(REC, course_id="b" * 56)
+    assert f'name="theme-color" content="{canon.PAPER}"' in page._page_html(other)
+    # and it is no longer the palette's value
+    assert f'name="theme-color" content="{colors.palette_for(REC["course_id"])["deep"]}"' not in html
+    print("  ✅ theme-color is canon paper, identical across credentials")
+
+
+def test_page_chrome_is_course_independent():
+    """KTD2's actual contract: nothing in the page's own chrome varies by course.
+    The badge ARTWORK still does (it is a different artifact), and the embed
+    variant still reads the palette — so ctx must keep carrying it."""
+    a = page._page_html(REC)
+    b = page._page_html(dict(REC, course_id="c" * 56))
+    for pal_key in ("deep", "raised", "prim", "bone", "slate", "hair"):
+        v = colors.palette_for(REC["course_id"])[pal_key]
+        assert v not in a, f"per-course {pal_key} ({v}) still reaches page chrome"
+    assert "--paper:" in a and "--paper:" in b
+    assert page._ctx(REC)["pal"], "ctx must keep the palette — _embed_html reads it"
+    print("  ✅ page chrome is course-independent; palette still available to the embed")
+
+
+def test_canon_tokens_are_imported_not_inlined():
+    """The canon literals live in generator/canon.py so the deferred explainer,
+    holder-viewer and OG-card restyles import one copy instead of each carrying
+    its own transcription with its own drift clock."""
+    src = open(os.path.join(GEN, "page.py"), encoding="utf-8").read()
+    for literal in (canon.PAPER, canon.ORANGE, canon.BLUE, canon.CORAL_TINT):
+        assert literal not in src, (
+            f"canon literal {literal} is inlined in page.py — import it from canon.py")
+    assert "import canon" in src
+    print("  ✅ canon values imported from canon.py, never inlined")
 
 
 def test_html_escaping():
@@ -484,6 +518,214 @@ def test_embed_badge_image_is_horizontally_centred():
     # ...and must not regress the anchor centring that already works.
     assert "align-items:center" in html, "embed body must keep flex cross-axis centring"
     print("  ✅ embed badge image centres horizontally (auto margin, sizing intact)")
+
+
+def test_no_legacy_type_stack_or_dark_chrome():
+    html = page._page_html(REC)
+    for gone in ("Archivo", "Spline Sans Mono", "radial-gradient", "border-radius"):
+        assert gone not in html, f"legacy chrome survived: {gone}"
+    assert '"Inter"' in html and '"JetBrains Mono"' in html
+    print("  ✅ canon type stack; no legacy dark chrome, no radius")
+
+
+def test_canon_fonts_embedded_within_ceiling():
+    """KTD7: the page subset-embeds the canon variable faces, under an 80 KB
+    per-page ceiling, from its OWN artifact — never gen.FONT_FACE, which feeds
+    the signed badge SVGs."""
+    assert page.PAGE_FONT_FACE, "page_fonts.css missing — run embed_fonts.py"
+    assert "@font-face" in page.PAGE_FONT_FACE
+    kb = len(page.PAGE_FONT_FACE.encode()) / 1024
+    assert kb <= 80, f"embedded faces are {kb:.0f} KB, over the 80 KB ceiling"
+    # Ignore comments: page.py names gen.FONT_FACE in prose to explain why it
+    # does NOT use it, and that explanation is worth keeping.
+    src = open(os.path.join(GEN, "page.py"), encoding="utf-8").read()
+    code = "\n".join(l for l in src.splitlines() if not l.lstrip().startswith("#"))
+    assert "gen.FONT_FACE" not in code, \
+        "page.py must not read the shared fonts.css constant"
+    assert '"page_fonts.css"' in code, "page.py must read its own font artifact"
+    print(f"  ✅ canon faces embedded ({kb:.0f} KB, ceiling 80 KB), isolated from fonts.css")
+
+
+def test_shared_fonts_css_untouched_by_page_path():
+    """The KTD7 isolation guard. generator/fonts.css is inlined by the badge
+    SVGs (signed artifacts), the OG cards, the explainers and the holder viewer.
+    Nothing on the page path may write it."""
+    ef = open(os.path.join(GEN, "embed_fonts.py"), encoding="utf-8").read()
+    assert '"page": (PAGE_CSS_URL, "page_fonts.css"' in ef, "page target missing"
+    assert os.path.exists(os.path.join(GEN, "page_fonts.lock.json")), \
+        "font integrity manifest missing — the fetch must be hash-pinned"
+    print("  ✅ page fonts are a separate artifact with a pinned manifest")
+
+
+def test_no_foreign_origin_subresource():
+    """The load-bearing no-external-assets invariant, asserted for the first
+    time. Scoped to SUBRESOURCES: the absolute og:image on our own host and the
+    outbound <a href> targets (X, LinkedIn, andamio.io) are not subresources."""
+    html = page._page_html(REC)
+    assert "<link" not in html, "external stylesheet/link on a self-contained page"
+    assert "@import" not in html
+    for m in re.finditer(r'src="([^"]+)"', html):
+        v = m.group(1)
+        assert not re.match(r"https?://", v), f"foreign-origin src: {v}"
+    for m in re.finditer(r"url\(([^)]+)\)", html):
+        v = m.group(1).strip("'\"")
+        assert v.startswith("data:"), f"foreign-origin url(): {v[:40]}"
+    print("  ✅ no foreign-origin subresource (page stays self-contained)")
+
+
+def test_hidden_beats_author_display():
+    """The 44px control minimum forces a `display` onto .btn, and an
+    author-origin display beats the UA's [hidden]{display:none}. Without an
+    explicit override a no-JS visitor sees four dead buttons while the
+    markup-only progressive-enhancement test stays green."""
+    html = page._page_html(REC)
+    assert "[hidden]{display:none!important;}" in html
+    assert html.index("[hidden]{display:none!important;}") < html.index(".btn{"), \
+        "[hidden] override must precede the .btn display rule"
+    print("  ✅ [hidden] overrides author display rules")
+
+
+def test_embed_disclosure_collapses_when_controls_hidden():
+    """:empty cannot express this — the buttons are always emitted and merely
+    hidden — and revealing from JS would mean editing the frozen _SHARE_SCRIPT."""
+    html = page._page_html(REC)
+    assert ".embed-group:not(:has(button:not([hidden])))" in html
+    assert "<details class=\"embed-group\">" in html and "<summary>" in html
+    print("  ✅ embed disclosure collapses via :has() when both controls are hidden")
+
+
+def test_holder_action_order_is_the_stated_order():
+    """#101 Q1. With no promoted primary, whichever action leads IS the primary
+    call to action, so the order is a stated decision, not accretion order."""
+    html = page._page_html(REC)
+    order = ["Download SVG", "Download PNG", "Copy link", "Share&hellip;",
+             "Share on LinkedIn", "Share on X", "Add to LinkedIn profile"]
+    pos = [html.index(label) for label in order]
+    assert pos == sorted(pos), f"holder actions out of stated order: {order}"
+    # the two embed controls live behind the disclosure, after every holder action
+    assert html.index("Copy embed code") > pos[-1]
+    print("  ✅ holder actions in the stated order; embed controls behind them")
+
+
+def test_single_css_orange_accent_on_verification_route_as_non_text_mark():
+    """KTD9, restated honestly now that the real brand mark is in the nav.
+
+    The mark carries brand orange, and the canon's accent whitelist permits
+    exactly that role ("Brand mark, the single primary CTA, the live pulse dot,
+    the VERIFIED stamp"). But it is a raster, so it cannot be caught by counting
+    hex literals — a test that only counted `#ff6b35` would pass while the page
+    showed two orange marks, which is a test lying by omission.
+
+    So the contract is stated in the terms that are actually checkable: the
+    stylesheet paints orange exactly once, on the verification affordance, as a
+    non-text tile. Brand orange on paper is ~2.8:1 and fails AA for text, and the
+    canon reserves links for blue — so the accent may never be text colour."""
+    html = page._page_html(REC)
+    css = html.split("<style>")[1].split("</style>")[0]
+    assert css.count(canon.ORANGE) == 1, \
+        "the stylesheet must define brand orange exactly once (the --orange token)"
+    assert css.count("var(--orange)") == 1, \
+        "exactly one rule may paint the accent"
+    assert ".tile{width:8px;height:8px;background:var(--orange)" in css, \
+        "the one accent rule must be the non-text tile"
+    assert '<a class="explainer" href="/badges/how-to-check"><span class="tile">' in html
+    assert f"color:{canon.ORANGE}" not in html and "color:var(--orange)" not in css, \
+        "the accent must never be text colour"
+    print("  ✅ one CSS accent, on the verification route, as a non-text mark; "
+          "brand mark is the canon's own whitelisted orange role")
+
+
+def test_no_text_uses_ink_below_muted():
+    """On white, ink .45 computes to 3.16:1 and fails AA for normal text; .60
+    gives 5.25:1. Steps below .60 are for rules, hairlines and non-text marks."""
+    html = page._page_html(REC)
+    for decl in re.findall(r"color:var\(--(\w+)\)", html):
+        assert decl not in ("faint", "ghost", "cell", "hairline", "grid"), \
+            f"text colour uses sub-AA ink step --{decl}"
+    print("  ✅ no text-bearing rule uses an ink alpha below .60")
+
+
+def test_nav_band_carries_the_brand_mark_inlined():
+    """The mark is the real Andamio logo, inlined as a data: URI.
+
+    No vector form of it exists — every "*.svg" logo in the landing repo is a
+    base64 PNG wrapped in <svg> — so the plan's "inline SVG, never an <img src>"
+    assumed an asset that isn't there. What that clause was actually protecting
+    is the no-external-assets invariant, and a data: URI satisfies it: the bytes
+    ship inside the page, make no request, and beacon to nobody. The assertion
+    that matters is therefore the ORIGIN of the src, not its element type."""
+    html = page._page_html(REC)
+    brand = html.split('class="brand"')[1].split("</a>")[0]
+    assert '<a class="brand" href="https://www.andamio.io">' in html
+    assert 'src="data:image/png;base64,' in brand, "mark must be inlined, not fetched"
+    assert "http" not in brand.split('src="')[1].split('"')[0], \
+        "mark must never load from another origin"
+    assert f'alt="{page.ISSUER}"' in brand, "the mark is the accessible name of the link"
+    assert page.LOGO_DATA_URI and len(page.LOGO_DATA_URI) < 8 * 1024, \
+        "inlined mark should stay small — it ships on all 58 pages"
+    print("  ✅ nav band: real brand mark inlined as data: URI, links to andamio.io")
+
+
+def test_two_column_layout_with_single_column_collapse():
+    html = page._page_html(REC)
+    assert "grid-template-columns:minmax(0,5fr) minmax(0,7fr)" in html
+    assert "@media (max-width:900px)" in html
+    assert "grid-template-columns:1fr" in html
+    assert "min-height:44px" in html, "44px control minimum missing below the breakpoint"
+    assert ".badge{{max-width:200px;}}".replace("{{", "{").replace("}}", "}") in html, \
+        "specimen must be capped below the breakpoint (fold guard)"
+    print("  ✅ two-column grid, single-column collapse, capped specimen, 44px controls")
+
+
+def test_course_id_shown_in_full_and_slt_hash_is_not():
+    """KTD8. One identifier, labelled with the job it does, wrapping, never
+    truncated — and rendered as a SIBLING of .verify, never inside it (_slot
+    splits to the first </p>)."""
+    html = page._page_html(REC)
+    assert REC["course_id"] in html
+    assert "match on-chain" in html
+    assert "overflow-wrap:anywhere" in html
+    assert "text-overflow" not in html and "white-space:nowrap" not in html
+    # slt_hash stays in URLs and the stem (expected); what it must not be is
+    # rendered TEXT the reader is invited to act on. Strip tags and check.
+    visible = re.sub(r"<[^>]+>", " ", html.split("<body>")[1])
+    assert REC["slt_hash"] not in visible, "slt_hash must not render as visible text"
+    assert REC["course_id"] in visible, "course id must render as visible text"
+    verify_slot = html.split('<p class="verify">')[1].split("</p>")[0]
+    assert REC["course_id"] not in verify_slot, \
+        "course id must be a sibling of .verify, not inside its wording-gated slot"
+    print("  ✅ course id in full, labelled, wrapping, outside the .verify slot")
+
+
+def test_no_holder_identity_rendered():
+    """KTD5 — this page is keyed (course_id, slt_hash) and resolves no holder."""
+    html = page._page_html(REC)
+    for forbidden in ("HOLDER", "alias", "Held by"):
+        assert forbidden not in html, f"holder identity leaked: {forbidden}"
+    print("  ✅ no holder identity on the class page")
+
+
+def test_issuer_line_unchanged():
+    """Guard that the restyle did not quietly absorb product-circle#181."""
+    assert f"Issued by {page.ISSUER}" in page._page_html(REC)
+    print("  ✅ issuer line still reads 'Issued by Andamio'")
+
+
+def test_focus_visible_present_and_never_suppressed():
+    html = page._page_html(REC)
+    assert ":focus-visible{outline:" in html
+    assert "outline:none" not in html
+    print("  ✅ visible focus state; outline never suppressed")
+
+
+def test_embed_variant_untouched_by_the_restyle():
+    """KTD6. The embed renders inside third-party pages; this plan does not
+    restyle it, and it must still read the per-course palette."""
+    e = page._embed_html(REC)
+    pal = colors.palette_for(REC["course_id"])
+    assert pal["ink"] in e and "Archivo" in e, "embed variant must be unchanged"
+    assert canon.PAPER not in e, "canon chrome leaked into the embed variant"
+    print("  ✅ embed variant unchanged (still per-course, still Archivo)")
 
 
 def test_main_output_byte_identical_to_committed_pages():

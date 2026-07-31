@@ -52,6 +52,11 @@ spike/screencast-script.md
 generator/__pycache__/
 *.pyc
 
+# Font-subsetting venv (generator/embed_fonts.py needs fonttools + brotli; its
+# docstring prescribes exactly this). Build-time only — the OUTPUT (fonts.css,
+# page_fonts.css and their integrity manifests) is committed, the toolchain is not.
+.fontvenv/
+
 # OG card composition intermediates (imaging/og.py -> temp SVGs); only the
 # rasterized badges/*.og.png is committed.
 imaging/.og-build/
