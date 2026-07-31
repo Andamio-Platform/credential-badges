@@ -28,7 +28,7 @@ achievable at all in this pass.**
 
 | Plan state | Achievable now? | Mechanism / reason |
 |---|---|---|
-| `anchored+signature-valid` | **No** | Requires verifying an `eddsa-rdfc-2022` Data Integrity proof, which requires JSON-LD expansion + RDFC (URDNA2015) canonicalization. Not implementable in-browser without vendoring a large JSON-LD/RDF-canonicalization stack into the served allowlist. The correct home is a server-side verify endpoint on `credential-badges-issuer`, which is gated on the unclosed Phase 2 ops gate. **Deferred — see [Why signature validity is not achievable here](#why-signature-validity-is-not-achievable-here).** |
+| `anchored+signature-valid` | **No** | Requires verifying an `eddsa-rdfc-2022` Data Integrity proof, which requires JSON-LD expansion + RDFC (URDNA2015) canonicalization. Not implementable in-browser without vendoring a large JSON-LD/RDF-canonicalization stack into the served allowlist. The correct home is a server-side verify endpoint on `credential-badges-issuer` (which is deployed and live — the ops gate closed 2026-07-23; the remaining gate is a trust-surface review, not infrastructure). **Deferred — see [Why signature validity is not achievable here](#why-signature-validity-is-not-achievable-here).** |
 | `anchored+signature-unavailable` | **Yes** | Already the substance of today's `anchored` / `signed` / `unknown` states. Renamed and re-copied so no label reads as a validity claim. |
 | `not-found` | **Yes — and it is the important gap** | The holder-state read already in flight answers it. `/badges/{stem}/{alias}` is the LinkedIn `certUrl` target — the exact URL an employer opens to ask "does this person hold this credential?" — and today it silently answers a *different* question when the answer is no. |
 | `revoked-signal` | **No — deliberately, per the plan's own rule** | Defined as "claim tx exists but the pair is now absent from the recipient's current global state". Distinguishing that from indexer lag requires a freshness / confirmation-depth signal Andamioscan does not expose, plus the O(index-pages) claim-discovery scan the issuer service runs server-side. The plan mandates `indeterminate`, never `revoked`, when freshness is inconclusive — so the honest client-side output is `not-found` / `indeterminate`. |
@@ -57,11 +57,17 @@ decides `indeterminate`.
 
 ### Why that shape is not available
 
-`credential-badges-issuer` is **built but not deployed**. Its ops gate
-(`issuer-service/README.md`, "The ops gate") lists six items — region decision,
-sign-SA attach, sign-only WIF, LB delta, KMS IAM scope-down, repo variables —
-every one of which is infrastructure work in the private operations repo, not
-code in this repo. `service-v0.1.0` cannot be tagged until they close. So there
+> **CORRECTION (2026-07-28, post-merge).** This section was written against a
+> stale `issuer-service/README.md`, which still framed the ops gate as a
+> precondition for tagging. **The ops gate is CLOSED and the service is live** —
+> `service-v0.1.1` deployed 2026-07-23; `/credentials/*` returns 200 today. The
+> conclusion below that a server-side verify endpoint is unavailable is therefore
+> **void on the infrastructure ground**. What still stands is the trust-surface
+> argument: adding a public route to the one process holding KMS sign permission
+> is a deliberate decision, not a free one. See [#87](https://github.com/Andamio-Platform/credential-badges/issues/87)-adjacent discussion and the corrected README.
+
+`credential-badges-issuer` was, at the time of writing, believed built but not
+deployed. So there
 is no server that can render a verification view today.
 
 What *is* deployed is the static nginx host plus the render service. The v1.2
@@ -166,8 +172,10 @@ integrity-pinned document loader that performs zero network fetches. A
 `GET /verify` route there is a small, well-understood addition. It is **not**
 built in this pass because:
 
-- The service cannot be deployed until the Phase 2 ops gate closes, so the
-  endpoint would be dead code behind an LB route that does not exist.
+- ~~The service cannot be deployed until the Phase 2 ops gate closes, so the
+  endpoint would be dead code behind an LB route that does not exist.~~
+  **Void — see the correction above.** The gate closed 2026-07-23 and the route
+  is live; the endpoint would not be dead code.
 - `issuer-service/README.md` states the service registers **no** route outside
   `/credentials/*` (plan Unit 4). Adding a public route to the one process that
   will ever hold KMS sign permission is a trust-surface change that belongs with
@@ -298,9 +306,10 @@ generator; the verifier-guidance state-surface mapping; CI smoke assertions.
 
 - **Client-side Data Integrity verification.** See
   [Why signature validity is not achievable here](#why-signature-validity-is-not-achievable-here).
-- **A `GET /verify` endpoint on `credential-badges-issuer`.** Designed above;
-  blocked on the Phase 2 ops gate and on a trust-surface review of adding a
-  public route to the sign-permissioned process.
+- **A `GET /verify` endpoint on `credential-badges-issuer`.** Designed above.
+  **Not** blocked on the ops gate — that closed 2026-07-23 and the service is
+  live. Blocked only on a trust-surface review of adding a public route to the
+  sign-permissioned process.
 - **`revoked-signal`.** KTD-2. Blocked on an upstream freshness /
   confirmation-depth signal and a by-holder claim-event index, neither of which
   exists.
@@ -388,8 +397,9 @@ generator; the verifier-guidance state-surface mapping; CI smoke assertions.
 
 ## Dependencies
 
-- **Phase 2 ops gate** (6 items, private ops repo) — blocks the issuer service
-  deploy, and therefore blocks `anchored+signature-valid` by any mechanism.
+- ~~**Phase 2 ops gate** (6 items, private ops repo)~~ — **CLOSED 2026-07-23**;
+  the issuer service is deployed and `/credentials/*` is live. This is no longer
+  a dependency of `anchored+signature-valid`.
 - **Upstream Andamioscan**: a by-holder or by-course credential-claim index, and
   a response freshness / confirmation-depth signal. Together these unblock the
   claim-tx explorer link and `revoked-signal`. Neither exists today.
