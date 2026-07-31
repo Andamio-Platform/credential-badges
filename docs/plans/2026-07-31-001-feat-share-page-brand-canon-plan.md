@@ -39,7 +39,7 @@ Underneath that, the page has no information hierarchy. Seven of its nine action
 | ID | Requirement |
 |---|---|
 | R1 | The page draws colour, spacing and component treatment from the Andamio canon — paper/ink neutrals, square containers, canon hairlines. Type conformance is bounded by the font-delivery decision in KTD7 |
-| R2 | The accent discipline holds: orange appears only in the canon's whitelisted roles — brand mark, a single primary action, live-pulse dot, verified stamp — and never on headings, body, labels or decoration. Blue is never a fill |
+| R2 | The accent discipline holds: orange appears only in the canon's whitelisted roles — brand mark, a single primary action, live-pulse dot, verified stamp — plus one role this page adds deliberately, the verification affordance (KTD9) — and never on headings, body, labels or decoration. The accent is always carried by a non-text mark, never by text colour (KTD9). Blue is never a fill |
 | R3 | A holder landing on the page sees the credential and one obvious next step without scrolling, at 1440×900 and 1280×800 |
 | R4 | Holder actions and developer embed actions are visibly and programmatically separate groups, with the embed group not competing for attention |
 | R5 | The layout uses available width rather than one narrow centred column, and collapses to a single column below 900px |
@@ -70,8 +70,8 @@ Build to the code. The reference mockup implements both retired treatments and i
 
 A per-course page accent cannot coexist with R2 — the canon has one paper per theme and a fixed accent whitelist. The landing's `.sys-light` forced-light island, used for its own badge specimen, is the established precedent for rendering a credential on a light plate.
 
-**KTD3 — Colour values are transcribed as literals from the canon's `:root` block, and the page is light-only.**
-There is no shared token package (`@andamio/tokens` is deferred in the guide's §11), so the values are copied from `globals.css`. **Only the light `:root` values are transcribed.** That file also defines a full `.dark` theme (`--sys-paper:#0f1419`, `--sys-orange:#ff7a52`, `--sys-blue:#5b8bff`, `--sys-coral-tint: rgb(255 122 82 / 0.1)`); this page ships **no** `prefers-color-scheme` block and renders light at every system theme, per the `.sys-light` precedent.
+**KTD3 — Colour values are transcribed as literals into one shared leaf module, and the page is light-only.**
+There is no shared token package (`@andamio/tokens` is deferred in the guide's §11), so the values are copied from `globals.css`. **They land in a new `generator/canon.py` leaf, not inline in `_page_html`'s `<style>` f-string** — the deferred OG-card, explainer and holder-viewer restyles all need the same values, and inlining them here would make each of those an independent second transcription with its own drift clock. `gen.py` already demonstrates this pattern for `HOST` / `ISSUER` / `FONT_FACE` ("the shared leaf constants for every page generator … so these live here rather than coupling explainers.py to page.py's heavy surface"), and `colors.palette_for` is single-sourced across five modules the same way. **Only the light `:root` values are transcribed.** That file also defines a full `.dark` theme (`--sys-paper:#0f1419`, `--sys-orange:#ff7a52`, `--sys-blue:#5b8bff`, `--sys-coral-tint: rgb(255 122 82 / 0.1)`); this page ships **no** `prefers-color-scheme` block and renders light at every system theme, per the `.sys-light` precedent.
 
 Two transcription traps: `coralTint` is **not** a tint of brand orange `#FF6B35` (`rgb(255,107,53)`) — the source writes it as `rgb(255 107 74 / 0.055)` and the page emits the equivalent `rgba(255,107,74,.055)`; re-deriving it from the orange shifts the credential plate. And the landing repo still carries a second live blue, `#004E89` "Foundation Blue", in its legacy shadcn layer, so a grep-based transcription can pick up the wrong one. The canon blue is `#2F6BFF`.
 
@@ -87,11 +87,13 @@ The share page is keyed `(course_id, slt_hash)` and does not resolve a holder; t
 **KTD7 — Font delivery is a decision this plan must make, not inherit.**
 Neither Inter nor JetBrains Mono is a system font on macOS, Windows, iOS or Android, and the page loads no webfont — the no-external-assets invariant forbids a `<link>` or an external stylesheet. Declaring the stack alone therefore renders the page in `system-ui` / `ui-monospace` for nearly every visitor, and the canon's display metrics (Inter 600, tracking −0.045em) are calibrated to Inter. Note the current page has the same defect with Archivo, so this is pre-existing, not introduced.
 
-The repo already has the machinery: `generator/embed_fonts.py` builds a base64 `@font-face` block into `generator/fonts.css`, and `gen.py` inlines it for the SVG path. Two options, and U1 must pick one:
-1. **Subset-embed** Inter 600 + JetBrains Mono 400 as base64 `@font-face` in the page `<style>`, extending the existing mechanism. Preserves the one-file invariant; costs page weight across 58 pages.
-2. **Accept the fallback** and narrow R1's type clause to "declares the canon stack".
+The repo already has the machinery: `generator/embed_fonts.py` builds a base64 `@font-face` block into `generator/fonts.css`, and `gen.py` inlines it for the SVG path.
 
-Whichever is chosen goes in the Verification Contract. Do not leave R1 asserting type conformance the page does not deliver.
+**Decision: subset-embed, under a stated byte ceiling.** The page embeds the Inter and JetBrains Mono **variable** faces as base64 `@font-face` — the existing mechanism subsets variable fonts and emits `font-weight:100 900`, so one file per family covers the 400 body and 600 display weights the canon needs. Do **not** enumerate single weights: "Inter 600 + JetBrains Mono 400" describes neither what the mechanism produces nor what the canon requires (the guide specifies "standard 14 / 16 px body, 12–13 px secondary, all Inter"), and embedding display-only would ship a visibly mixed-typeface page that satisfies neither option.
+
+**Ceiling: 80 KB of added `@font-face` per page.** This is not an unmeasured quantity — `generator/fonts.css` is ~56 KB of base64 for two variable families today, and `badges/_holder.html` (~66 KB) and `badges/how-to-check.html` (~62 KB) already ship that weight against a ~9.5 KB share page. If the measured block exceeds the ceiling, **escalate to `#99`** — do not silently fall back and narrow R1 in the same commit. Requirement-narrowing at implementation time makes the acceptance record show R1 green regardless of outcome, and leaves the origin's first done-when item ("Inter / JetBrains Mono") unmet in the dimension a visitor registers fastest.
+
+**The page's font artifact must be isolated from `generator/fonts.css`.** That file is not the page's private asset: `gen.py:23` reads it into the module-level `gen.FONT_FACE`, which is inlined by four generators this plan declares untouched — the badge SVGs (`gen.py:162`), the OG cards (`og.py:66`), the explainer pages (`explainers.py:51`) and the holder viewer (`holder.py:91`). `embed_fonts.py:85` overwrites `fonts.css` wholesale from whatever families its single `CSS_URL` names, so widening that URL pushes Inter and JetBrains Mono into all four. **The badge SVGs are the signed class artifacts** — they carry `proofValue` — so the result would be 58 signed artifacts whose bytes changed for a page-styling reason, a red byte-parity guard across the signed tree, and a tempting "fix" of re-baking 58 credentials that this plan puts out of scope. On a trust surface, unexplained signature churn is the exact signal a verifier is supposed to distrust. See U1 step 3.
 
 **KTD8 — The page displays the course id, labelled as the value the verification explainer asks you to match. It does not display `slt_hash`.**
 The page shows no identifiers today, and `#99`'s constraint about identifiers wrapping is framed as a preservation clause — *"correctness properties the current page gets right"* — not as a request to add content. So a data list of both hashes was never actually asked for, and two facts argue against it: both identifiers already appear in full in the URL of every visit, so a data list duplicates the address bar; and the how-to-check explainer asks a reader to match the **course id** against an on-chain record while `slt_hash` appears nowhere in that procedure.
@@ -103,9 +105,13 @@ R2 is a role whitelist rather than a count, so the brand mark and a stamp are no
 
 - The nav brand mark — the one element that answers neither visitor's question.
 - A "Verified" stamp on the specimen — carries direct R7 exposure. The page does not check a signature and must not imply that it does. This is what the mockup does.
-- **The verification affordance** — the "How this badge is checked" route.
+- **The verification affordance** — the "How do I check this?" route (the nav-level `.explainers` link, **not** the inline `.verify` caveat citation labelled "How this badge is checked"; the two are deliberately distinct anchors and `test_inline_caveat_link_differs_from_explainer_label` keeps them so).
 
 The third marks the *path* without asserting the *conclusion*, so it carries no R7 exposure, and it points at the stranger's entire reason for being on the page. The nav mark renders in ink; there is no stamp.
+
+**The accent is a non-text mark, never text colour.** Brand orange `#FF6B35` on canon paper is ~2.8:1 — below AA for normal text and below the 3:1 floor even for large text — so colouring the link itself would break R10 and U1 step 7 in the same stroke. The canon is stricter still: its own accent policy reserves links for blue ("Wayfinding … and data readouts/links"), and orange for "brand mark, the single primary CTA, the live pulse dot, the VERIFIED stamp. Nothing else." The affordance therefore gets an orange **square tile** beside it — the canon's own mark, matching the Kicker component's 2×2 tile — while the link text stays `ink`/`inkMuted`. This is why R2 names the verification affordance as an added role explicitly rather than leaving the page to violate a whitelist it also quotes.
+
+**The canon Kicker's orange square tile is dropped everywhere else on this page.** The current landing treatment leads its labels with that tile (KTD1), and this page spends its one accent on the verification affordance — so the two new group labels in U3 are Inter 13px semibold sentence case in `inkMuted` with **no** tile. Without this clause an implementer building the labels to KTD1's stated treatment would add two more orange marks and fail both U2's and U3's accent tests.
 
 **KTD10 — The nav wordmark links to `https://www.andamio.io`.**
 A nav band that looks like a nav and is inert is its own small irritation, and the visitor most likely to click a company mark is precisely the stranger asking whether this credential is real. The link is cross-host (this page is served from `credentials.andamio.io`) and opens in the same tab. It is the only outbound link the nav carries.
@@ -153,17 +159,18 @@ At a laptop viewport the two columns sit side by side inside `calc(100svh - nav)
 **Goal:** the page's colour and type come from the canon, and per-course palette no longer reaches the page chrome.
 **Requirements:** R1, R2, R10, KTD7
 **Dependencies:** none
-**Files:** `generator/page.py`, `generator/tests/test_page.py`
+**Files:** `generator/canon.py` (new), `generator/page.py`, `generator/embed_fonts.py`, `generator/tests/test_page.py`, `generator/tests/test_canon_pin.py` (new)
 
 **Approach:**
-1. Replace the `:root` custom-property block in the page `<style>` with the canon light literals per KTD3 — `paper`, `ink`, `rule` (solid ink, full-bleed dividers), the ink alpha ramp (`.60` muted / `.45` faint / `.30` ghost / `.15` cell / `.10` hairline / `.05` grid), `orange`, `blue`, `coralTint`. Record the `landing-page-and-blog` commit ref the values came from in a comment beside them, so drift is detectable by diff.
+1. Create `generator/canon.py` and put the canon light literals there per KTD3 — `paper`, `ink`, `rule` (solid ink, full-bleed dividers), the ink alpha ramp (`.60` muted / `.45` faint / `.30` ghost / `.15` cell / `.10` hairline / `.05` grid), `orange`, `blue`, `coralTint` — plus the `landing-page-and-blog` commit ref the values came from. `page.py` imports them and renders its `:root` block from them; the deferred OG/explainer/holder restyles import the same module rather than re-transcribing. **Pin the block with a sha256, the way this repo pins every other cross-boundary value.** A commit ref in a comment diffs nothing and fails nothing — no test run, no CI job, and no reviewer is prompted when landing changes a hex, so the stated drift risk would be accepted rather than mitigated. `tools/context-freeze.test.ts` (sha256-pins every published JSON-LD context) and `tools/did-pin.test.ts` (pins the committed DID key to KMS) are the house pattern, both adopted after `docs/solutions/conventions/never-mutate-published-jsonld-context.md` recorded a silent third-party breakage from exactly this shape of drift.
 2. Drop the radial-gradient body background and the `--deep/--ink/--raised/--prim/--sec/--bone/--slate/--hair` bindings **from the page path only**. Leave `colors.palette_for` imported and `_ctx`'s `pal` entry intact — `_embed_html` reads it (KTD2, KTD6).
-3. Resolve KTD7 and implement it. If embedding, extend `generator/embed_fonts.py`; if accepting fallback, say so in a comment and narrow R1.
-4. Set the display treatment: Inter weight 600, tracking −0.045em. Labels are Inter 13px semibold sentence case per KTD1 — **not** the retired mono-uppercase kicker.
-5. Remove `border-radius` from panels, plates, frames, buttons and inputs. The canon squares its *containers*; it does not ban radius outright (its live-pulse dot is a circle).
-6. Set `<meta name="theme-color">` to the canon paper value. This replaces the per-course binding and supersedes `test_theme_color_matches_palette`.
-7. **Text may only use `ink` or `inkMuted` (.60).** The `.45`, `.30`, `.15`, `.10` and `.05` steps are for rules, hairlines and non-text marks — on white, `.45` lands near 3.5:1 and fails AA. The reference mockup gets this wrong, setting 10–11px labels in `inkFaint`.
-8. **Preserve the class hooks the tests split on.** The verification note stays `<p class="verify">` and the download note stays `<p class="actions-note">` — single class token, `<p>` element, no added attributes. `generator/tests/test_page.py::_slot` does `html.split(f'<p class="{cls}">')[1]`, so a class rename raises IndexError with the copy untouched.
+3. Implement KTD7's subset-embed under the 80 KB ceiling. **Write the page's faces to a new `generator/page_fonts.css`, read only by `page.py`** — parameterize `embed_fonts.py`'s output path and family list rather than widening its `CSS_URL`, which would overwrite the shared `generator/fonts.css` and mutate the 58 signed badge SVGs plus the OG cards, explainers and holder viewer (KTD7). `generator/fonts.css` must come out byte-unchanged. **Pin the fetch before baking:** `embed_fonts.py:38` shells out to `curl -s -m 30` with no integrity check and no `returncode` check, so today a substituted or MITM'd upstream response would be base64-baked into 58 forever-public credential pages as an opaque blob no reviewer will diff — and U5 would then re-baseline the golden byte-parity test around it, converting the repo's only drift detector into a ratifier of whatever the fetch returned. A silent curl failure has the mirror-image effect: an empty face committed and served forever. Record each fetched `.woff2`'s sha256 in a checked-in manifest, assert `returncode == 0` and non-empty output, and fail the build on mismatch.
+4. **Emit `[hidden]{display:none!important;}` in the page `<style>`, before any rule that gives buttons or anchors a `display` value.** The four progressive-enhancement controls rely on the UA's `[hidden]{display:none}` today only because `.btn` declares no `display`; U3 step 5's 44px minimum height forces one (`min-height` has no effect on an inline-level `<a>`), and any author-origin `display` beats the UA rule regardless of source order. Without this, a no-JS or no-clipboard visitor sees four dead buttons — the exact failure R8 forbids — while `test_progressive_enhancement_buttons_hidden_and_script_present` stays green, because it asserts markup substrings and never computed style.
+5. Set the display treatment: Inter weight 600, tracking −0.045em. Labels are Inter 13px semibold sentence case per KTD1 — **not** the retired mono-uppercase kicker, and **without** the Kicker component's orange square tile (KTD9).
+6. Remove `border-radius` from panels, plates, frames, buttons and inputs. The canon squares its *containers*; it does not ban radius outright (its live-pulse dot is a circle).
+7. Set `<meta name="theme-color">` to the canon paper value. This replaces the per-course binding and supersedes `test_theme_color_matches_palette`.
+8. **Text may only use `ink` or `inkMuted` (.60).** The `.45`, `.30`, `.15`, `.10` and `.05` steps are for rules, hairlines and non-text marks — on white, `.45` computes to 3.16:1 and fails AA for normal text (`.60` gives 5.25:1 and passes). The reference mockup gets this wrong, setting 10–11px labels in `inkFaint`.
+9. **Preserve the class hooks the tests split on.** The verification note stays `<p class="verify">` and the download note stays `<p class="actions-note">` — single class token, `<p>` element, no added attributes. `generator/tests/test_page.py::_slot` does `html.split(f'<p class="{cls}">')[1]`, so a class rename raises IndexError with the copy untouched.
 
 **Patterns to follow:** the inline-`<style>`-in-an-f-string shape already in `_page_html`; keep every `{{` / `}}` escape correct. Do not introduce an external stylesheet.
 
@@ -172,10 +179,15 @@ At a laptop viewport the two columns sit side by side inside `calc(100svh - nav)
 - `theme-color` is the canon paper value rather than a per-course colour.
 - No panel, plate, frame, button or input rule declares `border-radius`.
 - Neither `Archivo` nor `Spline Sans Mono` appears in page output; the canon stacks do.
-- Whichever KTD7 option was chosen is asserted — an inlined `@font-face` for Inter is present, or a comment records the accepted fallback.
+- An inlined `@font-face` for Inter is present and the added block is within the 80 KB ceiling; the measured figure is recorded in `canon.py`.
+- **`generator/fonts.css` is byte-identical to its committed version, and `test_render_parity.py` passes without regenerating any badge SVG** — the KTD7 isolation guard. The OG-card, explainer and holder-viewer suites pass untouched for the same reason.
+- Every fetched font file matches its pinned sha256; a mismatched or empty fetch fails the build.
 - The blue in link styling is `#2F6BFF`; `#004E89` appears nowhere.
 - `coralTint` renders as `rgba(255,107,74,.055)` exactly — a regression guard against re-derivation from `#FF6B35`.
 - No text-bearing rule uses an ink alpha below `.60`.
+- The canon literal block in `canon.py` matches its sha256 pin; changing a value without updating the pin and the recorded source commit ref is a red test.
+- `[hidden]{display:none!important;}` is present whenever any `.btn` rule declares a `display` value.
+- **A generated page contains no foreign-origin subresource** — no `<link`, no `@import`, and no `src=`/`url(` pointing at a scheme-ful URL other than `data:`. Scoped to subresources, so the absolute `og:image` on our own host and the outbound `<a href>` targets still pass. This is the load-bearing no-external-assets invariant, asserted for the first time: nothing in `generator/tests/` guards it today, and this plan adds the two elements most likely to breach it (a nav brand mark and a webfont). A foreign-origin asset would make every credential view beacon to a host the DID document does not control.
 - `<p class="verify">` and `<p class="actions-note">` survive verbatim; the `_slot`-based wording-gate tests pass unmodified.
 
 ---
@@ -188,19 +200,20 @@ At a laptop viewport the two columns sit side by side inside `calc(100svh - nav)
 **Files:** `generator/page.py`, `generator/tests/test_page.py`
 
 **Approach:**
-1. Add the nav band — brand mark plus wordmark, with a full-bleed `rule` hairline beneath, at the canon's `5rem` clearance. The wordmark links to `https://www.andamio.io` in the same tab (KTD10); note in a comment that this is deliberate cross-host navigation off the static trust surface. **The mark renders in ink, not orange** — the accent belongs to the verification affordance (KTD9).
+1. Add the nav band — brand mark plus wordmark, with a full-bleed `rule` hairline beneath, at the canon's `5rem` clearance. The wordmark links to `https://www.andamio.io` in the same tab (KTD10); note in a comment that this is deliberate cross-host navigation off the static trust surface. **The mark renders in ink, not orange** — the accent belongs to the verification affordance (KTD9). **The mark is inline SVG or CSS-drawn, never an `<img src>`** — a logo pulled from the landing host would breach the no-external-assets invariant and make every credential view beacon to an origin outside this page's own integrity guarantees.
 2. Replace `main.card` (a 560px centred column) with a two-column grid capped at the canon's 1320px measure, with a `cell` hairline between columns. Nav divider uses `rule` (solid), the specimen frame edge uses `hairline` (.10), the inter-column divider uses `cell` (.15).
 3. Left column: the specimen frame — square ink hairline, a header row, the badge image on a `coralTint` plate, a caption row beneath. The badge `<img>` keeps its `width`/`height` attributes and stays horizontally centred. (Note: `#81` fixed the *embed* variant, whose docstring says it mirrors this page's `.badge` rule. Do not label page-side work as an `#81` guard — `test_embed_badge_image_is_horizontally_centred` reads the embed and must stay green untouched.)
 4. Right column, in order: an identity region (U4), an actions region and embed disclosure (U3), the **explainers slot**, then the verify note. The containers are built here; U3 and U4 fill them.
 5. **The explainers slot is a live region this restructure must carry.** `_page_html` renders `<div class="explainers" data-slot="explainers">` with "How do I share this?" and "How do I check this?" — it is not one of the nine actions and it is the stranger's only nav-level route to the verification explainer. Keep the `data-slot="explainers"` marker and both links as direct children with no intervening `<div>`: `test_explainer_links_present` splits on that marker and asserts an `<a ` inside. Keep it visually separated from the inline caveat link, whose label is deliberately different (`test_inline_caveat_link_differs_from_explainer_label`).
-6. **The verification affordance carries the page's single orange accent** (KTD9) — applied to the "How do I check this?" route, not to the stamp and not to the nav mark. Mark the path, never the conclusion: no treatment here may read as an assertion that a signature was checked (R7).
-7. Add the single-column collapse below 900px, specimen first.
+6. **The verification affordance carries the page's single orange accent** (KTD9) — an orange square tile beside the nav-level "How do I check this?" link, with the link's own text in `ink`/`inkMuted`. Not on the inline `.verify` caveat citation, not on a stamp, not on the nav mark. Mark the path, never the conclusion: no treatment here may read as an assertion that a signature was checked (R7).
+7. Add the single-column collapse below 900px, specimen first. **Cap the specimen frame's height below the breakpoint** so the first holder action stays reachable without scrolling — a full-height specimen leading the stack pushes every action below the fold on a phone, which is the holder's most likely visit and the one viewport R3 does not cover.
 
-**Execution note:** the without-scrolling claim in R3 is the part most likely to be wrong in practice — a unit test can assert the CSS is present but not that the content fits inside it. Generate a page and check it at 1440×900 and 1280×800 before considering this unit done. Also check the 900px-and-below stack: leading with a full specimen frame can push every action below the fold on a phone, which is the holder's most likely visit.
+**Execution note:** the without-scrolling claim in R3 is the part most likely to be wrong in practice — a unit test can assert the CSS is present but not that the content fits inside it, and **this repo has no tooling that could**: the only rasterizer is `imaging/` (resvg), which renders SVG, not HTML/CSS layout, and there is no headless browser anywhere in the tree. Generate a page and check it by eye at 1440×900 and 1280×800 before considering this unit done, and again on a phone-width viewport for the stacked case. Treat this as a permanent human gate, not a temporary gap — nothing detects a regression in any of the 58 pages after U5 re-baselines them.
 
 **Test scenarios:**
-- A generated page contains the nav band, the wordmark links to `https://www.andamio.io`, and the mark is not orange.
-- The orange accent appears on the verification affordance and nowhere else on the page.
+- A generated page contains the nav band, the wordmark links to `https://www.andamio.io`, and the mark is not orange and is not an `<img src>`.
+- The orange accent appears on the verification affordance and nowhere else on the page, and it is carried by a non-text mark — no rule sets an anchor's text `color` to the canon orange.
+- The specimen frame declares a height cap inside the `max-width: 900px` query.
 - The badge `<img>` retains its `width` and `height` attributes and its centring rule.
 - The layout declares a two-column grid and a single-column fallback under a `max-width: 900px` query.
 - Both explainer links are present, the `data-slot="explainers"` marker survives, and its links are direct children — `test_explainer_links_present` passes unmodified.
@@ -217,13 +230,15 @@ At a laptop viewport the two columns sit side by side inside `calc(100svh - nav)
 **Files:** `generator/page.py`, `generator/tests/test_page.py`
 
 **Approach:**
-1. In `_share_controls`, split the single `div.actions` into two regions, each with a visible label that is also programmatically associated with its group. Give both labels and the disclosure summary as verbatim strings; treat them per KTD1 (Inter 13px semibold sentence case, **not** the retired mono kicker the mockup uses). They are new user-facing copy — keep them free of verification claims.
-2. **State the holder-group order and test it.** The current order is the accretion order of `#71`, never designed. KTD4 spends hierarchy on grouping *and* ordering, so this is the half that carries R3's "one obvious next step". Put add-to-LinkedIn-profile last while it still writes the wrong issuing organisation.
+1. In `_share_controls`, split the single `div.actions` into two regions, each with a visible label that is also programmatically associated with its group. Give both labels and the disclosure summary as verbatim strings; treat them per KTD1 (Inter 13px semibold sentence case, **not** the retired mono kicker the mockup uses) and **without the orange square tile** the current landing treatment leads with (KTD9 — the page's one accent is spent on the verification affordance). They are new user-facing copy — keep them free of verification claims.
+2. **State the holder-group order and test it.** The current order is the accretion order of `#71`, never designed. KTD4 spends hierarchy on grouping *and* ordering, so this is the half that carries R3's "one obvious next step". Put add-to-LinkedIn-profile last while it still writes the wrong issuing organisation. **The order itself is Q2 — resolve it before this unit starts, and do not let it be settled by whoever codes the unit.** With no promoted primary, whichever action leads *is* the page's primary call to action; leaving it to implementation makes the most product-consequential choice on the page an unreviewed accident, and gives the "actions appear in the stated order" test nothing authored to check against.
 3. Put the embed group behind a native `<details>`/`<summary>`, default closed. Native, not a JS toggle: anchors must work with JS off, and `_SHARE_SCRIPT` is frozen byte-identical. If the marker is suppressed, replace it with a glyph that changes on `[open]` — the mockup removes the marker without replacing it, so the control gives no feedback that it opened.
-4. **Handle the disclosure's empty state.** Both embed controls ship `hidden` and are revealed only when `navigator.clipboard` exists. Behind a disclosure that degrades *visibly*: the summary invites a click and opens onto nothing. The existing code solves this class of problem with `.actions:empty,.explainers:empty{display:none;}` — carry an equivalent to the new container, or have the disclosure reveal itself alongside its buttons.
+4. **Handle the disclosure's empty state with `:has()`, not `:empty`.** Both embed controls ship `hidden` and are revealed only when `navigator.clipboard` exists, so behind a disclosure the summary invites a click and opens onto nothing. Neither obvious remedy works: `.actions:empty,.explainers:empty{display:none;}` matches only an element with *zero children*, and the two buttons are always emitted as children and merely `hidden` (that cited rule is in fact already vestigial — the test suite records it stopped applying once `#71`/`#72` populated the slots), while revealing the disclosure from JS would mean editing `_SHARE_SCRIPT`, which step 3 freezes. Use `details:not(:has(button:not([hidden]))){display:none;}` — it collapses the group when both controls are hidden and reveals it automatically when the existing script clears `hidden`, leaving `_SHARE_SCRIPT` untouched.
 5. Buttons get a gap, never touching borders — `ButtonRow`, not `Stitch`, per KTD1. Square, `cell` hairline, Inter, no radius. No orange fill on any action. Minimum 44px control height at and below the collapse breakpoint.
 6. Add a visible `:focus-visible` treatment for buttons, anchors and the disclosure summary — an offset outline in ink. The page currently has **no** focus rule at all, only `:hover`, and removing radius makes the UA default ring fit worse. Never `outline:none` without a replacement.
 7. **Preserve every `data-*` hook exactly, including attribute order.** `test_progressive_enhancement_buttons_hidden_and_script_present` asserts the literal substrings `'data-share-copy hidden'`, `'data-share-web hidden'`, and `'data-share-embed data-embed='`. Inserting a `class` or `aria-*` attribute *between* a hook and `hidden` fails the test with every hook intact. Put new attributes **before** the `data-*` hook. Hooks: `data-share-copy`, `data-share-web`, `data-share-embed`, `data-share-embed-wc`, `data-embed`, `data-slot="share-actions"`, `data-slot="explainers"`.
+
+   **A fourth adjacency coupling lives outside the Python suite.** The `docker-build` CI job greps the delivered page for the literal `href="/badges/$STEM.svg" download` (`.github/workflows/ci.yml:199`). Restyling that anchor the obvious way — moving `class` after `href`, or inserting an `aria-*`/`data-*` attribute between `href` and `download` — turns the whole Python suite green while a *required* status check fails. Keep `href` and `download` adjacent and in that order; put any new attribute before `href`.
 8. Keep `_svg_note` attached to the download affordance, making no verification claim, and reading as the class artifact rather than the holder's own (R9).
 
 **Test scenarios:**
@@ -231,8 +246,10 @@ At a laptop viewport the two columns sit side by side inside `calc(100svh - nav)
 - The holder actions appear in the stated order.
 - All four progressive-enhancement controls remain `hidden` — `test_progressive_enhancement_buttons_hidden_and_script_present` passes unmodified, adjacency intact.
 - `_SHARE_SCRIPT` is byte-identical across two credentials — `test_share_script_is_a_constant_no_per_badge_interpolation` passes unmodified.
-- The disclosure is not exposed when both its controls are `hidden`.
-- No action carries an orange accent.
+- The disclosure carries the `:has()`-based collapse rule, so it is not exposed when both its controls are `hidden`.
+- The four progressive-enhancement controls stay visually hidden once `.btn` declares a `display` — assert `[hidden]{display:none!important;}` is present (U1 step 4).
+- The download-SVG anchor keeps `href` and `download` adjacent and in that order, matching the `docker-build` CI grep.
+- No action carries an orange accent, and neither group label carries an orange square tile.
 - A `:focus-visible` rule exists for buttons, anchors and the summary; no rule sets `outline:none` without a replacement.
 - The escaped embed snippets survive attribute context — `test_embed_data_attribute_escaped` and `test_share_encoding_no_attribute_breakout` pass unmodified.
 - All nine actions are present and point at the same URLs as before.
@@ -249,7 +266,7 @@ At a laptop viewport the two columns sit side by side inside `calc(100svh - nav)
 
 **Approach:**
 1. Render the identity block in the right column: issuer line, module title as `<h1>`, course title.
-2. Render the **course id** (56 hex characters, in full) adjacent to the "How this badge is checked" route, labelled as the value that explainer asks a reader to match — not in a standalone data block (KTD8). **Do not render `slt_hash`**; the verification procedure does not use it and it is already in the URL.
+2. Render the **course id** (56 hex characters, in full) adjacent to the inline "How this badge is checked" citation, labelled as the value that explainer asks a reader to match — not in a standalone data block (KTD8). It goes in a **sibling element immediately after** `<p class="verify">`, never inside it: U1 step 9 pins that paragraph to a single class token with no added attributes, and `_slot()` splits to the first `</p>`, so putting the identifier inside would put it in the wording-gate's slice. Interpolate it through `esc()` like every other record-derived field. **Do not render `slt_hash`**; the verification procedure does not use it and it is already in the URL.
 3. Any identifier is mono, `inkMuted`, and wraps with `overflow-wrap:anywhere`. No `text-overflow`, no `white-space:nowrap`, no ellipsis, no slicing, no Python-side truncation anywhere on the page path. These guards apply page-wide, not just to the one identifier now shown — they are the forward guarantee for the identifiers that arrive with the per-holder artifact (R9).
 4. **No holder identity** (KTD5) — no alias, no `HOLDER` row, no per-holder field.
 5. The issuer line stays *"Issued by Andamio"*. Changing it is `Andamio-Platform/product-circle#181` (internal), which is unplanned and carries a data dependency.
@@ -274,29 +291,37 @@ At a laptop viewport the two columns sit side by side inside `calc(100svh - nav)
 
 **Approach:**
 1. `test_main_output_byte_identical_to_committed_pages` **will fail for all 58 pages** by design once U1–U4 land. Re-baseline it by regenerating, never by loosening the assertion. The `.embed.html` variants are regenerated by the same `main()` run and must come out **byte-identical** — that is the KTD6 guard, not a deliverable. Do not use a `badges/*.html` glob: that tree also holds 58 embed variants, `_holder.html`, and the two explainer pages, all out of scope.
-2. Run the generator, commit the regenerated share pages, confirm byte-parity passes.
-3. Confirm the wording-gate suite is green *without modification*: `test_wording_gate`, `test_verifier_class_mentions_stay_qualified`, `test_caveat_appears_once_in_plain_language`, `test_caveat_keeps_its_compatibility_bound`, `test_baked_download_note_makes_no_check_claim`, `test_verifiability_copy_is_baked_aware`, `test_unbaked_copy_never_claims_a_signature_in_any_phrasing`, `test_inline_caveat_link_differs_from_explainer_label`, `test_verify_note_differs_by_baked_state`.
+2. **Pin the page count at 58 and name why it is not 62.** `page.py:384` filters `SKIP_COURSES` (`build.py:27`, the FCB Fan Engagement course) out of a 62-record registry, which is what makes 58. Assert the regenerated count equals 58 so a change in skip-list membership fails loudly instead of silently re-baselining the golden test against a different page set — which would carry newly-unskipped credentials into the served tree inside a restyle diff, where nobody is looking for them.
+3. Run the generator, commit the regenerated share pages, confirm byte-parity passes.
+4. Confirm the wording-gate suite is green *without modification*: `test_wording_gate`, `test_verifier_class_mentions_stay_qualified`, `test_caveat_appears_once_in_plain_language`, `test_caveat_keeps_its_compatibility_bound`, `test_baked_download_note_makes_no_check_claim`, `test_verifiability_copy_is_baked_aware`, `test_unbaked_copy_never_claims_a_signature_in_any_phrasing`, `test_inline_caveat_link_differs_from_explainer_label`, `test_verify_note_differs_by_baked_state`.
 
-**Execution note:** if a wording-gate test fails, distinguish two causes before touching anything. **A copy claim moved** — R7 forbids it; fix the markup, not the test. **Or a class hook moved** — five of those tests reach the copy through `_slot()`, which splits on the literal `<p class="verify">` / `<p class="actions-note">` opening tags, so a class rename raises IndexError with the copy entirely intact. U1 step 8 forbids that rename precisely so this ambiguity cannot arise; if it does, restore the class rather than re-point the helper. `docs/solutions/conventions/never-delete-a-qualifier-that-bounds-a-claim.md` records why the first class of edit is dangerous, and `docs/solutions/runtime-errors/stale-pycache-bytecode-masks-source-edits.md` is worth reading before concluding a source edit had no effect.
+**Execution note:** if a wording-gate test fails, distinguish two causes before touching anything. **A copy claim moved** — R7 forbids it; fix the markup, not the test. **Or a class hook moved** — five of those tests reach the copy through `_slot()`, which splits on the literal `<p class="verify">` / `<p class="actions-note">` opening tags, so a class rename raises IndexError with the copy entirely intact. U1 step 9 forbids that rename precisely so this ambiguity cannot arise; if it does, restore the class rather than re-point the helper. `docs/solutions/conventions/never-delete-a-qualifier-that-bounds-a-claim.md` records why the first class of edit is dangerous, and `docs/solutions/runtime-errors/stale-pycache-bytecode-masks-source-edits.md` is worth reading before concluding a source edit had no effect.
 
 **Test scenarios:**
 - Byte-parity passes against the regenerated tree.
-- 58 share pages regenerated; all 58 `.embed.html` variants unchanged.
+- Exactly 58 share pages regenerated — the count is asserted, not assumed; all 58 `.embed.html` variants unchanged.
+- `generator/fonts.css` is byte-unchanged and no badge SVG, OG card, explainer page or holder-viewer artifact was regenerated.
 - The full `generator/tests/` suite passes with no test file modified other than those this plan names.
 
 ---
 
 ## Verification Contract
 
+**Automated — the suite is the gate:**
 - `generator/tests/` passes in full.
 - No wording-gate test was modified to make it pass.
-- All 58 embed variants are byte-identical to their committed versions.
-- A generated page at 1440×900 and 1280×800 shows the credential and the first holder action without scrolling.
-- A generated page below 900px stacks to one column, specimen first, with no horizontal overflow and 44px minimum control heights.
-- The course id is visible in full and wrapped, with no ellipsis, at every viewport.
-- Orange appears once, on the verification affordance, and nowhere else.
+- Exactly 58 share pages; all 58 embed variants byte-identical to their committed versions.
+- `generator/fonts.css` byte-unchanged; no signed badge SVG regenerated (the KTD7 isolation guard).
+- The canon literal block matches its sha256 pin; every embedded font file matches its pinned hash.
+- The page declares no foreign-origin subresource.
+- Orange appears once, on the verification affordance, carried by a non-text mark, and nowhere else.
 - Every interactive control has a visible focus state; no text uses an ink alpha below `.60`.
-- Whichever KTD7 font-delivery option was chosen is in effect and asserted.
+- Subset-embedded Inter and JetBrains Mono are present and within the 80 KB per-page ceiling (KTD7).
+
+**Human gate — no tooling in this repo can discharge these.** There is no headless browser here; `imaging/` rasterizes SVG, not HTML layout. These are checked by eye before the unit closes, and **nothing detects a later regression** across the 58 pages once U5 re-baselines them:
+- A generated page at 1440×900 and 1280×800 shows the credential and the first holder action without scrolling.
+- A generated page below 900px stacks to one column, specimen first, with no horizontal overflow, 44px minimum control heights, and the first holder action still above the fold.
+- The course id is visible in full and wrapped, with no ellipsis, at every viewport.
 
 ## Definition of Done
 
@@ -318,8 +343,9 @@ R1–R10 hold; the 58 committed share pages are regenerated and byte-parity is g
 - The per-holder Holder Artifact and its download (`#89`), which lands on the holder viewer. **R9 keeps a place for it in this layout.**
 
 ### Deferred to Follow-Up Work
-- **The Open Graph card (`og.py`).** It builds a 1200×630 per-course dark field in Archivo, and it is *this page's own* `og:image` — the first Andamio surface anyone sees when a credential link is shared. After this change it previews a page it no longer resembles. Accepted as an interim cost; worth doing next, before the explainers.
-- Restyling the explainer pages and the holder viewer, both reachable in one click and both still dark.
+- **The explainer pages (`explainers.py`) — first, because this page's one accent points at them.** KTD9 spends the page's strongest attention instrument on the "How do I check this?" route, and that route resolves to `/badges/how-to-check`, which this plan leaves in the old dark language. The stranger asking "is this real?" is therefore steered, by the most emphasised element on the page, straight into the inconsistency the plan exists to remove — at the exact moment trust is being decided. Both explainers are HTML-generation only with no raster pipeline behind them, and they can import the same `canon.py` literals U1 establishes. **If only one follow-up happens, it is this one.**
+- **The Open Graph card (`og.py`).** It builds a 1200×630 per-course dark field in Archivo, and it is *this page's own* `og:image` — the first Andamio surface anyone sees when a credential link is shared. After this change it previews a page it no longer resembles. Heavier than it looks: it depends on the Node raster pipeline (`imaging/rasterize.ts`) as well as `gen.FONT_FACE`.
+- Restyling the holder viewer, reachable in one click and still dark.
 - Restyling the embed variant, as its own change with its own blast radius.
 - Adding a Credential Badges row to the brand guide's §10 checklist — bookkeeping, not a prerequisite (see Risks).
 - Syncing the brand guide to current landing source. Its own §11.1 mandates a sync note per landing change and none has been filed; that is a `landing-page-and-blog` problem.
@@ -328,10 +354,15 @@ R1–R10 hold; the 58 committed share pages are regenerated and byte-parity is g
 
 ## Open Questions
 
-**Q1 — Which font-delivery option does U1 take? (KTD7.)**
-The only decision this plan deliberately leaves to implementation, because it turns on a measurement nobody has taken: the per-page byte cost of a subset-embedded Inter 600 + JetBrains Mono 400 across 58 self-contained files. Subset and measure first, then choose. If the cost is acceptable, embed; if not, accept the system fallback and narrow R1's type clause in the same commit rather than leaving R1 overclaiming.
+**Q1 — What is the holder-group action order? (KTD4, U3 step 2.) — the one open decision, and it is a product call, not an implementation detail.**
+KTD4 declines the orange primary specifically so that *ordering* carries R3's "one obvious next step", which makes whichever action leads the page's de facto primary call to action. The plan states only the last position (add-to-LinkedIn-profile, while it still writes the wrong issuing organisation) and leaves the other six unordered — so as written, an engineer picks the page's primary action mid-build and the "actions appear in the stated order" test has nothing authored to check against. Two candidate leads were argued at review:
 
-*Three questions that were open at first review are now settled as KTD8 (the course id is the one identifier shown, labelled at the point of use), KTD9 (the orange accent marks the verification affordance), and KTD10 (the nav wordmark links to `https://www.andamio.io`). Their reasoning is recorded there.*
+- **Copy link first** — platform-neutral, works for every destination including ones the page does not enumerate, and the action every other share path is a shortcut for. But it is one of the four controls that ship `hidden` without `navigator.clipboard`, so on a no-JS visit the page's lead action is absent entirely.
+- **Download SVG first** — always present regardless of JS, and it is the artifact itself rather than a pointer to it. But it is the class artifact, not the holder's own (R9), and leading with it may read as offering something more personal than it is.
+
+Resolve before U3 starts. Whatever is chosen, write the full seven-item order into U3 step 2 as a literal list.
+
+*Q1's former subject — font delivery — is now decided in KTD7 (subset-embed the variable faces under an 80 KB per-page ceiling, escalate rather than narrow R1). Three further questions open at first review are settled as KTD8 (the course id is the one identifier shown, labelled at the point of use), KTD9 (the accent marks the verification affordance, as a non-text mark on the nav-level route), and KTD10 (the nav wordmark links to `https://www.andamio.io`).*
 
 ---
 
@@ -340,10 +371,14 @@ The only decision this plan deliberately leaves to implementation, because it tu
 | Risk | Mitigation |
 |---|---|
 | The wording-gated copy is subtly altered while being re-styled, weakening a claim | The wording-gate suite is the guard, and U5 forbids editing it to pass. A qualifier is a ceiling — removing it *widens* the claim rather than narrowing it |
-| A class-hook rename makes wording-gate tests fail for a reason that is not a copy change, and the stop rule misfires | U1 step 8 pins `<p class="verify">` and `<p class="actions-note">`; U5's execution note names both causes so they cannot be confused |
-| The golden byte-parity test gets loosened rather than re-baselined | U5 states the re-baseline explicitly; the assertion is the point of the test |
+| A class-hook rename makes wording-gate tests fail for a reason that is not a copy change, and the stop rule misfires | U1 step 9 pins `<p class="verify">` and `<p class="actions-note">`; U5's execution note names both causes so they cannot be confused |
+| The golden byte-parity test gets loosened rather than re-baselined, or re-baselined against a different page set | U5 states the re-baseline explicitly and pins the count at 58 with the `SKIP_COURSES` filter named; the assertion is the point of the test |
 | The canon is transcribed from the guide rather than the code, shipping the retired kicker and the reversed stitch | KTD1 is explicit on both, and U1/U3 carry the specific treatments |
-| Hand-copied literals drift as landing changes, with no token package and no sync obligation to this repo | U1 step 1 records the source commit ref so drift is detectable by diff. A shared token package is the real fix and is upstream's call |
+| Hand-copied literals drift as landing changes, with no token package and no sync obligation to this repo | U1 step 1 sha256-pins the literal block alongside the recorded source commit ref, so a hand-edit fails the suite — the `tools/context-freeze.test.ts` pattern. A commit ref alone would be acceptance, not mitigation. A shared token package is the real fix and is upstream's call |
+| The page font embed silently mutates the signed badge SVGs and three other out-of-scope surfaces | KTD7 and U1 step 3 isolate the page's faces into `page_fonts.css`; U1 and U5 both assert `generator/fonts.css` is byte-unchanged |
+| An unpinned upstream font fetch bakes attacker-influenced or truncated bytes into 58 forever-public pages, and U5's re-baseline then ratifies them | U1 step 3 hash-pins every fetched face and fails the build on mismatch or empty response |
+| A restyle breaches the no-external-assets invariant via the nav mark or a webfont, and every credential view beacons to a third-party host | U1 asserts no foreign-origin subresource; U2 step 1 requires the mark to be inline SVG or CSS-drawn |
+| The 44px control minimum introduces a `display` rule that overrides the UA's `[hidden]`, exposing four dead buttons with the suite still green | U1 step 4 emits `[hidden]{display:none!important;}`; U3 asserts it whenever `.btn` declares a `display` |
 | Conforming a surface the brand guide's §10 checklist does not list | Low. The guide's header declares itself *"Canon for: every Andamio surface"* and the enumeration that follows reads as illustrative, so no governance gate is triggered. Adding a §10 row is optional bookkeeping, deferred above |
 | A `.pyc` cache masks a source edit and a change appears to have no effect | `docs/solutions/runtime-errors/stale-pycache-bytecode-masks-source-edits.md` |
 
@@ -355,7 +390,12 @@ The only decision this plan deliberately leaves to implementation, because it tu
 - `docs/mockups/2026-07-27-share-page/` — reference mockups and their README. **Layout only.** Their copy predates the current release; `brand-conformant.html` additionally renders a holder row this page cannot produce, an issuer attribution that has not shipped, labels in the retired mono kicker, stitched buttons, `inkFaint` body text below AA, and no focus states.
 - `docs/design-system/andamio-brand-guide.md` in `landing-page-and-blog` — the canon text. Read alongside the source below, not as a frozen spec.
 - `landing-page-and-blog`: `src/styles/globals.css` (the only place canon hexes live, light `:root` and `.dark`), `src/ui/system/tokens.ts` (semantic layer; `:178` carries the dated `kickerCls` tombstone), `src/ui/system/kit.tsx` (`ButtonRow` replacing `Stitch`).
-- `generator/tests/test_page.py` — `_slot()` at `:383`, the adjacency assertions at `:305-315`, and the byte-parity guard are the three couplings this restyle has to respect.
+- `generator/tests/test_page.py` — `_slot()` at `:383`, the adjacency assertions at `:305-315`, and the byte-parity guard are three of the four couplings this restyle has to respect.
+- `.github/workflows/ci.yml:199` — the fourth coupling, and the one outside the Python suite: the `docker-build` job greps the delivered page for the literal `href="/badges/$STEM.svg" download`. A required check fails there while `generator/tests/` is entirely green.
+- `generator/gen.py:22-24` and its four consumers (`gen.py:162`, `og.py:66`, `explainers.py:51`, `holder.py:91`) — why `generator/fonts.css` is not the page's private asset, and why KTD7 isolates the page's font artifact from it.
+- `generator/build.py:27` (`SKIP_COURSES`) and `generator/page.py:384` — why the page count is 58 and not 62.
+- `tools/context-freeze.test.ts`, `tools/did-pin.test.ts` — the house pattern for pinning cross-boundary values, applied to the canon literals in U1 step 1.
+- `landing-page-and-blog` `src/ui/system/tokens.ts` `accentPolicy` — the canon's own accent rule ("Brand mark, the single primary CTA, the live pulse dot, the VERIFIED stamp. Nothing else." / links are blue), the constraint behind KTD9's non-text mark.
 - `docs/solutions/conventions/never-delete-a-qualifier-that-bounds-a-claim.md`
 - `docs/solutions/runtime-errors/stale-pycache-bytecode-masks-source-edits.md`
 - `#89` and `#95` — why the share page carries a class artifact and does not know a holder.
