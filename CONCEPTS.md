@@ -14,7 +14,9 @@ The badge designated as the end-to-end proof artifact — the one exercised agai
 Embedding a signed object byte-transparently into a badge SVG's credential block, replacing the unsigned hook the generator emits. The embedded object is either a Class Achievement or a Holder Artifact — the two are never interchangeable. Regenerating a badge un-bakes it, so a bake must follow any regeneration of a signed badge. Extraction must round-trip byte-identical to the signed artifact.
 
 ### Class Achievement
-The signed, holder-free object describing what a badge *means* — its achievement, issuer, and on-chain anchor — with no subject identity and no assertion that anyone earned it. One per badge, immutable (a badge's identity commits to its content, so changed content is a different badge), and safe to publish at a shared address because it names nobody.
+The signed, holder-free object describing what a badge *means* — its achievement, issuer, and on-chain anchor — asserting that nobody in particular earned it. One per badge, immutable (a badge's identity commits to its content, so changed content is a different badge), and safe to publish at a shared address because it names no person.
+
+It does carry a credential subject, whose identifier is the *achievement itself* rather than a holder. Holder-free means no person is identified, not that the subject identifier is absent — a distinction the reference validator forces, since it rejects a subject with no identifier at all.
 
 ### Holder Artifact
 The signed credential asserting that one named holder earned one specific badge. Identified by badge *and* holder, because a badge coordinate alone does not identify a credential — a single badge routinely has many holders. Carries the holder's Access Token alias by necessity; a shared, holder-agnostic address can never serve one truthfully.
@@ -33,6 +35,11 @@ The pinned fingerprint of a signed artifact's canonical RDF form. It changes onl
 
 ### Drift Check
 Fail-closed verification that the live, publicly served copy of a trust artifact equals the committed/bundled copy. The issuer refuses to boot on a mismatch or a missing live artifact; the signing path refuses to canonicalize. Unreachability degrades to a warning; a confirmed mismatch never does.
+
+### Validation Gate
+The refusal to produce a batch of signed artifacts until exactly one has been checked against the external reference validator at zero errors and zero warnings. A spec permitting or recommending a shape is a hypothesis this gate tests, not a substitute for it: the written standard and the implementation the ecosystem runs are independent authorities that can disagree, and the running one is what rejects an artifact in someone else's pipeline.
+
+Distinct from [Anchor Gate], which refuses an individual signature on chain evidence. This gate refuses a *batch* on external conformance evidence.
 
 ### Anchor Gate
 The refusal to sign a credential unless its on-chain claim is re-verified live — the claim transaction exists, belongs to the subject, and the credential's content hashes match what is anchored. Signing is downstream of the chain, never of trusted local state.

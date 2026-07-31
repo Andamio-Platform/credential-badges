@@ -10,7 +10,7 @@ applies_when:
   - "Adding, renaming, or removing terms in a context served under /context/"
   - "Any change to a published artifact that signed credentials reference by URL"
 symptoms:
-  - "1EdTech verifybadge.org EmbeddedProofProbe fails (12/13) on a correctly signed badge"
+  - "1EdTech verifybadge.org EmbeddedProofProbe fails (12/13) on a correctly signed badge — canonicalization, not credential shape"
   - "Verifier's canonicalized N-Quads silently drop custom terms (courseOwner, OnChainCredentialAnchor fields)"
 resolution_type: workflow_improvement
 tags: [jsonld, context, caching, immutable, verifier, ob3, data-integrity]
@@ -64,6 +64,7 @@ Credentials already signed against `v0` keep verifying because `v0.jsonld` never
 
 ## Related
 
+- [`validate-one-artifact-before-batching.md`](validate-one-artifact-before-batching.md) — the other verifybadge.org 12/13, with a different diagnosis (`CredentialSubjectProbe`, credential shape). Together these two are the pattern: verify against the running implementation, not the document describing it.
 - verifybadge.org report 44c287d8 (2026-07-22): the failing probe's `canonicalizedJsonLdObjectWithoutProof` is missing the post-upgrade terms, the direct evidence for this rule
 - verifybadge.org report 82863657 (2026-07-23): same failure ~38h later — the evidence that verifier document caches are unbounded and the incident could not self-heal
 - `tools/context-freeze.test.ts` + the deploy-time freeze-pin step in `.github/workflows/deploy.yml`: this convention as an enforced invariant (any byte change to a published context version is CI-red and deploy-blocked)
