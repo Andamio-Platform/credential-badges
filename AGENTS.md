@@ -20,6 +20,7 @@ changes what a signature was computed over is a breaking change even when nothin
 | `docs/solutions/` | Documented solutions to past problems — bugs, conventions, best practices, workflow patterns — organised by category with YAML frontmatter (`module`, `tags`, `problem_type`, `applies_when`). Relevant when implementing or debugging in an area someone has already been burned by. |
 | `docs/runbooks/` | Operational procedures for things that touch production keys or published artifacts: class-artifact signing, key rotation, the compromise kill-switch, gateway keys. |
 | `docs/plans/` · `docs/brainstorms/` | Decision records. A plan carries the reasoning and the rejected alternatives, not just the outcome — including decisions that were later refuted, which are left legible on purpose. |
+| `docs/residual-review-findings/` | Review findings deliberately **not** applied, and why. Read this before concluding a guard holds or a weakness is unknown — it is where a known-unfixed thing goes, so its absence from a diff is not evidence it was missed. |
 
 `docs/solutions/` is small enough to skim in full. Searching frontmatter is usually faster than
 searching prose: `grep -rl "tags:.*signing" docs/solutions/`.
@@ -57,5 +58,11 @@ These have all happened or come close. None of them fails loudly at the time.
   `scripts/ci/check-allowlist.sh` fails the build if anything else would be served. Adding a public
   path is a deliberate, reviewed act.
 - **Deploy lanes are tag-routed** with non-overlapping patterns — see [`DEPLOY.md`](DEPLOY.md).
-  Note that ROADMAP *phase* names (v1.0, v1.1, v1.2) are not release tags and do not line up with
-  them; `v1.1` was never cut.
+- **Release names come from `product-circle` board 28; the version number comes from this repo.**
+  A tag is the fact about what shipped, so it belongs here; a Release takes its number from the
+  tag line and adds what the line cannot carry — scope, audience, visibility, done-ness — and
+  names its tags before it closes. There is **one historical exception**: the `v1.1` Release
+  shipped inside `v1.0.9` and no `v1.1.x` tag was ever cut. `v1.0`, `v1.2` and `v1.3` line up
+  with `v1.0.0`, `v1.2.0` and `v1.3.0`/`v1.3.1`, and everything from `v1.3.0` on is kept aligned
+  — do not read the `v1.1` exception as an expectation that the two drift. Mapping table and the
+  rule: `product-circle`'s `roadmap/roadmap-board-reference.md`.
