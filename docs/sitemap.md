@@ -76,14 +76,17 @@ method except GET is denied.
 
 ## Design conformance — where the canon has and hasn't reached
 
-| Surface | State |
-|---|---|
-| `/badges/{stem}` share page | ✅ canon (`v1.3.1`) |
-| `/badges/how-to-share`, `/badges/how-to-check` | ✅ canon |
-| `/badges/{stem}/{alias}` holder viewer | ✅ canon (tokens only — `#89` will re-lay-out it) |
-| `/badges/{stem}.og.png` | ❌ still the per-course dark field. Its own plan; two open questions (per-course or single) |
-| `/badges/{stem}.embed` | ❌ deliberately excluded — it renders inside *someone else's* page, where matching our brand is a different question |
-| `/design/` | ❌ deferred by decision. Note it is the **only** surface loading external stylesheets (two Google Fonts families), which breaches the no-external-assets invariant the other pages hold |
+Every unfinished row names the issue that tracks it — a status table nobody can
+act from is just a snapshot.
+
+| Surface | State | Tracked in |
+|---|---|---|
+| `/badges/{stem}` share page | ✅ canon (`v1.3.2`) | — |
+| `/badges/how-to-share`, `/badges/how-to-check` | ✅ canon (`v1.3.2`) | copy pass: **#106** |
+| `/badges/{stem}/{alias}` holder viewer | ✅ canon — **tokens only**; `#89` will re-lay-out this page, so layout work here would be discarded | `#89` |
+| `/badges/{stem}.og.png` | ❌ still the per-course dark field. Canon **paper** is settled; whether it stays **per-course** is not | **#108** |
+| `/badges/{stem}.embed` | ❌ deliberately excluded — it renders inside *someone else's* page, where matching our brand is a different question with probably a different answer | — |
+| `/design/` | ❌ deferred by decision. It is the **only** surface loading external stylesheets (two Google Fonts families), breaching the no-external-assets invariant every other page holds — a correctness fix worth doing on its own timetable, independent of any restyle | — |
 
 ---
 
