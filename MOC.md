@@ -109,6 +109,8 @@ Reference artifact. Validates the end-to-end mapping + signing pipeline against 
 | `spike/CORNERS-CUT.md` | The 8 deliberate corners. The plan hardens 1, 2, 4, 5, 6, 7. |
 | `spike/credential-imagery.md` | The v1 design decision for the `badges/` directory. |
 | `spike/prerequisite-chaining.md` | PQ1–PQ6 prerequisite-chain defaults. |
+| `spike/end-user-ux-research.md` | Where Open Badges actually live in 2026, the portability regression, and DQ1–DQ5 for Andamio. |
+| `spike/third-party-display-research.md` | Third-party display targets — LinkedIn `certUrl`, Open Badges 3.0, Credly, Europass; the recipient-identifier gate; where issuer-org data could live. Research only; supersedes the Credly line in `open-questions.md` Q7. |
 | `spike/sample-credential.jsonld` | Canonical signed sample (deliverable). |
 | `spike/samples/` | Per-recipient samples (real preprod data) — `james` and `njuguna`, plus HTML renders + policy metadata. |
 | `spike/src/` | TS implementation: `mapper.ts`, `sign.ts` (VC-JWT), `sign-di.ts` (Data Integrity), `path-b.ts` (programmatic builder), `verify.ts`, `plutus.ts`, `keys.ts`, `credential.ts`, `validate.ts`, `inspect.ts`, `render.ts`, `build.ts`, `generate.ts`. |
