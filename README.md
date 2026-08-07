@@ -56,7 +56,7 @@ Titles are the only thing fetched. The badge geometry is the proof-ring encoding
 
 ---
 
-## What's built, what's coming
+## What's built
 
 ### ✅ Built: v1.0 (mainnet core), shipped 2026-06-29
 
@@ -68,16 +68,19 @@ A learner's on-chain credential renders as a badge that is visible in the Andami
 - Badges shown in the Andamio app on the learner's Credentials page.
 - Proof-Ring encoding verified to round-trip to on-chain hashes (`make verify`).
 
-### 🔜 Coming: v1.1 (Q3), the portable / verifiable layer
+### ✅ Built: v1.1 (the portable / verifiable layer), shipped 2026-07-23
 
-Turns the badge from "Proof-Ring + on-chain anchor" into an independently verifiable OB 3.0 / Verifiable Credential that travels off-platform:
+The badge is now an independently verifiable OB 3.0 / Verifiable Credential that travels off-platform, not just a Proof-Ring plus an on-chain anchor.
 
-- Ed25519 signing (GCP KMS) and OB 3.0 signed-VC baking.
-- `did:web` issuer identity and a hosted verification page.
-- A BitstringStatusList for revocation signaling.
-- A third-party SDK embed and a standalone wallet-connect viewer.
+- Ed25519 signing through GCP KMS, anchor-gated: nothing is signed unless a live on-chain check passes first.
+- OB 3.0 signed-VC baking — all 58 rendered badges carry a signed Class Achievement, validated 13/13 against the 1EdTech reference validator.
+- `did:web:credentials.andamio.io` issuer identity, with a hosted `how-to-check` page that walks the verification path without trusting Andamio.
+- A signed key-epoch `BitstringStatusList` for suspension signalling — the key-compromise kill-switch.
+- A third-party embed (`@andamio/andamio-badge` web component) and a per-holder viewer.
 
-Until then, a badge's proof is its Proof-Ring encoding plus the on-chain anchor.
+**A badge's proof is now its signature *and* its Proof-Ring encoding *and* its on-chain anchor.**
+
+**Not built:** the per-holder half of baking. A baked badge carries the holder-free Class Achievement — what the badge *means* — not a per-holder credential. That is deliberate: holder identity in public git history is permanent and un-purgeable, so per-holder artifacts are served on demand rather than committed. See [`ROADMAP.md`](ROADMAP.md) and [#89](https://github.com/Andamio-Platform/credential-badges/issues/89).
 
 > **Two version axes, do not conflate them.** The repo/release tag (`v1.0.0`, which deploys the static host) is separate from the **JSON-LD schema version**. `v1.jsonld` shipped 2026-07-23 as a byte-copy of the (mutated) v0 at a fresh URL — a cache-migration bump, not a vocabulary change (see `docs/solutions/conventions/never-mutate-published-jsonld-context.md`). Vocabulary changes ship as new version files (`v2.jsonld`, ...). Tagging the repo does not version the schema.
 
@@ -90,9 +93,9 @@ The authoritative, phase-by-phase checklist lives in **[`ROADMAP.md`](ROADMAP.md
 - [x] v1.0 mainnet core: render + serve any credential on demand (shipped 2026-06-29)
 - [x] Badges shown in the Andamio app (Credentials page)
 - [ ] **"Look at this badge" in the app** (in progress, `andamio-app-v2`): show earnable badges on the public course page, the badge in the module learning UX, and an enlarge + metadata + shareable-link path on the Credentials page ([app-v2 #738](https://github.com/Andamio-Platform/andamio-app-v2/issues/738))
-- [ ] v1.1 Phase 0: evidence gate (external verifier runs + comprehension cohort) ([#15](https://github.com/Andamio-Platform/credential-badges/issues/15)–[#21](https://github.com/Andamio-Platform/credential-badges/issues/21))
-- [ ] v1.1 Phase 1: Ed25519 sign key + `did.json` CI emission
-- [ ] v1.1 Phase 2–3: signed-credential service + human verification page
+- [x] v1.1 Phase 0: evidence gate (external verifier runs + comprehension cohort) ([#15](https://github.com/Andamio-Platform/credential-badges/issues/15)–[#21](https://github.com/Andamio-Platform/credential-badges/issues/21))
+- [x] v1.1 Phase 1: Ed25519 sign key + `did.json` CI emission
+- [x] v1.1 Phase 2–3: signed-credential service + human verification page
 
 Known issues and good entry points are in [GitHub Issues](https://github.com/Andamio-Platform/credential-badges/issues). Look for [`good first issue`](https://github.com/Andamio-Platform/credential-badges/labels/good%20first%20issue) and [`documentation`](https://github.com/Andamio-Platform/credential-badges/labels/documentation).
 
@@ -111,7 +114,8 @@ Some things you can build on today, and where it's headed:
 - **Verify a badge against the chain.** The rings are an encoding, not decoration. `make verify` decodes a built badge and confirms it matches its on-chain hashes, so the image is self-checking.
 - **Read the credential's schema.** Fetch `/context/v1.jsonld` to see Andamio's OB 3.0 extension terms and build your own renderer or validator against them.
 - **Regenerate or restyle locally.** `make badges` renders the full set offline and deterministically. Fork the generator in [`generator/`](generator/README.md) to experiment with palettes or encodings (`gen.py`, `colors.py`).
-- **Coming in v1.1:** import a signed, independently verifiable credential into your own app via the SDK, or point people at the standalone wallet-connect viewer, no Andamio account required.
+- **Embed a badge as a web component.** `@andamio/andamio-badge` is published to npm — drop `<andamio-badge>` into your own app and it renders from the public host, no Andamio account required.
+- **Extract and verify the signed credential yourself.** Every rendered badge carries a signed OB 3.0 Class Achievement baked into the SVG. Pull it out, resolve `did:web:credentials.andamio.io`, and check the signature with any Data Integrity verifier — the [`how-to-check`](https://credentials.andamio.io/badges/how-to-check) page walks the whole path without trusting us.
 
 If you build something with these, or want a surface that does not exist yet, open an issue. We want this to be a thing people pick up and run with.
 
