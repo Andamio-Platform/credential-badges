@@ -14,7 +14,7 @@ It was `spike/` until the production half was promoted out. What lives here now:
 - [`mapping.md`](mapping.md) — the Andamio → OB 3.0 field mapping and the URN convention. `docs/badge-registry.md` cites it for `slt_hash` semantics.
 - [`credential-imagery.md`](credential-imagery.md) — the v1 design decision for `badges/`.
 
-Do not prune either one while `docs/badge-registry.md` still points at them.
+Do not prune either one while `docs/badge-registry.md` still points at them. Tracked as [#117](https://github.com/Andamio-Platform/credential-badges/issues/117) — the fix is to promote them into `docs/`, not to delete them.
 
 ---
 

@@ -74,9 +74,9 @@ The name is also load-bearing in the wrong direction: `MOC.md:134` and `CONTRIBU
 **In scope.** The classification, both directory moves, every reference repair, the depth guard, and the live-doc updates.
 
 **Deferred to follow-up work.**
-- Extending the expansion pin to cover the 58 class artifacts. Separate PR, deliberately — a pure move is reviewable, a move plus a behaviour change is not.
+- Extending the expansion pin to cover the 58 class artifacts ([#116](https://github.com/Andamio-Platform/credential-badges/issues/116)). Separate PR, deliberately — a pure move is reviewable, a move plus a behaviour change is not.
 - Reviewing `CORNERS-CUT.md` for corners that shipped. That is a product question.
-- Promoting `archive/mapping.md` and `archive/credential-imagery.md` into `docs/`. They are cited as current authority by `docs/badge-registry.md` while living in an archive — a real tension, recorded in Open Questions, not resolved here.
+- Promoting `archive/mapping.md` and `archive/credential-imagery.md` into `docs/` ([#117](https://github.com/Andamio-Platform/credential-badges/issues/117)). They are cited as current authority by `docs/badge-registry.md` while living in an archive — a real tension, recorded in Open Questions, not resolved here.
 - Adding a `make` entry point for the signing path. It was never wired into `Makefile`; adding one is new surface, not a port.
 - Reviewing CODEOWNERS coverage of `signing/`. The move concentrates the KMS signing entry points, the kill-switch writer, the 58 unpinned class artifacts, and `expansion-pin.dep-test.ts` (which holds both hash pins) into one directory, while only `status-list.ts` and its test stay gated. The repo gates the equivalent pin files elsewhere — `.github/CODEOWNERS:18-19` and `:30-32` cover `did-pin.test.ts` and `context-freeze.test.ts` on exactly that reasoning. The gap is pre-existing and widening the gates here would be the behaviour change this PR excludes; it is recorded so it is not lost.
 - Renaming the npm package. `signing/package.json` keeps `"name": "signer-spike"` after the move. Renaming it churns the lockfile the `expansion-pin` job installs from, which is a content change to a file this PR should only move.
