@@ -27,12 +27,12 @@ import { existsSync, promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { bakeSignedVc, extractVc } from "../../tools/bake-signed-vc.ts";
+import { bakeSignedVc, extractVc } from "../tools/bake-signed-vc.ts";
 import { registry, classCredentialId, type BadgeRecord } from "./class-credential.ts";
 import { ISSUER_DID } from "./document-loader.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, "..", "..");
+const REPO = path.resolve(HERE, "..");
 const ARTIFACT_DIR = path.join(HERE, "class-artifacts");
 const BADGES_DIR = path.join(REPO, "badges");
 

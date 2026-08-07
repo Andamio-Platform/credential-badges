@@ -34,19 +34,35 @@ id_ed25519
 *.env.*
 !.env.example
 
-# Imported spike: build, deps, throwaway signing keys, context cache
-spike/node_modules/
-spike/dist/
-spike/out/
-spike/.env
-spike/.env.local
+# Archived OB 3.0 prototype: build, deps, throwaway signing keys, context cache
+archive/node_modules/
+archive/dist/
+archive/out/
+archive/.env
+archive/.env.local
 
-# Imported spike: internal strategy/demo material — canonical home stays in
+# Archived OB 3.0 prototype: internal strategy/demo material — canonical home stays in
 # the private orchestration vault, not this public repo. Kept locally for
 # reference but never committed here.
-spike/end-user-ux-research.md
-spike/DEMO.md
-spike/screencast-script.md
+archive/end-user-ux-research.md
+archive/DEMO.md
+archive/screencast-script.md
+
+# Migration guard (retire-spike, 2026-08). `git mv` moves tracked files only,
+# so pulling the rename into an existing clone deletes the tracked spike/ files
+# and strands every untracked one — now un-ignored, and one `git add -A` from a
+# permanent public history.
+#
+# Deliberately the whole directory rather than the specific leftovers. Naming
+# them individually missed a case: the nested .gitignore at
+# verifier-spike/verifiers/spruce/.gitignore travelled to archive/ with the
+# code, so the `/target` rule that had been ignoring 1.4GB of Rust build output
+# stopped applying at the old path. Ignore rules live inside a moved tree too,
+# and they leave with it.
+#
+# Nothing should exist at spike/ anymore, so this hides nothing worth seeing.
+# Remove it once no working copy has a spike/ leftover.
+spike/
 
 # python build artifacts
 generator/__pycache__/
@@ -60,3 +76,4 @@ generator/__pycache__/
 # OG card composition intermediates (imaging/og.py -> temp SVGs); only the
 # rasterized badges/*.og.png is committed.
 imaging/.og-build/
+.worktrees

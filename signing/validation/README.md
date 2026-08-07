@@ -2,7 +2,7 @@
 
 Evidence that the **Class Achievement** shape is accepted by the OB 3.0
 reference validator. Same verifier and pass criterion as the Phase 0 holder
-credential (`spike/verifier-spike/results/onedtech.md`): **VALID with 0 errors
+credential (`archive/verifier-spike/results/onedtech.md`): **VALID with 0 errors
 AND 0 warnings**, not merely "no errors".
 
 **Verifier:** 1EdTech Member Validator, `OB30Inspector`, at `verifybadge.org`
@@ -89,6 +89,6 @@ make.
 
 ## Related
 
-- Procedure: [`../../../docs/runbooks/class-artifact-signing.md`](../../../docs/runbooks/class-artifact-signing.md)
-- Phase 0 holder-credential evidence: [`../../verifier-spike/results/onedtech.md`](../../verifier-spike/results/onedtech.md)
+- Procedure: [`../../docs/runbooks/class-artifact-signing.md`](../../docs/runbooks/class-artifact-signing.md)
+- Phase 0 holder-credential evidence: [`../../archive/verifier-spike/results/onedtech.md`](../../archive/verifier-spike/results/onedtech.md)
 - Builder: [`../class-credential.ts`](../class-credential.ts)

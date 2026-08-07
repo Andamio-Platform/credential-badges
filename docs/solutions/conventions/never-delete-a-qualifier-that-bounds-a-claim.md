@@ -27,7 +27,7 @@ tags: [wording-gate, overclaim, verifiability, copy-guards, mutation-testing, ob
 
 Of the 58 committed badges in `badges/`, exactly **one** carries a cryptographic signature. The other 57 are presentation-only: credential data plus an `andamio:onChainAnchor`, nothing more. `generator/page.py::_is_baked()` reads the committed SVG for `proofValue`, and every piece of verifiability copy branches on that boolean, so the signed badge and the unsigned majority can say different things.
 
-Sitting on top of that split is a standing rule this repo calls the **wording gate**: the page must never imply broader verifiability than actually exists. It is not a style preference, and it is not legal caution. It comes from a measurement. The verifier spike (`spike/verifier-spike/results/walt-id.md`) found that walt-id — a real, mainstream OB 3.0 verifier — is *structurally* unable to read Andamio's Data Integrity JSON-LD proof. Its CLI is JWS/SD-JWT-only; every policy fails at the format gate with `"String does not look like JWS"`, at exit code 0. spruce and 1EdTech verify clean; walt-id cannot verify at all. The 2026-07-09 verifier gate launched on those two independents plus loopback and deferred walt-id for exactly this reason *(auto memory [claude])*.
+Sitting on top of that split is a standing rule this repo calls the **wording gate**: the page must never imply broader verifiability than actually exists. It is not a style preference, and it is not legal caution. It comes from a measurement. The verifier spike (`archive/verifier-spike/results/walt-id.md`) found that walt-id — a real, mainstream OB 3.0 verifier — is *structurally* unable to read Andamio's Data Integrity JSON-LD proof. Its CLI is JWS/SD-JWT-only; every policy fails at the format gate with `"String does not look like JWS"`, at exit code 0. spruce and 1EdTech verify clean; walt-id cannot verify at all. The 2026-07-09 verifier gate launched on those two independents plus loopback and deferred walt-id for exactly this reason *(auto memory [claude])*.
 
 So there exist reasonable tools that report FAIL on a perfectly genuine Andamio badge. That fact is the ceiling.
 
@@ -186,7 +186,7 @@ The pattern in all three: the assertion moved from *"is this exact sentence pres
 ## Related
 
 - `docs/verifier-guidance.md` — the canonical statement of what "DI-capable OB 3.0 / VC verifiers" means, including the JWS-only limitation. The target the caveat's inline citation links to.
-- `spike/verifier-spike/results/SUMMARY.md` (and `walt-id.md`, `spruce.md`) — the empirical origin of the qualifier: walt-id structurally cannot parse the DI JSON-LD sample; spruce and 1EdTech verify clean.
+- `archive/verifier-spike/results/SUMMARY.md` (and `walt-id.md`, `spruce.md`) — the empirical origin of the qualifier: walt-id structurally cannot parse the DI JSON-LD sample; spruce and 1EdTech verify clean.
 - `docs/solutions/workflow-issues/unwired-test-suites-silently-rot.md` — the general case of trap 5. There, a suite stopped protecting because it was never wired into CI; here, a gate nearly stopped protecting because its subject moved surfaces. Both are about a protection surviving a change rather than silently vanishing.
 - `docs/solutions/conventions/never-mutate-published-jsonld-context.md` — same trust-artifact family, same verifier-heterogeneity reality. Useful to a reader auditing what verifiers can and cannot do.
 - Issue #82 (the hard constraint and the open question about signed-vs-unsigned wording), issue #81, PR #83.

@@ -176,7 +176,7 @@ One finding worth carrying forward: the first class shape omitted
 `credentialSubject.id`, which the OB 3.0 implementation guide **recommends** and
 the published schema **permits**. The reference validator rejected it anyway.
 Validating a single artifact before batching caught it for the price of one
-signature. Evidence: [`spike/signer-spike/validation/README.md`](spike/signer-spike/validation/README.md).
+signature. Evidence: [`signing/validation/README.md`](signing/validation/README.md).
 
 Procedure: [`docs/runbooks/class-artifact-signing.md`](docs/runbooks/class-artifact-signing.md).
 
@@ -185,7 +185,7 @@ Procedure: [`docs/runbooks/class-artifact-signing.md`](docs/runbooks/class-artif
 - **Deployment plan (the "why"):** [`docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md)
 - **Repo map for new contributors:** [`MOC.md`](MOC.md)
 - **Deploy mechanism:** [`DEPLOY.md`](DEPLOY.md)
-- **Original spike (validated end-to-end):** [`spike/README.md`](spike/README.md)
-- **Phase 0 pre-flight verifier evidence:** [`spike/verifier-spike/results/SUMMARY.md`](spike/verifier-spike/results/SUMMARY.md)
+- **Original spike (validated end-to-end):** [`archive/README.md`](archive/README.md)
+- **Phase 0 pre-flight verifier evidence:** [`archive/verifier-spike/results/SUMMARY.md`](archive/verifier-spike/results/SUMMARY.md)
 - **Issuer service (the signing oracle):** [`issuer-service/README.md`](issuer-service/README.md)
 - **Open GitHub Issues:** #4, #6, #7, #8, #11 (multi-issuer + design), #36 (event-triggered generate-on-earn), #87 (signing-key lifecycle)

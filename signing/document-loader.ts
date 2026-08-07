@@ -32,7 +32,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CTX_CACHE = path.join(HERE, "out", "ctx-cache");
-const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v1.jsonld");
+const REPO_CONTEXT_FILE = path.join(HERE, "..", "context", "v1.jsonld");
 
 export const ISSUER_DID = "did:web:credentials.andamio.io";
 export const DID_JSON_URL = "https://credentials.andamio.io/.well-known/did.json";

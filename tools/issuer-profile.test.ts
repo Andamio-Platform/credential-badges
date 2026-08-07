@@ -79,7 +79,7 @@ function assertContextDefinesTerms(context: any): void {
   // the four flat anchor terms are the Decision-2 evidence field names,
   // registered top-level so the flat evidence entry expands with no dropped
   // terms. Same shapes the rung-1 throwaway context proved against spruce +
-  // 1EdTech (spike/verifier-spike/publish/context/v0.jsonld).
+  // 1EdTech (archive/verifier-spike/publish/context/v0.jsonld).
   assert.deepEqual(c["courseOwner"], { "@id": "andamio:courseOwner", "@type": "@id" });
   assert.deepEqual(c["assessor"], { "@id": "andamio:assessor", "@type": "@id" });
   assert.equal(c["network"], "andamio:network");

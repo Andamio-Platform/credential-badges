@@ -1,8 +1,9 @@
 # AGENTS.md
 
 Orientation for coding agents working in this repo. Humans should start with
-[`README.md`](README.md) for what this is and [`MOC.md`](MOC.md) for a one-screen map of every
-component — this file does not repeat them. It covers what an agent needs that a map does not
+[`README.md`](README.md) for what this is, [`MOC.md`](MOC.md) for a one-screen map of every
+component, and [`docs/sitemap.md`](docs/sitemap.md) for every public URL the domain serves — this
+file does not repeat them. It covers what an agent needs that a map does not
 give: where the accumulated knowledge lives, and which operations destroy things quietly.
 
 ## What this repo publishes
