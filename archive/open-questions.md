@@ -73,7 +73,7 @@ Each SLT becomes an `Alignment` pointing at e.g. `https://credentials.preprod.an
 ### Q7. No public reference verifier we could test against
 The plan calls for "automated interop tests against known verifiers (Credly, POK, 1EdTech reference validator)" in Phase 3. Of those:
 
-- **Credly** — closed platform; need a partnership conversation.
+- **Credly** — closed platform; need a partnership conversation. **⚠️ Superseded 2026-08-02:** Credly now documents earner-side import of outside OB2/OB3 badges (`.png` / `.svg` / `.json`), so no partnership appears necessary for the *display* use case — the blocker is the recipient identifier, not access. Original claim kept because it was accurate when written and the reasoning still applies to Credly as an *issuing* platform. See [`third-party-display-research.md`](third-party-display-research.md) §4.
 - **POK** — no public verifier endpoint we found in the spike timebox.
 - **1EdTech reference validator** — gated by membership.
 

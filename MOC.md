@@ -77,6 +77,7 @@ Local verification (hermetic, in CI) and live verification (network, run by a hu
 | `tools/*.test.ts` | **Local invariants, in CI, no install.** Context sha256 freeze, the KMS key pin, the baked-credential byte match. Hermetic — no network. See [`tools/README.md`](tools/README.md). |
 | `scripts/verify-live/verify-live.mjs` | **Post-deploy gate, live network.** Fetches a deployed badge, extracts the embedded OB3 credential, verifies its `eddsa-rdfc-2022` proof against the **live** context + `did:web` document + status list (every fetch `no-store`). Catches deploy drift nothing else sees: wrong context tag, drifted `did.json`, an unintended status-bit flip. Not in CI (needs a real deploy); not in `tools/` (that path is dependency-free by design). |
 | `docs/verifier-guidance.md` | What third-party verifiers should expect from an Andamio credential. |
+| `docs/third-party-display-research.md` | **Research only, nothing decided.** Where an Andamio credential can be displayed off-platform — LinkedIn `certUrl`, Open Badges 3.0, Credly, Europass — and the recipient-identifier problem that gates all of them. Separates verified-here claims from platform-documentation claims, which are hypotheses until spiked. |
 
 ## Runbooks
 
