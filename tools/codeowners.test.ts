@@ -15,6 +15,11 @@
 // tracked file. It does NOT judge whether the right things are gated — that is
 // a review question, not an invariant.
 //
+// Note when adding a gate: this reads `git ls-files`, so a new entry stays RED
+// until the file it names is staged. That is correct — GitHub matches
+// CODEOWNERS against repo contents, and an untracked file is ungatable — but
+// it means `git add` the file before expecting green.
+//
 // Hermetic — node builtins only, no npm install (this runs in the did-pin job
 // alongside the rest of tools/, which is dependency-free by design).
 
