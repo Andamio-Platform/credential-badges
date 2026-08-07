@@ -19,6 +19,15 @@ So it sits at top level, a sibling of `issuer-service/` and `imaging/`: a
 self-contained package with its own manifest, lockfile, and CI job. That is
 the shape this repo already uses for dependency-carrying modules.
 
+**The two packages import each other, and one invariant holds that up.**
+`sign.ts` and `bake-class.ts` import `../tools/gen-did-json.ts` and
+`../tools/bake-signed-vc.ts`; in the other direction `tools/flip-status-bit.ts`
+imports `../signing/status-list.ts`. That reverse edge only works because
+`status-list.ts` imports nothing but `node:zlib`. **Add any npm import to
+`status-list.ts` and the `did-pin` CI job breaks** — it runs `tools/` with no
+install — while everything still passes locally, where `signing/node_modules/`
+exists. Keep that one module dependency-free.
+
 ## Not to be confused with `issuer-service/`
 
 Both sign credentials. They divide like this:
