@@ -1,5 +1,5 @@
 // Rung 8 · The ONE vc.issue error the jsigs fallback may absorb.
-// Ported verbatim from spike/signer-spike/issue-error.ts (hardened reference
+// Ported verbatim from signing/issue-error.ts (hardened reference
 // implementation; issue #54 finding 1).
 //
 // Context (issue #54, finding 1): sign.ts used to wrap vc.issue in a blind
