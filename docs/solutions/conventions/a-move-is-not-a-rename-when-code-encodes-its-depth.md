@@ -1,6 +1,7 @@
 ---
-title: A directory move is not a pure rename when the code encodes its own depth
+title: A directory move relocates more than its files — depth couplings and ignore rules go too
 date: 2026-08-07
+last_updated: 2026-08-07
 category: conventions
 module: signing
 problem_type: convention
@@ -11,14 +12,16 @@ applies_when:
   - "Reviewing a PR whose diff reads as renames plus a handful of one-token path edits"
   - "Changing the nesting depth of any module that reads or writes a repo-root artifact"
   - "Deciding whether a structural change needs a guard or just green CI"
+  - "Moving a directory that contains its own nested .gitignore"
 symptoms:
   - "A module resolves the repo root by climbing a fixed number of segments from its own location"
   - "Every test passes after a move, but a path that is only written during a rare operation now points outside the repo"
   - "A reviewer sees `0 0` renames and concludes nothing changed"
-tags: [git, refactoring, file-moves, path-resolution, silent-failure, guard-tests, signing]
+  - "Build output that was ignored for months reappears untracked after pulling a rename"
+tags: [git, refactoring, file-moves, path-resolution, gitignore, silent-failure, guard-tests, signing]
 ---
 
-# A directory move is not a pure rename when the code encodes its own depth
+# A directory move relocates more than its files — depth couplings and ignore rules go too
 
 ## Context
 
@@ -60,9 +63,30 @@ The failure mode is not "the move broke something." It is "the move broke someth
 
 A guard converts an invisible failure into a red build at the moment the mistake is made.
 
+## The other thing that leaves with the tree: its ignore rules
+
+Path arithmetic is the mechanism that bites *inside* the moved code. There is a second one that bites *outside* it, and it was missed on the first pass of the same move.
+
+**A nested `.gitignore` travels with the directory it sits in.** `verifier-spike/verifiers/spruce/.gitignore` contained `/target`. It moved to `archive/` with the code, so the rule stopped applying at the old path — and 1.4GB of Rust build output, ignored for months, came back untracked the moment anyone pulled the rename.
+
+The root `.gitignore` had a migration guard, but it named individual leftovers: the private-material files, `node_modules/`, `out/`. Naming leftovers individually cannot anticipate this, because you would have to already know every ignore rule nested inside the tree you moved. Ignoring the directory can:
+
+```gitignore
+# Migration guard. `git mv` moves tracked files only, so pulling the rename
+# into an existing clone deletes the tracked files and strands the untracked
+# ones — now un-ignored. Nothing should exist here anymore.
+spike/
+```
+
+**Before moving a directory, list the `.gitignore` files inside it** (`find <dir> -name .gitignore`) and ask what each one was covering. Anything they ignored is about to become visible at the old path in every existing clone.
+
+Whether that matters depends on what was ignored. Here it was regenerable build output, so the cost was noise and disk. Had it been the private strategy material the root rules also cover, it would have been one `git add -A` from a permanent public history.
+
 ## When to Apply
 
 Any move of a directory containing code. Skip it for documents.
+
+Both mechanisms apply, and they need separate checks: grep the moved tree for path arithmetic, and list the `.gitignore` files inside it.
 
 Depth-independent anchors are exempt: anything resolved from `process.cwd()` or an environment variable does not care where its module lives. That is why the `archive/` half of #115 needed no repairs at all — `archive/src/` and `archive/verifier-spike/src/` anchor on the working directory, so their behaviour is unchanged by the rename.
 
