@@ -11,7 +11,7 @@
 //
 // Pure and DETERMINISTIC: same key in => byte-identical did.json out. No
 // timestamps, no randomness. The base58btc + multicodec logic mirrors the
-// spruce-verified encoder in `spike/src/keys.ts` (kept dependency-free on
+// spruce-verified encoder in `archive/src/keys.ts` (kept dependency-free on
 // purpose — this is a trust-critical, CODEOWNERS-gated path).
 //
 // Usage (regenerate the committed file):
@@ -45,7 +45,7 @@ function bytesToHex(bytes: Uint8Array): string {
     .join("");
 }
 
-// base58btc — BigInt encoder mirroring spike/src/keys.ts, with the matching
+// base58btc — BigInt encoder mirroring archive/src/keys.ts, with the matching
 // decode inverse used by the key-pin invariant. Leading zero bytes map to '1'.
 export function base58Encode(bytes: Uint8Array): string {
   let n = 0n;

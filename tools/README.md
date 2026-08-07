@@ -101,7 +101,7 @@ cd tools && npm test        # == node --experimental-strip-types --test *.test.t
   authed gcloud) to additionally re-fetch and compare against live KMS.
 - **`bake-signed-vc.test.ts`** — the **baked-badge invariant**: the committed
   badge SVG for the signed subject credential must embed
-  `spike/signer-spike/signed-credential.json` byte-for-byte (proof block and
+  `signing/signed-credential.json` byte-for-byte (proof block and
   anchor identifiers asserted field-by-field), in the OB3 embedded-proof form.
   Plus hermetic bake/extract round-trip units. No network.
 - **`bake-png-vc.test.ts`** — hermetic bake/extract units for the PNG iTXt bake:

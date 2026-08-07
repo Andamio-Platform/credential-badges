@@ -1,7 +1,7 @@
 # Third-Party Display Targets — Research
 
 **Date:** 2026-08-02
-**Companions:** `end-user-ux-research.md`, `open-questions.md`, `mapping.md`, `CORNERS-CUT.md`
+**Companions:** `archive/open-questions.md`, `archive/mapping.md`, `archive/CORNERS-CUT.md`, and `end-user-ux-research.md` — the last is **not in this repo**: it is internal strategy material whose canonical home is the private orchestration vault, and `.gitignore` keeps it out deliberately. Citations to it below are for readers with vault access.
 **Source trigger:** "What is a LinkedIn `certUrl`, and does this project deliver it?" — widened into where else an Andamio credential can be posted and viewed.
 
 **Status: research only. Nothing here is decided, and nothing here is a plan.**
@@ -20,7 +20,7 @@ a platform's documentation is a hypothesis about its behaviour, not evidence of 
 
 Every external-platform claim in §3–§5 is the second kind. The Credly finding in §4 is the one
 most worth testing early, because it is cheap to test and it supersedes a claim currently written
-into `open-questions.md`.
+into `archive/open-questions.md`.
 
 ---
 
@@ -32,7 +32,7 @@ into `open-questions.md`.
 2. **The three targets are not the same kind of thing.** Open Badges 3.0 is a *format we already
    meet*. Credly is a *commercial platform that now accepts imports*. Europass is a *regulated regime
    we are not eligible for*. Effort, risk, and blockers differ by category, not by degree.
-3. **Credly is far more reachable than `open-questions.md` Q7 currently says.** That entry
+3. **Credly is far more reachable than `archive/open-questions.md` Q7 currently says.** That entry
    ("closed platform; need a partnership conversation") predates Credly's earner-side import of
    outside badges. No partnership appears to be required for the display use case. See §4.
 4. **`.svg` is an accepted Credly import format** — and our badges are SVGs with the credential
@@ -65,11 +65,11 @@ Every third-party display target expects an email-derived identifier:
 | Target | Identifier expectation |
 |---|---|
 | Credly import | Email must match one on the earner's Credly account (their hashing is case-sensitive) |
-| HR systems (Workday, BambooHR) | Email hash — already noted at `open-questions.md:20` |
+| HR systems (Workday, BambooHR) | Email hash — already noted at `archive/open-questions.md:20` |
 | LinkedIn | No identifier at all — see §2; the URL carries the proof |
 
 **The important reframing:** this is already logged as an open question in two places
-(`mapping.md:115`, `docs/plans/2026-05-16-001-…:182`). This research did not discover it. It found
+(`archive/mapping.md:115`, `docs/plans/2026-05-16-001-…:182`). This research did not discover it. It found
 the *forcing function* for it — and established that it gates the whole external-display surface
 rather than any one integration.
 
@@ -147,7 +147,7 @@ certification is wrong.
 ## 3. Open Badges 3.0 — already shipped, distribution is the gap
 
 **Format-side: essentially nothing needed.** We issue OB3 today, validated 13/13 with contexts
-resolving and signatures verifying (`validation-results.md`). OB3 is not a destination to integrate
+resolving and signatures verifying (`archive/validation-results.md`). OB3 is not a destination to integrate
 with; it is the format we are already in. The gaps are elsewhere:
 
 1. **The Holder Artifact is not built.** Baked SVGs carry the *Class Achievement* — holder-free by
@@ -165,9 +165,9 @@ compliant issuer with signatures preserved, and Credly does too (§4). So "deliv
 
 ---
 
-## 4. Credly — supersedes `open-questions.md` Q7
+## 4. Credly — supersedes `archive/open-questions.md` Q7
 
-> `open-questions.md:76` currently reads: **"Credly — closed platform; need a partnership
+> `archive/open-questions.md:76` currently reads: **"Credly — closed platform; need a partnership
 > conversation."** That was accurate when written (2026-04). It is now out of date.
 
 Credly documents **earner-side import of outside badges**: an earner uploads any OB2/OB3-compliant
@@ -331,7 +331,7 @@ question is re-opened on its own terms.
 ## 8. Open decisions — none of these are made
 
 1. **Recipient identifier shape** — pseudonymous only, or additive hashed email on an export variant?
-   Gates §3, §4, and HR import. *(Already logged: `mapping.md:115`, plan §182.)*
+   Gates §3, §4, and HR import. *(Already logged: `archive/mapping.md:115`, plan §182.)*
 2. **Pre-baked vs on-demand Holder Artifacts** — settles §7, and with it whether any datastore is
    needed at all.
 3. **Where issuer-organization data lives** — dbapi, committed JSON, or a new store (§6). Downstream

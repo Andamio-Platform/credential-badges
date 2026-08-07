@@ -123,7 +123,7 @@ Credential badges are free and open source, and contributions are welcome. Start
 
 ## Background
 
-These extension terms came out of the Andamio Open Badges 3.0 spike (April–May 2026). The spike is committed at [`spike/`](spike/README.md) (source of truth), and the full deployment plan that promotes it lives at [`docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md).
+These extension terms came out of the Andamio Open Badges 3.0 spike (April–May 2026). That prototype is committed at [`archive/`](archive/README.md) as history; the production signing path it became lives at [`signing/`](signing/README.md). The full deployment plan that promotes it lives at [`docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md).
 
 ## License
 

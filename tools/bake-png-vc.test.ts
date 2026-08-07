@@ -21,7 +21,7 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const COURSE_ID = "ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df";
 const SLT_HASH = "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db";
 const FLAGSHIP_PNG = join(REPO, "badges", `${COURSE_ID}.${SLT_HASH}.png`);
-const SIGNED_VC = join(REPO, "spike", "signer-spike", "signed-credential.json");
+const SIGNED_VC = join(REPO, "signing", "signed-credential.json");
 
 const flagshipPng = readFileSync(FLAGSHIP_PNG);
 const signedVc = readFileSync(SIGNED_VC, "utf8");

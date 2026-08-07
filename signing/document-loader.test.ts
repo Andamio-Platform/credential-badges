@@ -23,7 +23,7 @@ import {
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CTX_CACHE = path.join(HERE, "out", "ctx-cache");
-const REPO_CONTEXT_FILE = path.join(HERE, "..", "..", "context", "v1.jsonld");
+const REPO_CONTEXT_FILE = path.join(HERE, "..", "context", "v1.jsonld");
 
 const VM_ID = `${ISSUER_DID}#key-2026-07`;
 

@@ -19,9 +19,9 @@ Waiting for certainty is the expensive mistake.
 | Published as | `#key-2026-07` in `.well-known/did.json` (+ `/did.json` alias) — `Cache-Control: public, max-age=3600` |
 | Status list | `status/key-epoch-2026-07.json`, served at `/status/key-epoch-2026-07.json` — `max-age=3600`; **bit 0 = key-2026-07** (one bit per key version, positions 0–63) |
 | Flip tool | `tools/flip-status-bit.ts` — prepares the flipped unsigned payload; **never signs** |
-| Suspension state in code | `SUSPENDED_KEY_VERSION_POSITIONS` in `spike/signer-spike/status-list.ts` — builder + CI read it; the served list can never silently disagree |
-| Hardened re-sign | `spike/signer-spike` → `npm run sign:status` (cache clear → live anchor gate → live-DID key pin → exactly one KMS call → atomic write) |
-| Stale-proof guard | `COMMITTED_STATUS_FILE_SHA256` pin in `spike/signer-spike/status-list.test.ts` — update on every legitimate re-sign |
+| Suspension state in code | `SUSPENDED_KEY_VERSION_POSITIONS` in `signing/status-list.ts` — builder + CI read it; the served list can never silently disagree |
+| Hardened re-sign | `signing` → `npm run sign:status` (cache clear → live anchor gate → live-DID key pin → exactly one KMS call → atomic write) |
+| Stale-proof guard | `COMMITTED_STATUS_FILE_SHA256` pin in `signing/status-list.test.ts` — update on every legitimate re-sign |
 | Deploy | `git tag vX.Y.Z && git push origin vX.Y.Z` — the only deploy path (WIF ref-constrained to `refs/tags/v*`) |
 | KMS sign access | **James direct-only today** (personal gcloud). When the issuer service ships, the dedicated sign SA (deployment plan Decision 5) joins; a service compromise then also triggers this runbook |
 | Key-version creation | Terraform in `andamio-ops` (`terraform/credentials/`) — same infra source of truth as the [gateway keys](gateway-key.md) |
@@ -32,7 +32,7 @@ Any of these counts as suspected compromise. One is enough.
 
 - A KMS Cloud Audit Log `asymmetric-sign` entry not attributable to a known,
   transcribed run (every legitimate KMS call in this repo lands in
-  `spike/signer-spike/transcripts/`; the count per rung is documented in the
+  `signing/transcripts/`; the count per rung is documented in the
   merging PR).
 - A signed credential or status list surfaces in the wild that verifies under
   `#key-2026-07` but is not the committed `signed-credential.json` or
@@ -83,21 +83,21 @@ within **~1 h 40 m** end to end.
    sha256 of the committed input; review the stdout payload — only
    `encodedList` differs from the committed file, and `proof` is stripped.
 2. Record the flip in code, per the tool's output:
-   `spike/signer-spike/status-list.ts` →
+   `signing/status-list.ts` →
    `SUSPENDED_KEY_VERSION_POSITIONS = [0]`.
 3. Re-sign through the hardened path (~5 min; requires KMS sign access —
    James):
    ```bash
-   cd spike/signer-spike && npm run sign:status
+   cd signing && npm run sign:status
    ```
    **Verify:** output ends `KMS SIGN + LIVE-DID VERIFY OK` with
    `KMS asymmetric-sign calls: 1`; `status/key-epoch-2026-07.json` now decodes
    with bit 0 = 1.
 4. Update the sha pin: `shasum -a 256 status/key-epoch-2026-07.json` →
-   `COMMITTED_STATUS_FILE_SHA256` in `spike/signer-spike/status-list.test.ts`.
+   `COMMITTED_STATUS_FILE_SHA256` in `signing/status-list.test.ts`.
 5. Prove coherence, ship (~25 min for CI + deploy):
    ```bash
-   node --experimental-strip-types --test spike/signer-spike/*.test.ts tools/*.test.ts
+   node --experimental-strip-types --test signing/*.test.ts tools/*.test.ts
    ```
    Commit the constant + re-signed list + sha pin together, push a branch,
    open a PR (CODEOWNERS gates `/status/**` and the flip tool), merge, then:
@@ -134,14 +134,14 @@ directions below pass against the LIVE list.**
    **Verify:** prints `bit 0 = 1 (SUSPENDED)`.
 2. A status-honoring verifier reports the **subject credential** suspended:
    ```bash
-   cd spike/signer-spike && npm run verify -- --status live
+   cd signing && npm run verify -- --status live
    ```
    **Verify:** the loopback now **fails** with
    `credential SUSPENDED at statusListIndex 0` — success here means the flip
    propagated through a real `credentialStatus` evaluation. Re-run the
    independent verifier set (spruce on the live list; 1EdTech OB30Inspector on
    the extracted flagship credential, per
-   `spike/signer-spike/transcripts/`) and confirm at least one third-party
+   `signing/transcripts/`) and confirm at least one third-party
    verifier surfaces the suspension.
 3. Remember the cache tail: a verifier that fetched the list up to an hour
    before deploy may still hold the fresh list until `max-age=3600` expires.
@@ -167,7 +167,7 @@ propagates within the same one-hour window.
      version `"1"`). Point it at the new version with a new dated fragment
      (`#key-YYYY-MM`), **omitting the compromised method** from both
      `verificationMethod` and `assertionMethod`.
-   - `spike/signer-spike/status-list.ts`: add the new key version to
+   - `signing/status-list.ts`: add the new key version to
      `KEY_VERSION_POSITIONS` (next free position, e.g. `"key-YYYY-MM": 1`) and
      move `ACTIVE_KEY_VERSION` to it. Stand up the new epoch's list file
      `status/key-epoch-YYYY-MM.json` (all zeros; new credentials'
@@ -198,7 +198,7 @@ until re-issued. Today that is the flagship credential; at scale it is every
 credential in the epoch.
 
 1. Re-sign each affected credential through the hardened subject path
-   (`spike/signer-spike` → `npm run sign:kms`) — the anchor gate re-proves
+   (`signing` → `npm run sign:kms`) — the anchor gate re-proves
    each credential against the chain before the new key touches it, so a
    forged credential cannot ride the re-issuance wave.
 2. Re-bake baked badges:
@@ -248,7 +248,7 @@ method is removed, there is no un-remove; recovery is re-issuance.
 ## Related
 
 - Flip tool: [`../../tools/flip-status-bit.ts`](../../tools/flip-status-bit.ts) (prepares; never signs)
-- Hardened signer: [`../../spike/signer-spike/sign-status-list.ts`](../../spike/signer-spike/sign-status-list.ts)
-- Status-list semantics + committed suspension state: [`../../spike/signer-spike/status-list.ts`](../../spike/signer-spike/status-list.ts)
+- Hardened signer: [`../../signing/sign-status-list.ts`](../../signing/sign-status-list.ts)
+- Status-list semantics + committed suspension state: [`../../signing/status-list.ts`](../../signing/status-list.ts)
 - Deploy mechanics: [`../../DEPLOY.md`](../../DEPLOY.md)
 - Decision 3 / kill-switch design: [`../plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`](../plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md)

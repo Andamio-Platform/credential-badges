@@ -45,8 +45,8 @@
 # /status/** is gated so any future sibling on this forever-public path is
 # reviewed too.
 /status/**                             @workshop-maybe
-/spike/signer-spike/status-list.ts     @workshop-maybe
-/spike/signer-spike/status-list.test.ts @workshop-maybe
+/signing/status-list.ts        @workshop-maybe
+/signing/status-list.test.ts @workshop-maybe
 
 # The key-compromise kill-switch (Rung 8.6; deployment plan Decision 3 +
 # CODEOWNERS glob set). The flip tool prepares the suspension flip for a whole
@@ -71,3 +71,11 @@
 # generated artifact, so widening its charset gets a deliberate review.
 /scripts/alias_gate.py            @workshop-maybe
 /scripts/tests/test_alias_gate.py @workshop-maybe
+
+# The liveness guard for this file. GitHub never warns about a pattern that
+# matches nothing, so a path move can silently retire any gate above — the
+# retire-spike move (2026-08) relocated the two status-list entries and only
+# a hand check caught it. codeowners.test.ts turns that into a red build.
+# Gated alongside the thing it protects, same as did-pin.test.ts and
+# context-freeze.test.ts: deleting the guard should be a deliberate act.
+/tools/codeowners.test.ts      @workshop-maybe

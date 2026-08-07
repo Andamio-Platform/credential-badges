@@ -122,7 +122,7 @@ outage until you roll forward.
   `assertionMethod`.
 - Regenerate `.well-known/did.json`; update the pins in `tools/did-pin.test.ts`
   for **both** keys.
-- `spike/signer-spike/status-list.ts` — add the new key to
+- `signing/status-list.ts` — add the new key to
   `KEY_VERSION_POSITIONS` at the next free position, and move
   `ACTIVE_KEY_VERSION` to it. Leave `SUSPENDED_KEY_VERSION_POSITIONS` alone: an
   additive rotation suspends nothing.
@@ -130,7 +130,7 @@ outage until you roll forward.
   nginx `^~ /status/` location serves any new file in the tree with correct
   headers automatically.
 
-**Verify:** `node --experimental-strip-types --test tools/*.test.ts spike/signer-spike/*.test.ts`
+**Verify:** `node --experimental-strip-types --test tools/*.test.ts signing/*.test.ts`
 green; the regenerated `did.json` contains **both** fragments.
 
 ### 2b. Sign the new epoch list — after did.json is live, not before
@@ -147,7 +147,7 @@ So the static deploy splits in two:
 2. Then sign the new epoch list through the hardened path and deploy it.
    **Verify:** the signed list's `proof.verificationMethod` names the **new**
    fragment; update the `COMMITTED_STATUS_FILE_SHA256` pin in
-   `spike/signer-spike/status-list.test.ts` in the same PR.
+   `signing/status-list.test.ts` in the same PR.
 
 The outgoing epoch list stays served, unchanged, with its bit still `0`. Old
 credentials point at it and must keep resolving.
@@ -264,7 +264,7 @@ migration is exactly this runbook.
 
 - Compromise kill-switch: [`key-compromise.md`](key-compromise.md)
 - DID generator: [`../../tools/gen-did-json.ts`](../../tools/gen-did-json.ts) · pin test [`../../tools/did-pin.test.ts`](../../tools/did-pin.test.ts)
-- Key-version registry + status semantics: [`../../spike/signer-spike/status-list.ts`](../../spike/signer-spike/status-list.ts)
+- Key-version registry + status semantics: [`../../signing/status-list.ts`](../../signing/status-list.ts)
 - Boot drift check: [`../../issuer-service/src/drift-check.ts`](../../issuer-service/src/drift-check.ts)
 - Issuer service posture: [`../../issuer-service/README.md`](../../issuer-service/README.md)
 - Deploy mechanics: [`../../DEPLOY.md`](../../DEPLOY.md)

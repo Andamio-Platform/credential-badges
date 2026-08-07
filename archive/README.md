@@ -1,4 +1,24 @@
-# Andamio OB 3.0 Prototype Spike
+# Archive — the OB 3.0 prototype and the Phase 0 verifier pre-flight
+
+**This directory is history. Nothing here runs in production and no CI job executes out of it.**
+
+It was `spike/` until the production half was promoted out. What lives here now:
+
+- `src/`, `samples/`, and the design notes — the Phase 1 OB 3.0 prototype, superseded by `signing/` (the operator-run signing package) and `issuer-service/` (the on-demand signing service).
+- `verifier-spike/` — the Phase 0 pre-flight that confirmed the target verifier set handles the production feature combination. Its `results/` are the evidence behind that decision.
+
+**The production code went to [`signing/`](../signing/README.md).** That is where the KMS signing path, the 58 signed class artifacts, and the KMS transcripts live.
+
+**Two files here are still current authority, archived by location only:**
+
+- [`mapping.md`](mapping.md) — the Andamio → OB 3.0 field mapping and the URN convention. `docs/badge-registry.md` cites it for `slt_hash` semantics.
+- [`credential-imagery.md`](credential-imagery.md) — the v1 design decision for `badges/`.
+
+Do not prune either one while `docs/badge-registry.md` still points at them. Tracked as [#117](https://github.com/Andamio-Platform/credential-badges/issues/117) — the fix is to promote them into `docs/`, not to delete them.
+
+---
+
+## The original prototype
 
 Phase 1 prototype for the [Open Badge 3.0 integration plan](../2026-04-16-open-badge-3-integration-one-pager.md). Generates and validates a signed Open Badges 3.0 credential for a real Andamio Cardano preprod course.
 

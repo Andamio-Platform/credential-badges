@@ -64,7 +64,7 @@ export const SUBJECT = {
   // Andamio V2 Access Token (Scaffolding Era) global-state asset for the
   // recipient: ASCII "g" + alias. Same derivation as the committed
   // real-recipient sample (globalStateAssetNameAscii "gjames" for alias
-  // "james" — spike/samples/sustain-and-maintain-gimbalabs-james-real.jsonld).
+  // "james" — archive/samples/sustain-and-maintain-gimbalabs-james-real.jsonld).
   studentStateAsset: "gjames",
   courseTitle: "Andamio Issuer",
   moduleTitle: "About Andamio Issuer",

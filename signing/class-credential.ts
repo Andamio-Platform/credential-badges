@@ -56,7 +56,7 @@ import { PRODUCTION_CONTEXTS, ISSUER_DID } from "./map-credential.ts";
 import { statusListEntry } from "./status-list.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, "..", "..");
+const REPO = path.resolve(HERE, "..");
 const REGISTRY_PATH = path.join(REPO, "generator", "credentials.json");
 
 /** The signing-key epoch this definition is published under. Deterministic by
