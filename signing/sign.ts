@@ -61,7 +61,7 @@ import {
   rawPublicKeyToMultibase,
   spkiPemToRawPublicKey,
   KMS_GET_PUBKEY_ARGS,
-} from "../../tools/gen-did-json.ts";
+} from "../tools/gen-did-json.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(HERE, "out");

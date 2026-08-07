@@ -33,9 +33,9 @@ FLAGSHIP = os.path.join(
 # the others).
 FLAGSHIP_STEM = ("ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df."
                  "e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db")
-CLASS_VC = os.path.join(REPO, "spike", "signer-spike", "class-artifacts",
+CLASS_VC = os.path.join(REPO, "signing", "class-artifacts",
                         f"{FLAGSHIP_STEM}.json")
-SIGNED_VC = os.path.join(REPO, "spike", "signer-spike", "signed-credential.json")
+SIGNED_VC = os.path.join(REPO, "signing", "signed-credential.json")
 TS_TOOL = os.path.join(REPO, "tools", "bake-signed-vc.ts")
 
 

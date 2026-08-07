@@ -35,7 +35,7 @@ import jsonld from "jsonld";
 import { makeDocumentLoader, ANDAMIO_CONTEXT_URL } from "./document-loader.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.join(HERE, "..", "..");
+const REPO = path.join(HERE, "..");
 const REPO_CONTEXT_FILE = path.join(REPO, "context", "v1.jsonld");
 
 const SIGNED_ARTIFACTS: Record<string, { file: string; canonicalSha256: string }> = {

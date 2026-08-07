@@ -34,9 +34,9 @@ const BADGE_PATH = join(REPO, "badges", `${COURSE_ID}.${SLT_HASH}.svg`);
 // badge cannot name a holder without misreporting for every other holder of the
 // same coordinate.
 const CLASS_VC_PATH = join(
-  REPO, "spike", "signer-spike", "class-artifacts", `${COURSE_ID}.${SLT_HASH}.json`,
+  REPO, "signing", "class-artifacts", `${COURSE_ID}.${SLT_HASH}.json`,
 );
-const HOLDER_VC_PATH = join(REPO, "spike", "signer-spike", "signed-credential.json");
+const HOLDER_VC_PATH = join(REPO, "signing", "signed-credential.json");
 
 const badgeSvg = readFileSync(BADGE_PATH, "utf8");
 const classVc = readFileSync(CLASS_VC_PATH, "utf8");

@@ -68,5 +68,5 @@ Credentials already signed against `v0` keep verifying because `v0.jsonld` never
 - verifybadge.org report 44c287d8 (2026-07-22): the failing probe's `canonicalizedJsonLdObjectWithoutProof` is missing the post-upgrade terms, the direct evidence for this rule
 - verifybadge.org report 82863657 (2026-07-23): same failure ~38h later — the evidence that verifier document caches are unbounded and the incident could not self-heal
 - `tools/context-freeze.test.ts` + the deploy-time freeze-pin step in `.github/workflows/deploy.yml`: this convention as an enforced invariant (any byte change to a published context version is CI-red and deploy-blocked)
-- `spike/verifier-spike/verifiers/spruce/run.sh`: independent verification path used to isolate the failure to the verifier's cache
+- `archive/verifier-spike/verifiers/spruce/run.sh`: independent verification path used to isolate the failure to the verifier's cache
 - `docs/verifier-guidance.md`: verifier-facing framing of the credential

@@ -31,12 +31,12 @@ sign by hand.
 ## Phase 1 — Dry run (no KMS)
 
 ```bash
-cd spike/signer-spike
+cd signing
 npm run sign:class -- --signer local --badge <courseId>.<sltHash>
 ```
 
 **Verify:** ends `DRY RUN SIGN + LOOPBACK VERIFY OK`. Output lands in
-`spike/signer-spike/out/` — gitignored, so a dry-run artifact cannot be
+`signing/out/` — gitignored, so a dry-run artifact cannot be
 committed. It carries a `did:example` issuer and the bake step refuses it by
 design.
 
@@ -53,8 +53,8 @@ loopback-verifies against the **live** status list, and asserts the signer seam
 was invoked exactly once for that artifact.
 
 **Verify:** `KMS SIGN + VERIFY OK`, and the transcript exists under
-`spike/signer-spike/transcripts/`. Artifact lands in
-`spike/signer-spike/class-artifacts/`.
+`signing/transcripts/`. Artifact lands in
+`signing/class-artifacts/`.
 
 ## Phase 3 — Validate the shape externally
 
@@ -70,17 +70,17 @@ npm run validate:1edtech -- class-artifacts/<badgeId>.json
 ```
 
 **Pass criterion:** `VALID`, **0 errors and 0 warnings** — the Phase 0 bar
-(`spike/verifier-spike/results/onedtech.md`), not merely "no errors".
+(`archive/verifier-spike/results/onedtech.md`), not merely "no errors".
 
 If it fails, stop. Do not batch-sign. The response is saved under
-`spike/signer-spike/out/validation/`.
+`signing/out/validation/`.
 
 **This gate has already caught one refuted design decision.** The first shape
 omitted `credentialSubject.id` — the identityless form the OB 3.0 implementation
 guide recommends and the published schema permits — and the validator errored
 with `no id in credentialSubject` (CredentialSubjectProbe). The guide and the
 validator disagree; the validator wins. Evidence and the fix are in
-[`../../spike/signer-spike/validation/README.md`](../../spike/signer-spike/validation/README.md).
+[`../../signing/validation/README.md`](../../signing/validation/README.md).
 Treat "the spec says this is fine" as a hypothesis this gate tests, not a
 reason to skip it.
 
@@ -132,5 +132,5 @@ and re-committing all of them — see
 
 - Plan: [`../plans/2026-07-28-004-feat-fully-baked-badges-plan.md`](../plans/2026-07-28-004-feat-fully-baked-badges-plan.md)
 - Requirements: [`../brainstorms/2026-07-28-fully-baked-badges-requirements.md`](../brainstorms/2026-07-28-fully-baked-badges-requirements.md)
-- Prior verifier evidence: [`../../spike/verifier-spike/results/onedtech.md`](../../spike/verifier-spike/results/onedtech.md)
+- Prior verifier evidence: [`../../archive/verifier-spike/results/onedtech.md`](../../archive/verifier-spike/results/onedtech.md)
 - Vocabulary: [`../../CONCEPTS.md`](../../CONCEPTS.md)

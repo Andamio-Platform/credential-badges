@@ -4,16 +4,18 @@ The production issuer service: serves a **signed OB3 Verifiable Credential**
 for any registered Andamio badge on demand. TypeScript, Cloud Run, KMS-signed
 Data Integrity proofs (`eddsa-rdfc-2022`).
 
-This service **inherits the hardened `spike/signer-spike/` logic** (Rung 6,
+This service **inherits the hardened `signing/` logic** (Rung 6,
 hardened at Rung 8 per issue #54, finalized at Rung 8.3): the anchor gate with
 SLT Blake2b verification, the live-did key pin, the narrow vc.issue error
 handling, the single-sign assertion, the key-epoch status-list integration,
-and the flat evidence dialect. Each `src/` module's header comment names its
-spike origin. The spike stays in place as the reference implementation and
-CLI harness; the service is a clean port (the spike is a one-shot CLI pinned
-to one subject, the service is a long-running server generalized to any
-registered badge — sharing code directly would have broken the spike's
-hermetic tests and its pinned-subject posture).
+and the flat evidence dialect. Each `src/` module's header comment names the
+`spike/signer-spike/` file it was ported from; that directory is now
+[`signing/`](../signing/README.md), and the headers are left as dated
+provenance rather than rewritten. `signing/` remains the operator-run CLI
+harness; the service is a clean port (the CLI is one-shot and pinned to one
+subject, the service is a long-running server generalized to any registered
+badge — sharing code directly would have broken the CLI's hermetic tests and
+its pinned-subject posture).
 
 ## The contract
 

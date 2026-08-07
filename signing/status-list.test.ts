@@ -28,7 +28,7 @@ import {
 } from "./status-list.ts";
 
 const ISSUER_DID = "did:web:credentials.andamio.io";
-const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const COMMITTED_STATUS_FILE = join(REPO, "status", "key-epoch-2026-07.json");
 
 test("registry: key-2026-07 owns bit 0 and is the active key version", () => {

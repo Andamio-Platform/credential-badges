@@ -45,8 +45,8 @@
 # /status/** is gated so any future sibling on this forever-public path is
 # reviewed too.
 /status/**                             @workshop-maybe
-/spike/signer-spike/status-list.ts     @workshop-maybe
-/spike/signer-spike/status-list.test.ts @workshop-maybe
+/signing/status-list.ts        @workshop-maybe
+/signing/status-list.test.ts @workshop-maybe
 
 # The key-compromise kill-switch (Rung 8.6; deployment plan Decision 3 +
 # CODEOWNERS glob set). The flip tool prepares the suspension flip for a whole

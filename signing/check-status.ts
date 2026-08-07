@@ -33,7 +33,7 @@ import { decodeStatusList, statusBitAt, STATUS_LIST_URL } from "./status-list.ts
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const COMMITTED_STATUS_FILE = path.join(
-  HERE, "..", "..", "status", "key-epoch-2026-07.json",
+  HERE, "..", "status", "key-epoch-2026-07.json",
 );
 
 export type StatusListSource = "committed" | "live";

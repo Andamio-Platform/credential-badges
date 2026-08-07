@@ -21,7 +21,7 @@ import {
 import { PRODUCTION_CONTEXTS, ISSUER_DID } from "./map-credential.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, "..", "..");
+const REPO = path.resolve(HERE, "..");
 const REGISTRY = path.join(REPO, "generator", "credentials.json");
 
 const registry = JSON.parse(readFileSync(REGISTRY, "utf8")) as Array<{

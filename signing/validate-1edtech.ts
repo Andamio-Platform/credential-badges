@@ -30,7 +30,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, "..", "..");
+const REPO = path.resolve(HERE, "..");
 const RESULTS_DIR = path.join(HERE, "out", "validation");
 
 const ENDPOINT = "https://verifybadge.org/api/validate";

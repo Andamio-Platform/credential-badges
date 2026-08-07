@@ -35,15 +35,15 @@ jobs:
         # land at Rung 8, per plan KTD-2). No install — tools/ is dependency-free.
         run: node --experimental-strip-types --test tools/*.test.ts
 
-  signer-spike-hardening:
+  signing-hardening:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: "Signer-spike hardening tests (issue #54) — hermetic: fetch is mocked, no KMS, no npm install (the tested modules are dependency-free)"
-        run: node --experimental-strip-types --test spike/signer-spike/*.test.ts
+      - name: "Signing-package hardening tests (issue #54) — hermetic: fetch is mocked, no KMS, no npm install (the tested modules are dependency-free)"
+        run: node --experimental-strip-types --test signing/*.test.ts
 
   expansion-pin:
     runs-on: ubuntu-latest
@@ -52,8 +52,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: "Signed-artifact expansion pin — canonicalizes the committed signed artifacts (signed-credential.json, status/key-epoch-2026-07.json) under the COMMITTED context/v1.jsonld and pins the RDF dataset hash, so no context PR can silently change what the committed proofs were computed over. Needs the spike's jsonld dep (npm ci — not in the hermetic job); network touches only the version-pinned immutable W3C/OB3 contexts."
-        working-directory: spike/signer-spike
+      - name: "Signed-artifact expansion pin — canonicalizes the committed signed artifacts (signed-credential.json, status/key-epoch-2026-07.json) under the COMMITTED context/v1.jsonld and pins the RDF dataset hash, so no context PR can silently change what the committed proofs were computed over. Needs the signing package's jsonld dep (npm ci — not in the hermetic job); network touches only the version-pinned immutable W3C/OB3 contexts."
+        working-directory: signing
         run: |
           npm ci
           npm run test:expansion-pin

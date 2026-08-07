@@ -51,7 +51,7 @@ import { buildClassCredential, registry, type BadgeRecord } from "./class-creden
 import { existsSync } from "node:fs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, "..", "..");
+const REPO = path.resolve(HERE, "..");
 // Production artifacts are committed; dry-run artifacts carry a did:example
 // issuer and must never be mistaken for them. Routing dry-run output into the
 // already-gitignored out/ makes that a property of the filesystem rather than
