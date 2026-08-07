@@ -5,7 +5,7 @@
 // identity assertions here walk the whole object rather than checking known
 // field names.
 //
-// Run: node --experimental-strip-types --test spike/signer-spike/class-credential.test.ts
+// Run: node --experimental-strip-types --test signing/class-credential.test.ts
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -21,7 +21,7 @@ import {
 import { PRODUCTION_CONTEXTS, ISSUER_DID } from "./map-credential.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, "..", "..");
+const REPO = path.resolve(HERE, "..");
 const REGISTRY = path.join(REPO, "generator", "credentials.json");
 
 const registry = JSON.parse(readFileSync(REGISTRY, "utf8")) as Array<{

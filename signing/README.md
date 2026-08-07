@@ -1,4 +1,63 @@
-# signer-spike (Rung 6, hardened at Rung 8, finalized at Rung 8.3)
+# signing — the Andamio credential signing package
+
+**This is production.** It holds the KMS signing path, the key-epoch status
+list builder that backs the key-compromise kill switch, and the 58 signed
+class artifacts every served badge is baked from. Two CI jobs run out of it.
+
+## Why it lives here, and not in `tools/` or `scripts/`
+
+Not `tools/` — that directory is **dependency-free by design** (its own
+`package.json` says so, and the `did-pin` CI job runs it with no install).
+This package carries real npm dependencies: `@digitalbazaar/*`, `jsonld`,
+`jsonld-signatures`, plus a lockfile the `expansion-pin` job installs from.
+
+Not `scripts/` — the nearest precedent, `scripts/verify-live/`, went there
+because it is read-only and explicitly *not* part of the signing path. This
+code **is** the signing path.
+
+So it sits at top level, a sibling of `issuer-service/` and `imaging/`: a
+self-contained package with its own manifest, lockfile, and CI job. That is
+the shape this repo already uses for dependency-carrying modules.
+
+**The two packages import each other, and one invariant holds that up.**
+`sign.ts` and `bake-class.ts` import `../tools/gen-did-json.ts` and
+`../tools/bake-signed-vc.ts`; in the other direction `tools/flip-status-bit.ts`
+imports `../signing/status-list.ts`. That reverse edge only works because
+`status-list.ts` imports nothing but `node:zlib`. **Add any npm import to
+`status-list.ts` and the `did-pin` CI job breaks** — it runs `tools/` with no
+install — while everything still passes locally, where `signing/node_modules/`
+exists. Keep that one module dependency-free.
+
+## Not to be confused with `issuer-service/`
+
+Both sign credentials. They divide like this:
+
+- **`signing/` (here)** — the operator-run batch CLI. Produces the committed
+  class artifacts, builds and signs the status list, bakes signed credentials
+  into `badges/*.svg`. One-shot, run deliberately, transcribed every time.
+- **[`issuer-service/`](../issuer-service/README.md)** — the long-running
+  service that signs on demand, per holder, for any registered badge.
+
+`issuer-service/` was ported from this code; its `src/` header comments still
+name the original `spike/signer-spike/` paths as dated provenance.
+
+## Provenance
+
+This package was `spike/signer-spike/` until it was promoted out. The name was
+the only thing prototype about it — the signing, the artifacts, and the CI jobs
+were all production. The prototype it grew from is retained as history at
+[`archive/`](../archive/README.md).
+
+Transcripts under [`transcripts/`](./transcripts/) record commands run against
+the old `spike/signer-spike/` path and are **never rewritten** — the
+key-compromise runbook treats a KMS `asymmetric-sign` not attributable to a
+recorded run as a compromise trigger, so falsifying a capture to tidy a path
+would break the attribution chain. A future auditor reconciling an audit entry
+against a transcript should expect the pre-rename path there.
+
+---
+
+## Rung 6, hardened at Rung 8, finalized at Rung 8.3
 
 One cryptographically signed OB3 Verifiable Credential for a **real mainnet
 Andamio credential**, signed with the **production GCP KMS Ed25519 key**,
@@ -10,7 +69,7 @@ since Rung 8.3 in its FINAL production shape: the deployment plan's flat
 `evidence` anchor dialect (`network`/`policyId`/`asset`/`claimTxHash`),
 top-level `courseOwner` attribution (assessor omitted — the on-chain record
 names none), and a `credentialStatus` BitstringStatusListEntry pointing at the
-served key-epoch status list ([`status/key-epoch-2026-07.json`](../../status/key-epoch-2026-07.json),
+served key-epoch status list ([`status/key-epoch-2026-07.json`](../status/key-epoch-2026-07.json),
 signed with the same key; `statusPurpose: "suspension"`, one bit per key
 version, bit 0 = `#key-2026-07` = 0).
 
@@ -114,14 +173,14 @@ Rung-8 hardening (issue #54, findings 1 + 2):
 ## Repro commands
 
 ```
-cd spike/signer-spike
+cd signing
 npm install
 
 npm run check-anchor     # anchor gate only; writes out/anchor.json
 npm run map              # gate + unsigned credential; writes out/credential-unsigned.json
 npm run sign:local       # gate + loopback sign/verify with an ephemeral key (no KMS)
 npm run sign:status      # gate + key-pin check + ONE KMS sign of the key-epoch
-                         #   status list -> writes ../../status/key-epoch-2026-07.json
+                         #   status list -> writes ../status/key-epoch-2026-07.json
 npm run sign:kms         # gate + key-pin check + ONE KMS sign + live-did verify
                          #   -> writes ./signed-credential.json
 npm run verify           # standalone digitalbazaar verify of the committed artifact
@@ -140,8 +199,8 @@ npm run resign-check     # ONE deterministic KMS re-sign of the committed artifa
 # strict-equality drift guard is the normal posture.
 
 # spruce (independent verifier #1):
-cd ../verifier-spike/verifiers/spruce
-./run.sh ../../../signer-spike/signed-credential.json
+cd ../archive/verifier-spike/verifiers/spruce
+./run.sh ../../../../signing/signed-credential.json
 
 # 1EdTech public validator (headless file upload):
 curl -X POST "https://verifybadge.org/api/validate?validatorId=OB30Inspector&other=" \

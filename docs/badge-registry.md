@@ -19,7 +19,7 @@ badge_id = <course_id> "." <slt_hash>
 | Segment | Bytes | Hex chars | What it is |
 |---|---|---|---|
 | `course_id` | 28 | 56 | The Cardano **minting policy id** of the course, created on-chain when an issuer creates the course. Also called `policy_id` in the README and `policyId` in credential `evidence`. |
-| `slt_hash` | 32 | 64 | The course-state hash the on-chain local state commits to for the module. Not opaque: it is a Blake2b-256 composition over the module's Student Learning Target texts (see `issuer-service/src/slt-hash.ts` and `spike/mapping.md` §"gjames map"). |
+| `slt_hash` | 32 | 64 | The course-state hash the on-chain local state commits to for the module. Not opaque: it is a Blake2b-256 composition over the module's Student Learning Target texts (see `issuer-service/src/slt-hash.ts` and `archive/mapping.md` §"gjames map"). |
 
 Concretely:
 
@@ -156,7 +156,7 @@ Revising a module's SLT texts changes its `slt_hash`, which changes the
 `badge_id`, which is a new URL. There is no in-place "version 2" of a badge and
 no version segment in the path. This is why the convention is version-precise
 for free — a course revision produces a distinguishable achievement, not a
-silent update (empirically demonstrated 2026-05-12, `spike/mapping.md`).
+silent update (empirically demonstrated 2026-05-12, `archive/mapping.md`).
 
 ### I6 — One `badge_id` → one credential, stored as a length-1 list
 
@@ -216,7 +216,7 @@ preprod. The render service copes by trying its configured `BADGE_NETWORKS`
 network, try the next".
 
 Why it is tolerated: mainnet is production-implicit under the URN convention
-(`spike/mapping.md`), the issuer service pins `NETWORK = "mainnet"` as a
+(`archive/mapping.md`), the issuer service pins `NETWORK = "mainnet"` as a
 build-time constant, and the credential itself carries `evidence.network`
 explicitly — so nothing *trust-affecting* depends on inferring the network
 from the URL. What would force a change: serving mainnet and preprod badges
@@ -240,7 +240,7 @@ existing one (I3).
 - **Not stable across Andamio deployments.** The `slt_hash` composition is
   salted with the deployment's `ls_cs`, so the same SLT texts under a different
   Andamio deployment produce a different `slt_hash` and therefore a different
-  badge (`spike/mapping.md`, "the hash is deployment-bound").
+  badge (`archive/mapping.md`, "the hash is deployment-bound").
 
 ---
 
@@ -292,6 +292,6 @@ Two known extensions, neither built:
 - [`generator/README.md`](../generator/README.md) — the generation pipeline
 - [`MOC.md`](../MOC.md) — repo map
 - [`docs/cache.md`](cache.md) — render-cache TTLs, orphan guard, `cache-admin`
-- [`spike/credential-imagery.md`](../spike/credential-imagery.md) — the v1 imagery design decision
-- [`spike/mapping.md`](../spike/mapping.md) — the full Andamio → OB 3.0 field mapping and the URN convention
+- [`archive/credential-imagery.md`](../archive/credential-imagery.md) — the v1 imagery design decision
+- [`archive/mapping.md`](../archive/mapping.md) — the full Andamio → OB 3.0 field mapping and the URN convention
 - [`docs/solutions/conventions/never-mutate-published-jsonld-context.md`](solutions/conventions/never-mutate-published-jsonld-context.md) — the sibling freeze rule for published contexts

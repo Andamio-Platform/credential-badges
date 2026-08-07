@@ -16,7 +16,7 @@
 // (STATUS_LIST_VALID_FROM), and the gzip encoding is mtime-0 — an unchanged
 // bitstring re-signs to a byte-identical artifact.
 //
-// Output: ../../status/key-epoch-2026-07.json (committed; served by the
+// Output: ../status/key-epoch-2026-07.json (committed; served by the
 // static host at /status/key-epoch-2026-07.json). Proof in array form, the
 // repo convention since rung 1.
 //
@@ -44,7 +44,7 @@ import {
 } from "./sign.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const OUT_FILE = path.join(HERE, "..", "..", "status", "key-epoch-2026-07.json");
+const OUT_FILE = path.join(HERE, "..", "status", "key-epoch-2026-07.json");
 
 async function main() {
   await clearContextCache();

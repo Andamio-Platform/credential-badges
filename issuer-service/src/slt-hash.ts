@@ -1,6 +1,6 @@
 // Rung 8 · SLT-hash derivation — the on-chain commitment, recomputed locally.
-// Ported verbatim from spike/signer-spike/slt-hash.ts (the hardened reference
-// implementation); the spike's test vectors (slt-hash.test.ts) remain the
+// Ported verbatim from signing/slt-hash.ts (the hardened reference
+// implementation); its test vectors (signing/slt-hash.test.ts) remain the
 // authoritative coverage for this module.
 //
 // An Andamio module's `slt_hash` is NOT an opaque identifier: it commits to the

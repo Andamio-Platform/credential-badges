@@ -23,12 +23,12 @@ This is distinct from the key-compromise runbook (`docs/runbooks/key-compromise.
 
 ## Guidance
 
-Run the hardened path (`spike/signer-spike/sign.ts --signer kms`), which enforces: context cache cleared → live anchor gate (on-chain claim re-verified, SLT texts hash-checked) → live-DID key pin (KMS public key == published `did.json`) → **exactly one** KMS `asymmetric-sign` call → atomic artifact write. `proof.created` derives from the claim-tx block time, so it is stable across re-signs by construction — no timestamp choice to make.
+Run the hardened path (`signing/sign.ts --signer kms`), which enforces: context cache cleared → live anchor gate (on-chain claim re-verified, SLT texts hash-checked) → live-DID key pin (KMS public key == published `did.json`) → **exactly one** KMS `asymmetric-sign` call → atomic artifact write. `proof.created` derives from the claim-tx block time, so it is stable across re-signs by construction — no timestamp choice to make.
 
 Then enforce **hard acceptance gates** — predictions, not observations:
 
 1. `proofValue` is **byte-identical** to the previous signature (Ed25519 is deterministic; same canonical N-Quads + same key + same created ⇒ same signature).
-2. Expansion-pin dataset hashes (`spike/signer-spike/expansion-pin.dep-test.ts`) are **unchanged** — the pins are not updated; they *verify* the re-sign.
+2. Expansion-pin dataset hashes (`signing/expansion-pin.dep-test.ts`) are **unchanged** — the pins are not updated; they *verify* the re-sign.
 3. The artifact diff is **exactly the intended lines** (in #65: one `@context` URL line in `signed-credential.json` and the same line inside the baked SVG).
 4. Re-bake with `tools/bake-signed-vc.ts` and confirm `extract` round-trips byte-identical to the signed artifact, committed **in the same commit** (the expansion-pin header rule).
 
@@ -44,7 +44,7 @@ Treating determinism as a *hope* ("proofValue will probably be unchanged") licen
 
 - Context version bumps where the new version is a byte-copy (cache-migration bumps)
 - Any re-sign where inputs to canonicalization are meant to be unchanged
-- As a periodic drift check: `spike/signer-spike/resign-check.ts` re-signs the committed content and byte-compares, proving pipeline determinism with one KMS call
+- As a periodic drift check: `signing/resign-check.ts` re-signs the committed content and byte-compares, proving pipeline determinism with one KMS call
 - NOT for key rotation or compromise — that is `docs/runbooks/key-compromise.md` (new key, new `verificationMethod`, status-list flip)
 
 ## Examples

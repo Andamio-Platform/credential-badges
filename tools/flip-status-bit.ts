@@ -6,7 +6,7 @@
 // deterministically from the COMMITTED signed list (one bit flipped,
 // everything else byte-stable) and prints the exact hardened re-sign command
 // the operator runs next. Signing stays exclusively on the existing hardened
-// path (spike/signer-spike/sign-status-list.ts: context-cache clear -> live
+// path (signing/sign-status-list.ts: context-cache clear -> live
 // anchor gate -> live-DID key pin -> exactly ONE KMS call -> atomic write).
 // No KMS, no gcloud, no network anywhere in this file.
 //
@@ -50,7 +50,7 @@ import {
   decodeStatusList,
   encodeStatusList,
   statusBitAt,
-} from "../spike/signer-spike/status-list.ts";
+} from "../signing/status-list.ts";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -233,23 +233,23 @@ is the full runbook — cache windows, cross-verifier reads, DID-doc response):
 
   1. Record the flip in code — the builder and CI read suspension state from
      the committed constant, so the flip is a reviewed code change:
-       spike/signer-spike/status-list.ts:
+       signing/status-list.ts:
          export const SUSPENDED_KEY_VERSION_POSITIONS: readonly number[] = ${positions};
 
   2. Re-sign through the hardened path (context-cache clear -> live anchor
      gate -> live-DID key pin -> exactly ONE KMS call -> atomic write). This
      tool did NOT sign; only this path may:
-       cd spike/signer-spike && npm run sign:status
+       cd signing && npm run sign:status
 
   3. Update the committed-file sha pin (the stale-proof guard in
-     spike/signer-spike/status-list.test.ts — its comment documents this exact
+     signing/status-list.test.ts — its comment documents this exact
      procedure: "UPDATE THIS PIN ON EVERY LEGITIMATE RE-SIGN"):
        shasum -a 256 status/${result.keyEpoch}.json
        -> paste into COMMITTED_STATUS_FILE_SHA256
 
   4. Prove coherence locally, then ship via reviewed PR + tag deploy
      (CODEOWNERS gates /status/** and this tool; only a v* tag deploys):
-       node --experimental-strip-types --test spike/signer-spike/*.test.ts tools/*.test.ts
+       node --experimental-strip-types --test signing/*.test.ts tools/*.test.ts
        git checkout -b <flip-branch> && git commit && git push -u origin HEAD
        # after merge:  git tag vX.Y.Z && git push origin vX.Y.Z
 

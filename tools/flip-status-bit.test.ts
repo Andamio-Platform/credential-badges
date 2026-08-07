@@ -27,7 +27,7 @@ import {
   buildStatusListCredential,
   decodeStatusList,
   statusBitAt,
-} from "../spike/signer-spike/status-list.ts";
+} from "../signing/status-list.ts";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const KEY_EPOCH = "key-epoch-2026-07";

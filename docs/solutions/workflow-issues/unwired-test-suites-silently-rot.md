@@ -22,7 +22,7 @@ tags: [ci, test-coverage, parity-test, generator, invariants]
 
 ## Context
 
-`generator/tests/` holds real invariant tests — including `test_render_parity.py`, which asserts generator output is byte-identical to the committed badge set. None of them run in CI: `ci.yml` globs `tools/*.test.ts`, `spike/signer-spike/*.test.ts`, the expansion-pin job, and the issuer-service suite, and nothing else. When PR #65 repointed `generator/gen.py` to the v1 context, the parity invariant broke for all 58 committed badges — and every CI check stayed green. The break surfaced only because a code-review agent found the suite and ran it manually; the fix (regenerating the badge set) then shipped in the same PR.
+`generator/tests/` holds real invariant tests — including `test_render_parity.py`, which asserts generator output is byte-identical to the committed badge set. None of them run in CI: `ci.yml` globs `tools/*.test.ts`, `signing/*.test.ts`, the expansion-pin job, and the issuer-service suite, and nothing else. When PR #65 repointed `generator/gen.py` to the v1 context, the parity invariant broke for all 58 committed badges — and every CI check stayed green. The break surfaced only because a code-review agent found the suite and ran it manually; the fix (regenerating the badge set) then shipped in the same PR.
 
 The counter-example from the same day proves the pattern in reverse: `tools/context-freeze.test.ts` was wired into both CI and the deploy workflow at birth, so it *cannot* silently rot — a context mutation goes red before merge and again at tag time.
 
@@ -50,7 +50,7 @@ The gap, concretely — `ci.yml` runs these:
 
 ```yaml
 node --experimental-strip-types --test tools/*.test.ts            # tools suite ✓
-node --experimental-strip-types --test spike/signer-spike/*.test.ts  # spike suite ✓
+node --experimental-strip-types --test signing/*.test.ts  # signing suite ✓
 # issuer-service: npm test ✓   expansion-pin: npm run test:expansion-pin ✓
 # generator/tests/*.py: nothing ✗  ← the parity invariant lived here, unenforced
 ```

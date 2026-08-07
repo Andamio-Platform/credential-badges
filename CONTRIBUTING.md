@@ -42,7 +42,7 @@ Full deploy mechanism, the allowlist rule, and tag policy live in [`DEPLOY.md`](
 
 ### The served-file allowlist
 
-Only an allowlisted set of files is baked into the served image (`Dockerfile` + `scripts/ci/check-allowlist.sh` enforce it). Repo material that is *not* served — `README.md`, `ROADMAP.md`, `MOC.md`, `docs/`, `spike/`, this file — lives in the repo without being deployed. If you add a new file that *should* be served, update the allowlist in the same PR; CI will fail otherwise.
+Only an allowlisted set of files is baked into the served image (`Dockerfile` + `scripts/ci/check-allowlist.sh` enforce it). Repo material that is *not* served — `README.md`, `ROADMAP.md`, `MOC.md`, `docs/`, `archive/`, this file — lives in the repo without being deployed. If you add a new file that *should* be served, update the allowlist in the same PR; CI will fail otherwise.
 
 ### Hosted files are versioned, never edited in place
 

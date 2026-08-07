@@ -34,19 +34,30 @@ id_ed25519
 *.env.*
 !.env.example
 
-# Imported spike: build, deps, throwaway signing keys, context cache
-spike/node_modules/
-spike/dist/
-spike/out/
-spike/.env
-spike/.env.local
+# Archived OB 3.0 prototype: build, deps, throwaway signing keys, context cache
+archive/node_modules/
+archive/dist/
+archive/out/
+archive/.env
+archive/.env.local
 
-# Imported spike: internal strategy/demo material — canonical home stays in
+# Archived OB 3.0 prototype: internal strategy/demo material — canonical home stays in
 # the private orchestration vault, not this public repo. Kept locally for
 # reference but never committed here.
+archive/end-user-ux-research.md
+archive/DEMO.md
+archive/screencast-script.md
+
+# Migration guard (retire-spike, 2026-08). `git mv` moves tracked files only,
+# so pulling the rename into an existing clone deletes the tracked spike/
+# files and leaves any untracked ones behind — now un-ignored, and one
+# `git add -A` from a permanent public history. Keep the old spellings until
+# no working copy has a spike/ leftover.
 spike/end-user-ux-research.md
 spike/DEMO.md
 spike/screencast-script.md
+spike/node_modules/
+spike/out/
 
 # python build artifacts
 generator/__pycache__/
