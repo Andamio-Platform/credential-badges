@@ -48,6 +48,17 @@ archive/end-user-ux-research.md
 archive/DEMO.md
 archive/screencast-script.md
 
+# Migration guard (retire-spike, 2026-08). `git mv` moves tracked files only,
+# so pulling the rename into an existing clone deletes the tracked spike/
+# files and leaves any untracked ones behind — now un-ignored, and one
+# `git add -A` from a permanent public history. Keep the old spellings until
+# no working copy has a spike/ leftover.
+spike/end-user-ux-research.md
+spike/DEMO.md
+spike/screencast-script.md
+spike/node_modules/
+spike/out/
+
 # python build artifacts
 generator/__pycache__/
 *.pyc

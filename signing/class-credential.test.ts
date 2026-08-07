@@ -5,7 +5,7 @@
 // identity assertions here walk the whole object rather than checking known
 // field names.
 //
-// Run: node --experimental-strip-types --test spike/signer-spike/class-credential.test.ts
+// Run: node --experimental-strip-types --test signing/class-credential.test.ts
 
 import assert from "node:assert/strict";
 import test from "node:test";

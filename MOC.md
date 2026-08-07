@@ -26,7 +26,7 @@ repo; that one maps the website.
 |---|---|
 | `Dockerfile` | Nginx-alpine image. **Explicit `COPY` of allowlisted paths only** — never `COPY .`. Currently allows `context/`, `issuer/`, `badges/`, `.well-known/`, `README.md`. |
 | `nginx/default.conf.template` | Per-extension MIME map (`application/ld+json` for `.jsonld`), exact-match for `/issuer`, cache headers, root landing page. `^~ /badges/` owns badge serving with `try_files $uri @render` — a miss proxies to `RENDER_UPSTREAM` (injected at container start). |
-| `scripts/ci/check-allowlist.sh` | Fails CI if any repo file outside the allowlist would end up served. `IGNORED_PREFIXES` covers tooling/build/docs/archive/`service` paths that are explicitly **not** served. |
+| `scripts/ci/check-allowlist.sh` | Fails CI if any repo file outside the allowlist would end up served. `IGNORED_PREFIXES` covers tooling/build/docs/signing/archive/`service` paths that are explicitly **not** served. |
 | `.github/workflows/ci.yml` | PR check — allowlist + docker build + smoke-test served Content-Types + nginx `@render` fallback e2e. |
 | `.github/workflows/deploy.yml` | Tag-triggered deploy (`v[0-9]*.*.*`) via Workload Identity Federation. Builds, pushes SHA + semver tags (never `:latest`), deploys to Cloud Run, verifies Content-Types on the live `*.run.app` URL. |
 | `DEPLOY.md` | Two-service topology, WIF ref-constraint (`refs/tags/v*`), deploy triggers, the `andamio-ops#170` infra delta + apply order, versioning + permanence, rollback. |

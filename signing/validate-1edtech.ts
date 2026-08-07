@@ -10,7 +10,7 @@
 //
 // Endpoint and invocation are inherited from the Phase 0 verifier spike, which
 // reached VALID 13/13 on the holder credential:
-//   spike/verifier-spike/results/onedtech.md
+//   archive/verifier-spike/results/onedtech.md
 //
 // Takes a LOCAL FILE and uploads it — no hosting required. The Phase 0 spike
 // used the URI form (`/api/validateuri`), which meant publishing the credential
@@ -121,7 +121,7 @@ async function main() {
   } else {
     console.log("\n❌ NOT a clean pass. Do NOT batch-sign.");
     console.log("   Read the full response above; the Phase 0 pass criterion is 0 errors AND 0 warnings");
-    console.log("   (spike/verifier-spike/results/onedtech.md).");
+    console.log("   (archive/verifier-spike/results/onedtech.md).");
     process.exit(1);
   }
 }

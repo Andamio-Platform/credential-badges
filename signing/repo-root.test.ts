@@ -50,16 +50,26 @@ test("repo-root resolution: resolve(HERE, '..') is the repo root", () => {
   }
 });
 
-// Built by concatenation so this file does not match its own patterns.
-// A literal here would make the guard flag itself and go red on a correct tree.
-const DEPTH2_PATTERNS = [
-  ['"..", ', '".."'].join(""), // the two-segment array form in a path.join/resolve
-  ["../", "../"].join(""), // the two-segment literal form in an import or comment
-];
+// Two `..` segments separated by nothing but quotes, commas, slashes, or
+// whitespace. Built from a source string rather than written as a literal so
+// this file does not flag itself. Matching on the SHAPE rather than on two
+// exact spellings is deliberate: `resolve(HERE, "..", "..")`, `"..",".."`,
+// `"../.."`, `../../`, and the same segments split across lines are all the
+// same bug, and a guard that only knew one spelling would go green on the
+// other four.
+const DEPTH2 = new RegExp(["\\.\\.", "[\\s,\"'/]*", "\\.\\."].join(""));
 
-test("no depth-2 path survives anywhere in the package", () => {
+// The cross-package imports this package makes. A depth edit can leave these
+// syntactically fine and still unresolvable, and no CI job ever loads the
+// modules that declare them (nothing imports sign.ts or bake-class.ts), so
+// the shape check above would pass while the import is broken.
+const CROSS_PACKAGE_IMPORTS = ["tools/gen-did-json.ts", "tools/bake-signed-vc.ts"];
+
+test("no depth-2 path survives in the package's top-level .ts sources", () => {
   // Top level only: no recursion, so node_modules/ (which the expansion-pin
   // job installs into this directory) and class-artifacts/ stay out of scope.
+  // Subdirectories are deliberately unscanned — the package is flat, and
+  // transcripts/ and validation/ are frozen records that keep the old paths.
   const sources = readdirSync(HERE, { withFileTypes: true })
     .filter((e) => e.isFile() && e.name.endsWith(".ts") && e.name !== SELF)
     .map((e) => e.name);
@@ -69,11 +79,12 @@ test("no depth-2 path survives anywhere in the package", () => {
   const offenders: string[] = [];
   for (const name of sources) {
     const body = readFileSync(path.join(HERE, name), "utf8");
-    body.split("\n").forEach((line, i) => {
-      for (const pattern of DEPTH2_PATTERNS) {
-        if (line.includes(pattern)) offenders.push(`${name}:${i + 1}: ${line.trim()}`);
-      }
-    });
+    // Scan the whole text, not line by line: the segments may be split across
+    // lines, and this package already formats one repo-root join that way.
+    if (!DEPTH2.test(body)) continue;
+    const at = body.search(DEPTH2);
+    const line = body.slice(0, at).split("\n").length;
+    offenders.push(`${name}:${line}: ${body.split("\n")[line - 1].trim()}`);
   }
 
   assert.deepEqual(
@@ -81,6 +92,17 @@ test("no depth-2 path survives anywhere in the package", () => {
     [],
     `depth-2 paths remain — these resolve above the repo root now:\n  ` +
       offenders.join("\n  ") +
-      `\n(comments count: sign-status-list.ts documents its own output path.)`,
+      `\n(comments count too: sign-status-list.ts documents its own output path.)`,
   );
+});
+
+test("cross-package imports resolve at this depth", () => {
+  for (const target of CROSS_PACKAGE_IMPORTS) {
+    assert.ok(
+      existsSync(path.join(REPO, target)),
+      `${target} not found from ${REPO} — an import specifier in this package ` +
+        `points at nothing. Nothing in CI loads the modules that declare these, ` +
+        `so this assertion is the only thing that catches it.`,
+    );
+  }
 });

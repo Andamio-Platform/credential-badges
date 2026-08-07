@@ -50,7 +50,7 @@ The gap, concretely — `ci.yml` runs these:
 
 ```yaml
 node --experimental-strip-types --test tools/*.test.ts            # tools suite ✓
-node --experimental-strip-types --test signing/*.test.ts  # spike suite ✓
+node --experimental-strip-types --test signing/*.test.ts  # signing suite ✓
 # issuer-service: npm test ✓   expansion-pin: npm run test:expansion-pin ✓
 # generator/tests/*.py: nothing ✗  ← the parity invariant lived here, unenforced
 ```

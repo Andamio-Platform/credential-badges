@@ -1,7 +1,7 @@
 {
-  "name": "signer-spike",
+  "name": "andamio-credential-signing",
   "version": "0.0.1",
-  "description": "Rung 6: one cryptographically signed OB3 VC for a real mainnet Andamio credential \u2014 KMS Ed25519, hard-gated on a live on-chain anchor check.",
+  "description": "The Andamio credential signing package (Rung 6, hardened at Rung 8.3): one cryptographically signed OB3 VC for a real mainnet Andamio credential \u2014 KMS Ed25519, hard-gated on a live on-chain anchor check.",
   "type": "module",
   "private": true,
   "scripts": {
