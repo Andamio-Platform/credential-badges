@@ -89,7 +89,18 @@ check() { # description, condition-already-evaluated ($1 desc, $2 ok/empty)
   if [ -n "$2" ]; then echo "  ok   — $1"; else echo "  FAIL — $1"; fails=$((fails+1)); fi
 }
 
-baked="$(ls badges/*.svg | grep -v _placeholder | head -1 | xargs -n1 basename)"
+# Pick any real baked badge. Deliberately pipe-free: the earlier
+# `ls | grep -v | head -1` raced — `head` closed the pipe, `grep` took SIGPIPE
+# and exited non-zero, and under `bash -e` that surfaced as a spurious
+# "grep: write error: Broken pipe" / exit 2 on an unrelated PR. Timing-
+# dependent, so it passed far more often than it failed.
+baked=""
+for f in badges/*.svg; do
+  [ "${f##*/}" = "_placeholder.svg" ] && continue
+  baked="${f##*/}"
+  break
+done
+if [ -z "$baked" ]; then echo "FATAL: no baked badge found in badges/" >&2; exit 1; fi
 # A well-formed (56-hex course_id . 64-hex slt_hash) badge id that is NOT baked.
 miss="$(printf 'a%.0s' $(seq 56)).$(printf 'b%.0s' $(seq 64)).svg"
 
