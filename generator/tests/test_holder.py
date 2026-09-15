@@ -148,20 +148,24 @@ def test_shell_cross_links_check_page():
 
 def test_registry_shape_and_signed_flag():
     reg = holder.build_registry()
-    assert len(reg) == 58, f"expected 58 built badges, got {len(reg)}"
+    # One registry entry per non-skipped credentials.json record. Derived rather
+    # than hardcoded: a new course is added by appending a record, and a pinned
+    # count turns every such addition into a test edit.
+    with open(os.path.join(GEN, "credentials.json")) as f:
+        expected = {f"{r['course_id']}.{r['slt_hash']}" for r in json.load(f)
+                    if r["course_id"] not in SKIP_COURSES}
+    assert set(reg) == expected, f"registry keys != credentials.json records ({len(reg)} vs {len(expected)})"
     for stem, meta in reg.items():
         assert STEM_RE.match(stem), f"registry key not a valid stem: {stem}"
         assert set(meta) == {"course_title", "module_title", "signed"}, f"bad entry: {stem}"
         assert isinstance(meta["signed"], bool)
     assert reg[FLAGSHIP]["signed"] is True, "flagship must be signed"
-    # Every committed badge now carries a signed class artifact, so the flag
-    # should read True across the board. This asserted the opposite while the
-    # rollout was partial; the flag's *derivation* is still exercised, and the
-    # presentation-only rendering path is covered by the synthetic fixture in
-    # test_page.py rather than by depending on an unsigned badge existing.
-    unsigned = [s for s, m in reg.items() if not m["signed"]]
-    assert not unsigned, f"expected every badge signed, {len(unsigned)} are not: {unsigned[:3]}"
-    print(f"  ✅ registry: 58 badges, valid stems, all signed")
+    # Not every badge is signed: a newly registered badge ships unsigned, because
+    # the issuer's anchor gate refuses to sign until the badge URL is live, so
+    # signing can only follow a deploy. The unsigned wording path is covered by
+    # the synthetic fixture in test_page.py.
+    signed = sum(1 for m in reg.values() if m["signed"])
+    print(f"  ✅ registry: {len(reg)} badges ({signed} signed), valid stems, flagship signed")
 
 
 def test_registry_excludes_skip_courses():
