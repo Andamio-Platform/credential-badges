@@ -7,16 +7,28 @@ snapshot and renders one self-contained SVG per credential, named
 two encoded rings (outer = course_id, inner = slt_hash), OB3 metadata baked in,
 and fonts embedded from fonts.css.
 
+Badge art (#131) comes from generator/art/ via art.py, validated as a whole
+before the first write so a bad file can never leave the output half rewritten.
+
 Usage:
     python3 build.py            # write to ../badges/
     python3 build.py <outdir>   # write elsewhere (e.g. to verify reproduction)
+    python3 build.py <outdir> --only <badge_id> [--only <badge_id> ...]
+                                # scratch-build just those stems (the safe way to
+                                # refresh one signed badge: docs/runbooks/badge-art.md)
+    python3 build.py <outdir> --art-dir <dir>
+                                # art from <dir> instead of generator/art/ (tests,
+                                # make verify). A flag, never an environment variable,
+                                # so a placeholder can't leak into a production build.
 """
+import argparse
 import json
 import os
 import sys
 
 import gen
 import colors
+import art
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "credentials.json")
@@ -33,7 +45,7 @@ SKIP_COURSES = {"5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc"}
 palette_for = colors.palette_for
 
 
-def render(rec):
+def render(rec, badge_art=art.NO_ART):
     # Concurrency-safe: pass inputs as parameters instead of mutating gen's
     # module globals, so the render path is reusable per-request (the on-demand
     # service reuses gen.render_svg + palette_for the same way).
@@ -44,15 +56,33 @@ def render(rec):
         slt_hash=rec["slt_hash"],
         network="mainnet",
         pal=colors.light_interior(palette_for(rec["course_id"])),
+        image=badge_art.image_for(rec["course_id"], rec["slt_hash"]),
     )
 
 
 def main():
-    out = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
-    os.makedirs(out, exist_ok=True)
+    ap = argparse.ArgumentParser(description="Regenerate credential-badge SVGs.")
+    ap.add_argument("out", nargs="?", default=DEFAULT_OUT)
+    ap.add_argument("--only", action="append", metavar="BADGE_ID",
+                    help="build only this <course_id>.<slt_hash> (repeatable)")
+    ap.add_argument("--art-dir", default=art.ART_DIR)
+    args = ap.parse_args()
+    out = args.out
+
+    try:
+        badge_art = art.load(args.art_dir, skip_courses=SKIP_COURSES)  # whole dir, before any write
+    except art.ArtError as e:
+        sys.exit(f"❌ {e}")
     data = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
+    if args.only:
+        wanted = set(args.only)
+        data = [r for r in data if f"{r['course_id']}.{r['slt_hash']}" in wanted]
+        missing = wanted - {f"{r['course_id']}.{r['slt_hash']}" for r in data}
+        if missing:
+            sys.exit(f"❌ --only: not a built credential in credentials.json: {sorted(missing)}")
+    os.makedirs(out, exist_ok=True)
     for rec in data:
-        svg = render(rec)
+        svg = render(rec, badge_art)
         open(os.path.join(out, f"{rec['course_id']}.{rec['slt_hash']}.svg"), "w").write(svg)
     print(f"wrote {len(data)} badges -> {os.path.relpath(out, HERE)}/")
 

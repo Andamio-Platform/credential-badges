@@ -107,6 +107,26 @@ def test_out_of_subset_glyphs_sanitized():
     print("  ✅ out-of-subset title glyphs sanitized")
 
 
+def test_card_carries_injected_course_art():
+    import art
+    import shutil
+    import tempfile
+    d = tempfile.mkdtemp()
+    try:
+        shutil.copy(os.path.join(HERE, "fixtures", "art", "placeholder.jpg"),
+                    os.path.join(d, f"{REC['course_id']}.jpg"))
+        badge_art = art.load(d)
+    finally:
+        shutil.rmtree(d)
+    with_art = og._card_svg(REC, badge_art=badge_art)
+    plain = og._card_svg(REC, badge_art=art.NO_ART)
+    assert with_art.count("<image") == 1 and "<image" not in plain
+    # outside the nested badge, the card is unchanged
+    strip = lambda s: s[:s.index("<g transform")] + s[s.index("</svg></g>"):]
+    assert strip(with_art) == strip(plain)
+    print("  ✅ OG card nests the badge with its art; the card around it is unchanged")
+
+
 def _main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0
