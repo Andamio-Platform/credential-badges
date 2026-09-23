@@ -23,7 +23,7 @@ build, CI and the render image build before anything is written.
 | Encoding | 8-bit, baseline or progressive, grayscale or YCbCr (no CMYK, no 12-bit) |
 | Shape | Square, 824–1024 px per edge |
 | Size | At most 160 KiB on disk |
-| Metadata | None. No EXIF/XMP (APP1), ICC (APP2), Photoshop (APP13), Adobe (APP14) or comment (COM) segments |
+| Metadata | None. No EXIF/XMP (APP1), ICC (APP2), Photoshop (APP13), Adobe (APP14) or comment (COM) segments, no JFIF thumbnail, and nothing after the end-of-image marker |
 
 **Where files go.** Under `generator/art/`, named by key. Lowercase hex, `.jpg`
 exactly.
