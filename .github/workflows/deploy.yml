@@ -87,9 +87,13 @@ jobs:
             --update-env-vars "HOLDER_UPSTREAM=https://andamioscan.io/api/v2/" \
             --quiet
 
-      - name: Verify Content-Type + reachability on the *.run.app URL
+      - name: Verify Content-Type + reachability on the public host
+        # Through the LB, not *.run.app: the static host's ingress is sealed to
+        # the load balancer (andamio-ops#194), same as the issuer lane (#62/#63).
+        # gcloud run deploy has already moved 100% of traffic to the new
+        # revision, so the public host serves it.
         run: |
-          URL=$(gcloud run services describe "${GCP_SERVICE}" --region "${GCP_REGION}" --project "${GCP_PROJECT}" --format='value(status.url)')
+          URL="https://${PUBLIC_HOST}"
           assert_ct() {
             ct=$(curl -sI "${URL}$1" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
             echo "$1 Content-Type: $ct (expected $2)"
