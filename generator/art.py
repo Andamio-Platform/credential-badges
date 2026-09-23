@@ -19,8 +19,11 @@ changing it means rebuild + re-bake, never re-sign (docs/runbooks/badge-art.md).
 Validation is a stdlib JPEG marker walk (no Pillow — the generator is
 stdlib-only). Every file must be a clean baseline/progressive 8-bit JPEG,
 grayscale or YCbCr, square, MIN_EDGE..MAX_EDGE px, at most MAX_BYTES, carrying
-no EXIF/XMP/ICC/comment segment. WebP is out: the pinned @resvg/resvg-js 2.6.2
-has no WebP decoder and silently draws one as blank.
+no EXIF/XMP/ICC/comment segment, no JFIF thumbnail, and no bytes after the
+end-of-image marker — art carries nothing but the image, since it ships
+base64-inlined in every public badge SVG in this public repo. WebP is out:
+the pinned @resvg/resvg-js 2.6.2 has no WebP decoder and silently draws one
+as blank.
 
 A bad file fails loudly, before any output is written. It never falls back to
 "no image", which would make every downstream guard pass on nothing.
@@ -87,6 +90,9 @@ def check_jpeg(data):
         m = data[i]
         i += 1
         if m == 0xD9:                           # EOI
+            if i != n:
+                raise ArtError("bytes after the end-of-image marker; "
+                                "re-export with jpegtran -copy none")
             break
         if m not in _ALLOWED:
             raise ArtError(f"carries {_marker_name(m)}; strip metadata and re-export")
@@ -112,8 +118,13 @@ def check_jpeg(data):
             if not MIN_EDGE <= w <= MAX_EDGE:
                 raise ArtError(f"{w}px edge; must be {MIN_EDGE}-{MAX_EDGE}px")
             dims = (w, h)
-        elif m == 0xE0 and not (seg.startswith(b"JFIF\x00") or seg.startswith(b"JFXX\x00")):
-            raise ArtError("APP0 is not a JFIF header")
+        elif m == 0xE0:
+            if not seg.startswith(b"JFIF\x00"):
+                raise ArtError("APP0 is not a JFIF header (JFXX is not accepted)")
+            if len(seg) < 14:
+                raise ArtError("truncated JFIF header")
+            if seg[12] or seg[13]:
+                raise ArtError("APP0 carries a JFIF thumbnail; re-export without one")
         i += seglen
         if m == 0xDA:                           # SOS: skip entropy-coded data
             if not dims:

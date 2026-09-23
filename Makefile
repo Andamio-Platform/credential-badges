@@ -56,9 +56,11 @@ reconcile:
 	$(PY) $(GEN)/reconcile.py
 
 # Decodes a committed badge AND a freshly built one carrying the placeholder art
-# (#131), so an image in the plate can never silently break the rings. The art
-# badge is built into a temp dir from the test fixture via --art-dir; placeholder
-# art never enters badges/. decode.py exits non-zero on any ring mismatch.
+# (#131): proves the art build path leaves the ring geometry and the baked
+# metadata intact. It cannot see visual bleed into the ring band; that is the
+# ring-band check in imaging/rasterize.test.ts. The art badge is built into a temp
+# dir from the test fixture via --art-dir, so placeholder art never enters
+# badges/. decode.py exits non-zero on any ring mismatch.
 verify:
 	@set -e; f=$$(ls badges/*.*.svg | head -1); stem=$$(basename "$$f" .svg); \
 	echo "decoding $$f"; $(PY) $(GEN)/decode.py "$$f"; \

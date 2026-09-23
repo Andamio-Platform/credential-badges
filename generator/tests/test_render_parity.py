@@ -157,9 +157,31 @@ def test_decode_round_trip_still_holds():
                            capture_output=True, text=True)
         assert "❌" not in r.stdout, f"decode reported mismatch:\n{r.stdout}"
         assert r.stdout.count("✅ MATCH") >= 2, f"expected 2 ring matches:\n{r.stdout}"
+        assert r.returncode == 0, f"decode.py should exit 0 on a clean round-trip:\n{r.stdout}"
     finally:
         os.unlink(path)
     print("  ✅ render_svg badge round-trips (outer==course_id, inner==slt_hash)")
+
+
+def test_decode_catches_a_corrupted_ring():
+    """decode.py's exit code is what makes `make verify` fail (decode.py:76), but
+    nothing drove it with a mismatching badge. Corrupt one lit outer-ring tick's
+    stroke so its geometry no longer agrees with the baked course_id, and prove
+    decode.py both reports and *exits on* the mismatch — not just prints it."""
+    rec = _nonskipped_records()[0]
+    svg = gen.render_svg(**_kw(rec))
+    # decode_ring() treats a tick as lit when the ring's lit token ("--prim" for
+    # the outer ring) appears anywhere in its stroke; swapping it for the dim
+    # ring's hairline token flips that one bit from 1 to 0.
+    needle = 'stroke="var(--prim,'
+    assert needle in svg, "expected at least one lit outer-ring tick to corrupt"
+    corrupted = svg.replace(needle, 'stroke="var(--hair,', 1)
+    assert corrupted != svg, "corruption did not change the SVG"
+
+    r = _decode(corrupted)
+    assert r.returncode == 1, f"decode.py should exit 1 on a mismatch:\n{r.stdout}"
+    assert "❌ MISMATCH" in r.stdout, f"expected a MISMATCH report:\n{r.stdout}"
+    print("  ✅ decode.py exits 1 and reports ❌ MISMATCH when a ring is corrupted")
 
 
 # ---- plate image (#131) ----------------------------------------------------
@@ -226,6 +248,7 @@ def test_image_badge_round_trips():
     r = _decode(gen.render_svg(**_kw(_nonskipped_records()[0]), image=_image_uri()))
     assert "❌" not in r.stdout, f"decode reported mismatch:\n{r.stdout}"
     assert r.stdout.count("✅ MATCH") >= 2, f"expected 2 ring matches:\n{r.stdout}"
+    assert r.returncode == 0, f"decode.py should exit 0 on a clean round-trip:\n{r.stdout}"
     print("  ✅ an image-bearing badge still round-trips both rings")
 
 

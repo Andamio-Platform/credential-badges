@@ -87,6 +87,24 @@ def _with_sof(precision=None, h=None, w=None, comps=None):
     return bytes(b)
 
 
+def _app0_payload_offset():
+    """Offset of the fixture's APP0 segment payload (right after its 2-byte
+    length field). The fixture's APP0 is a 14-byte clean JFIF header:
+    "JFIF\\0"(5) version(2) units(1) Xdensity(2) Ydensity(2) Xthumb(1) Ythumb(1)."""
+    i = JPEG.find(b"\xff\xe0")
+    assert i >= 0 and JPEG[i + 4:i + 9] == b"JFIF\x00", "fixture must have a clean JFIF APP0"
+    return i + 4
+
+
+def _with_app0(offset, value_bytes):
+    """Fixture with APP0 payload bytes overwritten at `offset` (0 = the start
+    of the payload, i.e. "J" of "JFIF\\0")."""
+    b = bytearray(JPEG)
+    base = _app0_payload_offset()
+    b[base + offset:base + offset + len(value_bytes)] = value_bytes
+    return bytes(b)
+
+
 # ---- lookup ---------------------------------------------------------------
 
 def test_fixture_is_valid_art():
@@ -95,7 +113,7 @@ def test_fixture_is_valid_art():
 
 
 def test_per_badge_wins_over_course():
-    other = JPEG + b"\x00"                       # a distinct but still-valid file
+    other = _with_app0(8, b"\x00\x02")            # a distinct but still-valid file (Xdensity 1 -> 2)
     a = _load({f"{CID}.{SLT_A}.jpg": JPEG, f"{CID}.jpg": other})
     badge_uri, course_uri = a.image_for(CID, SLT_A), a.image_for(CID, SLT_B)
     assert badge_uri != course_uri
@@ -134,12 +152,24 @@ def test_dotfiles_ignored():
 # ---- rejection ------------------------------------------------------------
 
 def test_over_ceiling_rejected():
+    art.check_jpeg(JPEG)                          # the valid fixture is well under the ceiling
     big = JPEG + b"\x00" * (art.MAX_BYTES - len(JPEG) + 1)
     assert len(big) == art.MAX_BYTES + 1
     _rejects({f"{CID}.jpg": big}, f"{CID}.jpg", "ceiling")
+    # A file of exactly MAX_BYTES must not be rejected FOR SIZE. Padding with
+    # trailing zero bytes (the only cheap way to hit an exact byte count) does
+    # make it invalid — but for carrying bytes after the EOI marker, not for
+    # size, so the ceiling message must not appear.
     at = JPEG + b"\x00" * (art.MAX_BYTES - len(JPEG))
-    art.check_jpeg(at)                            # exactly at the ceiling is fine
-    print("  ✅ one byte over 160 KiB is rejected; exactly 160 KiB passes")
+    assert len(at) == art.MAX_BYTES
+    try:
+        art.check_jpeg(at)
+    except art.ArtError as e:
+        assert "ceiling" not in str(e), f"exactly-at-ceiling must not fail the size check: {e}"
+    else:
+        raise AssertionError("expected the zero-padded exactly-at-ceiling file to be rejected "
+                              "(for trailing bytes, not size)")
+    print("  ✅ one byte over 160 KiB fails the size ceiling; exactly 160 KiB does not")
 
 
 def test_other_formats_rejected():
@@ -171,6 +201,22 @@ def test_sample_format_rejected():
     _rejects({f"{CID}.jpg": _with_sof(precision=12)}, "12-bit")
     _rejects({f"{CID}.jpg": _with_sof(comps=4)}, "CMYK")
     print("  ✅ 12-bit and 4-component (CMYK) frames are rejected")
+
+
+def test_trailing_bytes_rejected():
+    _rejects({f"{CID}.jpg": JPEG + b"\x00"}, "end-of-image")
+    print("  ✅ a byte appended after the EOI marker is rejected (motion-photo/vendor trailers)")
+
+
+def test_jfif_thumbnail_rejected():
+    _rejects({f"{CID}.jpg": _with_app0(12, b"\x01\x00")}, "thumbnail")
+    print("  ✅ a JFIF APP0 carrying a nonzero thumbnail is rejected")
+
+
+def test_jfxx_rejected():
+    jfxx = _with_segment(0xE0, b"JFXX\x00" + b"\x00" * 16)
+    _rejects({f"{CID}.jpg": jfxx}, "JFXX")
+    print("  ✅ a JFXX-flavoured APP0 is rejected (JFIF-only)")
 
 
 def test_bad_filenames_rejected():

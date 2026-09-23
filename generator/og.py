@@ -17,7 +17,12 @@ build.py and render.py — og.py passes explicit inputs, so it resolves art itse
 
 Usage:
     python3 og.py <outdir>   # write {course_id}.{slt_hash}.og.svg per non-skipped record
+    python3 og.py <outdir> --art-dir <dir>
+                              # art from <dir> instead of generator/art/ (tests).
+                              # A flag, never an environment variable,
+                              # so a placeholder can't leak into a production build.
 """
+import argparse
 import json
 import os
 import sys
@@ -117,11 +122,15 @@ def _card_svg(rec, badge_art=art.NO_ART):
 
 
 def main():
-    if len(sys.argv) < 2:
-        sys.exit("usage: og.py <outdir>")
-    out = sys.argv[1]
+    ap = argparse.ArgumentParser(description="Compose the OG card SVGs.")
+    ap.add_argument("outdir")
+    ap.add_argument("--art-dir", default=art.ART_DIR)
+    args = ap.parse_args()
+    out = args.outdir
+
     try:
-        badge_art = art.load(skip_courses=SKIP_COURSES)   # whole dir, before any write
+        # whole dir, before any write
+        badge_art = art.load(args.art_dir, skip_courses=SKIP_COURSES)
     except art.ArtError as e:
         sys.exit(f"❌ {e}")
     os.makedirs(out, exist_ok=True)
