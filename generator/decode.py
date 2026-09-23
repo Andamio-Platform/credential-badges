@@ -72,3 +72,5 @@ ok2 = inner==_slt
 print(f"  outer ring  == course_id   {'✅ MATCH' if ok1 else '❌ MISMATCH'}")
 print(f"  inner ring  == slt_hash    {'✅ MATCH' if ok2 else '❌ MISMATCH'}")
 print(f"\n  {'✅ The rings ARE the data — decoded from pixels alone.' if ok1 and ok2 else '❌ decode failed'}")
+# Exit non-zero on a mismatch so `make verify` (and any caller) actually fails.
+sys.exit(0 if ok1 and ok2 else 1)

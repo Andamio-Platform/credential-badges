@@ -104,6 +104,8 @@ jobs:
           python3 generator/tests/test_holder.py
           python3 generator/tests/test_bake.py
           python3 generator/tests/test_art.py
+          python3 generator/tests/test_baked_signatures.py
+          python3 generator/art.py --check
           python3 scripts/tests/test_alias_gate.py
           python3 scripts/tests/test_cache_admin.py
 
