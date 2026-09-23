@@ -216,8 +216,8 @@ def _check(art_dir):
     except ArtError as e:
         print(f"❌ {e}")
         return 1
-    badge_ids = [f"{r['course_id']}.{r['slt_hash']}"
-                 for r in json.load(open(os.path.join(HERE, "credentials.json")))]
+    from build import DATA              # lazy, as in _default_skip
+    badge_ids = [f"{r['course_id']}.{r['slt_hash']}" for r in json.load(open(DATA))]
     keys = set(art.keys())
     for key in art.keys():
         if "." in key:                          # per-badge file

@@ -60,8 +60,8 @@ reconcile:
 # badge is built into a temp dir from the test fixture via --art-dir; placeholder
 # art never enters badges/. decode.py exits non-zero on any ring mismatch.
 verify:
-	@f=$$(ls badges/*.*.svg | head -1); echo "decoding $$f"; $(PY) $(GEN)/decode.py "$$f"
 	@set -e; f=$$(ls badges/*.*.svg | head -1); stem=$$(basename "$$f" .svg); \
+	echo "decoding $$f"; $(PY) $(GEN)/decode.py "$$f"; \
 	out=$$(mktemp -d); art=$$(mktemp -d); trap 'rm -rf "$$out" "$$art"' EXIT; \
 	cp $(GEN)/tests/fixtures/art/placeholder.jpg "$$art/$${stem%%.*}.jpg"; \
 	$(PY) $(GEN)/build.py "$$out" --only "$$stem" --art-dir "$$art" >/dev/null; \
