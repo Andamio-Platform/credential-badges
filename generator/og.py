@@ -12,16 +12,24 @@ Colors are authored as LITERAL palette values here (no CSS var(), unlike the
 badge itself) so the card is renderer-agnostic; the nested badge keeps its
 var(--token, fallback) form and is inlined by imaging/rasterize.ts at raster
 time. Titles are sanitized into the embedded glyph subset (render.sanitize_title).
+The nested badge carries its plate art (#131) through the same art.py lookup as
+build.py and render.py — og.py passes explicit inputs, so it resolves art itself.
 
 Usage:
     python3 og.py <outdir>   # write {course_id}.{slt_hash}.og.svg per non-skipped record
+    python3 og.py <outdir> --art-dir <dir>
+                              # art from <dir> instead of generator/art/ (tests).
+                              # A flag, never an environment variable,
+                              # so a placeholder can't leak into a production build.
 """
+import argparse
 import json
 import os
 import sys
 
 import gen
 import colors
+import art
 from render import sanitize_title
 from build import SKIP_COURSES
 
@@ -37,7 +45,7 @@ COL_X = BADGE_X + BADGE_BOX + 64    # right text column start
 COL_W = W - COL_X - PAD             # right column width
 
 
-def _card_svg(rec):
+def _card_svg(rec, badge_art=art.NO_ART):
     course_title = sanitize_title(rec["course_title"]) or "Andamio"
     module_title = sanitize_title(rec["module_title"]) or "Credential"
     course_id, slt_hash = rec["course_id"], rec["slt_hash"]
@@ -46,7 +54,8 @@ def _card_svg(rec):
     badge = gen.render_svg(
         course_title=course_title, module_title=module_title,
         course_id=course_id, slt_hash=slt_hash, network="mainnet",
-        pal=colors.light_interior(pal))
+        pal=colors.light_interior(pal),
+        image=badge_art.image_for(course_id, slt_hash))
 
     deep, ink, raised = pal["deep"], pal["ink"], pal["raised"]
     prim, bone, slate, hair = pal["prim"], pal["bone"], pal["slate"], pal["hair"]
@@ -113,13 +122,21 @@ def _card_svg(rec):
 
 
 def main():
-    if len(sys.argv) < 2:
-        sys.exit("usage: og.py <outdir>")
-    out = sys.argv[1]
+    ap = argparse.ArgumentParser(description="Compose the OG card SVGs.")
+    ap.add_argument("outdir")
+    ap.add_argument("--art-dir", default=art.ART_DIR)
+    args = ap.parse_args()
+    out = args.outdir
+
+    try:
+        # whole dir, before any write
+        badge_art = art.load(args.art_dir, skip_courses=SKIP_COURSES)
+    except art.ArtError as e:
+        sys.exit(f"❌ {e}")
     os.makedirs(out, exist_ok=True)
     data = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
     for rec in data:
-        svg = _card_svg(rec)
+        svg = _card_svg(rec, badge_art)
         open(os.path.join(out, f"{rec['course_id']}.{rec['slt_hash']}.og.svg"),
              "w").write(svg)
     print(f"wrote {len(data)} OG composition SVGs -> {out}/")

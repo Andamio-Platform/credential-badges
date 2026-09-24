@@ -16,6 +16,7 @@ import unicodedata
 import gen
 import colors
 import api_client
+import art
 from fetch import clean_title   # hex(ascii) chain-title decode — reused, not reinvented
 
 # The exact glyph set embed_fonts.py subsets into fonts.css. A title character
@@ -59,19 +60,29 @@ def _module_title(rec):
     return "Credential"
 
 
-def render_badge(course_id, slt_hash, network="mainnet", *, fetch_titles=None):
+# Badge art (#131), validated and base64-encoded once at import; per-request
+# lookup is a read of an immutable map, safe under gunicorn's threads. This load
+# raises on bad art and is never caught: service/Dockerfile runs `art.py --check`
+# at image build, so a built image cannot carry bad art, and falling back to "no
+# art" would silently hide the failure (plan KTD6).
+BADGE_ART = art.load()
+
+
+def render_badge(course_id, slt_hash, network="mainnet", *, fetch_titles=None, badge_art=None):
     """Render the badge SVG for one credential. `fetch_titles` is an injection
     seam (defaults to api_client.get_titles) taking (course_id, network) and
-    returning (course_title, modules). GatewayError from the read propagates."""
+    returning (course_title, modules). GatewayError from the read propagates.
+    `badge_art` is the art lookup seam (defaults to BADGE_ART)."""
     fetch = fetch_titles or api_client.get_titles
     course_title, modules = fetch(course_id, network)
 
     ct = sanitize_title(course_title) or "Andamio"
     mt = sanitize_title(_module_title(modules.get(slt_hash))) or "Credential"
     pal = colors.light_interior(colors.palette_for(course_id))
+    image = (BADGE_ART if badge_art is None else badge_art).image_for(course_id, slt_hash)
     return gen.render_svg(course_title=ct, module_title=mt,
                           course_id=course_id, slt_hash=slt_hash,
-                          network=network, pal=pal)
+                          network=network, pal=pal, image=image)
 
 
 if __name__ == "__main__":

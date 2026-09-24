@@ -107,6 +107,92 @@ def test_out_of_subset_glyphs_sanitized():
     print("  ✅ out-of-subset title glyphs sanitized")
 
 
+def test_card_carries_injected_course_art():
+    import art
+    import shutil
+    import tempfile
+    d = tempfile.mkdtemp()
+    try:
+        shutil.copy(os.path.join(HERE, "fixtures", "art", "placeholder.jpg"),
+                    os.path.join(d, f"{REC['course_id']}.jpg"))
+        badge_art = art.load(d)
+    finally:
+        shutil.rmtree(d)
+    with_art = og._card_svg(REC, badge_art=badge_art)
+    plain = og._card_svg(REC, badge_art=art.NO_ART)
+    assert with_art.count("<image") == 1 and "<image" not in plain
+    # outside the nested badge, the card is unchanged
+    strip = lambda s: s[:s.index("<g transform")] + s[s.index("</svg></g>"):]
+    assert strip(with_art) == strip(plain)
+    print("  ✅ OG card nests the badge with its art; the card around it is unchanged")
+
+
+def test_main_rejects_invalid_art_before_write():
+    """og.py's main() must validate the whole --art-dir before writing anything
+    (finding #2): a bad file in --art-dir should fail loudly and leave the
+    outdir empty/absent, mirroring build.py's whole-dir-before-first-write
+    guarantee."""
+    import shutil
+    import subprocess
+    import tempfile
+    art_dir = tempfile.mkdtemp()
+    outdir = tempfile.mkdtemp()
+    shutil.rmtree(outdir)   # main() should not need to create it to fail
+    try:
+        with open(os.path.join(art_dir, f"{REC['course_id']}.jpg"), "wb") as f:
+            f.write(b"not a jpeg")
+        proc = subprocess.run(
+            [sys.executable, os.path.join(GEN, "og.py"), outdir,
+             "--art-dir", art_dir],
+            capture_output=True, text=True)
+        assert proc.returncode != 0, "expected a non-zero exit on invalid art"
+        assert "not a JPEG" in (proc.stdout + proc.stderr)
+        assert not os.path.exists(outdir) or not os.listdir(outdir), \
+            "outdir must stay empty/absent when art validation fails"
+    finally:
+        shutil.rmtree(art_dir, ignore_errors=True)
+        shutil.rmtree(outdir, ignore_errors=True)
+    print("  ✅ og.py main() rejects invalid --art-dir before writing")
+
+
+def test_main_writes_cards_with_injected_art():
+    """Positive companion: valid --art-dir art reaches exactly the card whose
+    course_id matches, and no other card."""
+    import shutil
+    import subprocess
+    import tempfile
+    art_dir = tempfile.mkdtemp()
+    outdir = tempfile.mkdtemp()
+    shutil.rmtree(outdir)
+    try:
+        shutil.copy(os.path.join(HERE, "fixtures", "art", "placeholder.jpg"),
+                    os.path.join(art_dir, f"{REC['course_id']}.jpg"))
+        proc = subprocess.run(
+            [sys.executable, os.path.join(GEN, "og.py"), outdir,
+             "--art-dir", art_dir],
+            capture_output=True, text=True)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+
+        import json as _json
+        data = [r for r in _json.load(open(og.DATA)) if r["course_id"] != REC["course_id"]]
+        other = next(r for r in data if r["course_id"] != REC["course_id"])
+
+        with_art_path = os.path.join(
+            outdir, f"{REC['course_id']}.{REC['slt_hash']}.og.svg")
+        other_path = os.path.join(
+            outdir, f"{other['course_id']}.{other['slt_hash']}.og.svg")
+        with_art_svg = open(with_art_path).read()
+        other_svg = open(other_path).read()
+        assert with_art_svg.count("<image") == 1, \
+            "expected exactly one <image> for the record carrying injected art"
+        assert "<image" not in other_svg, \
+            "a different course's card must not carry the injected art"
+    finally:
+        shutil.rmtree(art_dir, ignore_errors=True)
+        shutil.rmtree(outdir, ignore_errors=True)
+    print("  ✅ og.py main() wires --art-dir into exactly the matching card")
+
+
 def _main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

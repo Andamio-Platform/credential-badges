@@ -115,6 +115,39 @@ def test_rendered_badge_round_trips():
     print("  ✅ on-demand badge round-trips (outer==course_id, inner==slt_hash)")
 
 
+def test_injected_art_is_drawn():
+    """render_badge resolves art through its injectable lookup, like fetch_titles."""
+    import art
+    import base64
+    import shutil
+    d = tempfile.mkdtemp()
+    try:
+        shutil.copy(os.path.join(HERE, "fixtures", "art", "placeholder.jpg"),
+                    os.path.join(d, f"{CID}.jpg"))
+        badge_art = art.load(d)
+    finally:
+        shutil.rmtree(d)
+    t = titles("C", {"slt_hash": SLT, "title": "M"})
+    with_art = render_badge(CID, SLT, "preprod", fetch_titles=t, badge_art=badge_art)
+    assert with_art.count("<image") == 1
+    uri = "data:image/jpeg;base64," + base64.b64encode(
+        open(os.path.join(HERE, "fixtures", "art", "placeholder.jpg"), "rb").read()).decode()
+    assert f'href="{uri}"' in with_art
+    other = "b" * 56
+    plain = render_badge(other, SLT, "preprod", fetch_titles=t, badge_art=badge_art)
+    assert "<image" not in plain
+    assert plain == render_badge(other, SLT, "preprod", fetch_titles=t, badge_art=art.NO_ART)
+    print("  ✅ render_badge draws injected course art; an uncovered course is unchanged")
+
+
+def test_module_art_loaded_from_repo():
+    """The service's default lookup is the validated repo art dir, loaded once."""
+    import art
+    assert isinstance(render.BADGE_ART, art.Art)
+    assert render.BADGE_ART.keys() == art.load().keys()
+    print("  ✅ render.BADGE_ART is the validated generator/art/ map")
+
+
 def _main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

@@ -120,9 +120,11 @@ weaken the "the URL is the identity" property.
 
 ### I3 — A published `badge_id` is permanent
 
-A signed OB 3.0 credential carries `achievement.image` = the badge SVG URL.
-Signed copies live in holders' hands indefinitely. Therefore a published
-`badge_id`:
+The badge SVG URL is shared, embedded and unfurled everywhere: share pages,
+embeds, holders' posts, social cards. Those copies live out of our reach
+indefinitely, so the URL can never move. (No signed credential carries
+`achievement.image` today: no class artifact sets it, and neither credential
+mapper does.) Therefore a published `badge_id`:
 
 - is never renamed,
 - is never deleted,

@@ -17,6 +17,10 @@ COPY service/requirements.txt service/requirements.txt
 RUN pip install --no-cache-dir -r service/requirements.txt
 
 COPY generator/ generator/
+# Badge art (#131) is validated here, so bad art fails the image build. render.py
+# loads it at import without catching errors; a raise there would pass Cloud
+# Run's TCP startup probe and then crash-loop (gunicorn binds before workers boot).
+RUN python3 -B generator/art.py --check
 COPY service/   service/
 COPY badges/_placeholder.svg badges/_placeholder.svg
 

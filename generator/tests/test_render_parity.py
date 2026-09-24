@@ -157,9 +157,170 @@ def test_decode_round_trip_still_holds():
                            capture_output=True, text=True)
         assert "❌" not in r.stdout, f"decode reported mismatch:\n{r.stdout}"
         assert r.stdout.count("✅ MATCH") >= 2, f"expected 2 ring matches:\n{r.stdout}"
+        assert r.returncode == 0, f"decode.py should exit 0 on a clean round-trip:\n{r.stdout}"
     finally:
         os.unlink(path)
     print("  ✅ render_svg badge round-trips (outer==course_id, inner==slt_hash)")
+
+
+def test_decode_catches_a_corrupted_ring():
+    """decode.py's exit code is what makes `make verify` fail (decode.py:76), but
+    nothing drove it with a mismatching badge. Corrupt one lit outer-ring tick's
+    stroke so its geometry no longer agrees with the baked course_id, and prove
+    decode.py both reports and *exits on* the mismatch — not just prints it."""
+    rec = _nonskipped_records()[0]
+    svg = gen.render_svg(**_kw(rec))
+    # decode_ring() treats a tick as lit when the ring's lit token ("--prim" for
+    # the outer ring) appears anywhere in its stroke; swapping it for the dim
+    # ring's hairline token flips that one bit from 1 to 0.
+    needle = 'stroke="var(--prim,'
+    assert needle in svg, "expected at least one lit outer-ring tick to corrupt"
+    corrupted = svg.replace(needle, 'stroke="var(--hair,', 1)
+    assert corrupted != svg, "corruption did not change the SVG"
+
+    r = _decode(corrupted)
+    assert r.returncode == 1, f"decode.py should exit 1 on a mismatch:\n{r.stdout}"
+    assert "❌ MISMATCH" in r.stdout, f"expected a MISMATCH report:\n{r.stdout}"
+    print("  ✅ decode.py exits 1 and reports ❌ MISMATCH when a ring is corrupted")
+
+
+# ---- plate image (#131) ----------------------------------------------------
+# Art is synthesized from the committed placeholder fixture into temp dirs (via
+# the --art-dir / badge_art seams), so these keep testing the same thing once
+# real art lands in generator/art/.
+
+FIXTURE = os.path.join(HERE, "fixtures", "art", "placeholder.jpg")
+
+
+def _image_uri():
+    import base64
+    return "data:image/jpeg;base64," + base64.b64encode(open(FIXTURE, "rb").read()).decode()
+
+
+def _kw(rec):
+    return dict(course_title=rec["course_title"] or "Andamio",
+                module_title=rec["module_title"] or "Credential",
+                course_id=rec["course_id"], slt_hash=rec["slt_hash"], network="mainnet",
+                pal=colors.light_interior(build.palette_for(rec["course_id"])))
+
+
+def _decode(svg):
+    with tempfile.NamedTemporaryFile("w", suffix=".svg", delete=False) as f:
+        f.write(svg)
+        path = f.name
+    try:
+        return subprocess.run([sys.executable, os.path.join(GEN, "decode.py"), path],
+                              capture_output=True, text=True)
+    finally:
+        os.unlink(path)
+
+
+def test_no_image_is_byte_identical():
+    """image=None must not change a single byte, and must emit none of the
+    image machinery — this is what keeps every committed badge unchanged."""
+    kw = _kw(_nonskipped_records()[0])
+    plain = gen.render_svg(**kw)
+    assert gen.render_svg(**kw, image=None) == plain
+    for token in ("<image", "clipPath", "plate-art"):
+        assert token not in plain, f"no-image badge carries {token!r}"
+    print("  ✅ render_svg(image=None) is byte-identical and emits no image machinery")
+
+
+def test_image_drawn_inside_plate():
+    kw = _kw(_nonskipped_records()[0])
+    uri = _image_uri()
+    svg = gen.render_svg(**kw, image=uri)
+    assert svg.count("<image") == 1
+    assert f'href="{uri}"' in svg
+    plate = svg.index('r="412" fill="url(#core)"')
+    img = svg.index("<image")
+    assert plate < img < svg.index("<text"), "image must sit between the plate and the text"
+    assert 'clip-path="url(#plate-art)"' in svg and 'r="411"' in svg
+    # never inside the credential JSON (metadata or the unsigned hook)
+    for block in re.findall(r"<!\[CDATA\[(.*?)\]\]>", svg, re.S):
+        assert "data:image" not in block, "image leaked into a CDATA block"
+    meta = lambda x: re.search(r"<metadata>(.*?)</metadata>", x, re.S).group(1)
+    assert meta(svg) == meta(gen.render_svg(**kw)), "image changed the metadata"
+    print("  ✅ image is clipped inside the plate, before the text, outside the credential JSON")
+
+
+def test_image_badge_round_trips():
+    r = _decode(gen.render_svg(**_kw(_nonskipped_records()[0]), image=_image_uri()))
+    assert "❌" not in r.stdout, f"decode reported mismatch:\n{r.stdout}"
+    assert r.stdout.count("✅ MATCH") >= 2, f"expected 2 ring matches:\n{r.stdout}"
+    assert r.returncode == 0, f"decode.py should exit 0 on a clean round-trip:\n{r.stdout}"
+    print("  ✅ an image-bearing badge still round-trips both rings")
+
+
+def test_var_fallbacks_are_paren_free():
+    """imaging/rasterize.ts inlineCssVars rejects a var() fallback containing
+    parentheses, so the scrim must never use rgba()."""
+    svg = gen.render_svg(**_kw(_nonskipped_records()[0]), image=_image_uri())
+    for fallback in re.findall(r"var\(--[\w-]+,\s*([^)]*)\)", svg):
+        assert "(" not in fallback, f"var() fallback with parens: {fallback}"
+    print("  ✅ every var() fallback in an image badge is paren-free")
+
+
+def test_image_render_is_concurrency_safe():
+    records = _nonskipped_records()[:6]
+    uri = _image_uri()
+    expected = {r["slt_hash"]: gen.render_svg(**_kw(r), image=uri if i % 2 else None)
+                for i, r in enumerate(records)}
+    got, errors = {}, []
+
+    def work(i, rec):
+        try:
+            for _ in range(5):
+                got[rec["slt_hash"]] = gen.render_svg(**_kw(rec), image=uri if i % 2 else None)
+        except Exception as e:  # noqa: BLE001
+            errors.append(str(e))
+
+    threads = [threading.Thread(target=work, args=(i, r)) for i, r in enumerate(records)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert not errors, errors
+    assert got == expected, "concurrent image/no-image renders diverged from serial"
+    print("  ✅ concurrent renders with and without art match their serial output")
+
+
+def _run_build(*args):
+    return subprocess.run([sys.executable, os.path.join(GEN, "build.py"), *args],
+                          capture_output=True, text=True)
+
+
+def test_build_only_with_art_dir():
+    rec = _nonskipped_records()[0]
+    stem = f"{rec['course_id']}.{rec['slt_hash']}"
+    with tempfile.TemporaryDirectory() as out, tempfile.TemporaryDirectory() as art_dir:
+        import shutil
+        shutil.copy(FIXTURE, os.path.join(art_dir, f"{rec['course_id']}.jpg"))
+        r = _run_build(out, "--only", stem, "--art-dir", art_dir)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert sorted(os.listdir(out)) == [f"{stem}.svg"], os.listdir(out)
+        svg = open(os.path.join(out, f"{stem}.svg")).read()
+        assert svg.count("<image") == 1
+        assert svg == gen.render_svg(**_kw(rec), image=_image_uri())
+    print("  ✅ build.py --only writes exactly that stem, with art from --art-dir")
+
+
+def test_build_rejects_bad_art_before_writing():
+    with tempfile.TemporaryDirectory() as out, tempfile.TemporaryDirectory() as art_dir:
+        rec = _nonskipped_records()[0]
+        open(os.path.join(art_dir, f"{rec['course_id']}.jpg"), "wb").write(b"not a jpeg")
+        r = _run_build(out, "--art-dir", art_dir)
+        assert r.returncode != 0, "build accepted invalid art"
+        assert "not a JPEG" in (r.stdout + r.stderr)
+        assert os.listdir(out) == [], f"build wrote before failing: {os.listdir(out)[:3]}"
+    print("  ✅ build.py fails on invalid art before writing any file")
+
+
+def test_build_only_rejects_unknown_badge():
+    with tempfile.TemporaryDirectory() as out:
+        r = _run_build(out, "--only", "0" * 56 + "." + "0" * 64)
+        assert r.returncode != 0 and os.listdir(out) == []
+    print("  ✅ build.py --only with an unknown badge_id fails and writes nothing")
 
 
 def _main():
