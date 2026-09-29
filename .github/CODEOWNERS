@@ -48,6 +48,20 @@
 /signing/status-list.ts        @workshop-maybe
 /signing/status-list.test.ts @workshop-maybe
 
+# The signing surface the retire-spike move concentrated under signing/
+# (credential-badges#124). sign.ts and sign-class.ts are the KMS entry points
+# (what gets signed, under what gate); sign-status-list.ts writes the served
+# kill-switch artifact; class-artifacts/** are the signed credentials every
+# served badge is baked from. expansion-pin.dep-test.ts holds the canonical-
+# dataset pins, so it is gated alongside (same pattern as did-pin.test.ts).
+# bake-class.ts is left out on purpose: it writes badges/, which is
+# presentation-layer and not gated.
+/signing/sign.ts                     @workshop-maybe
+/signing/sign-class.ts               @workshop-maybe
+/signing/sign-status-list.ts         @workshop-maybe
+/signing/class-artifacts/**          @workshop-maybe
+/signing/expansion-pin.dep-test.ts   @workshop-maybe
+
 # The key-compromise kill-switch (Rung 8.6; deployment plan Decision 3 +
 # CODEOWNERS glob set). The flip tool prepares the suspension flip for a whole
 # key epoch — a wrong flip suspends every credential signed under a key
