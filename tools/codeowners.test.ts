@@ -58,13 +58,17 @@ function ownedPatterns(): { pattern: string; line: number }[] {
 /**
  * Does `pattern` match at least one tracked file?
  *
- * Only the two shapes this repo actually uses are understood: a root-anchored
- * file path, and a root-anchored `dir/**` subtree. An unrecognized shape
- * THROWS rather than returning false or true — a guard that quietly gives up
- * on a pattern it cannot parse is the exact failure this file exists to
- * prevent. If a new shape is introduced, teach it here deliberately.
+ * Only the three shapes this repo actually uses are understood: the bare `*`
+ * catch-all (the default owner), a root-anchored file path, and a
+ * root-anchored `dir/**` subtree. An unrecognized shape THROWS rather than
+ * returning false or true — a guard that quietly gives up on a pattern it
+ * cannot parse is the exact failure this file exists to prevent. If a new
+ * shape is introduced, teach it here deliberately.
  */
 function matchesSomething(pattern: string, tracked: string[]): boolean {
+  // The catch-all matches every tracked file.
+  if (pattern === "*") return tracked.length > 0;
+
   assert.ok(
     pattern.startsWith("/"),
     `CODEOWNERS pattern ${pattern} is not root-anchored. This test only ` +
