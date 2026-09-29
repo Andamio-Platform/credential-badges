@@ -95,6 +95,8 @@ Local verification (hermetic, in CI) and live verification (network, run by a hu
 | `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md` | The Andamio OB 3.0 Issuer deployment plan — the "why" behind ROADMAP. Promotes the spike into a deployed signing service (`credential-badges-issuer`) sitting next to the static host behind an external HTTPS LB. 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (resolved 2026-05-25). Prototype posture documented; production-hardening checklist tracks the upgrade path. **Status when this MOC was written:** P1bis-refined; Phase 0 pre-flight verifier spike closed (PR #12). |
 | `docs/plans/2026-06-25-002-feat-dynamic-on-demand-badge-generation-plan.md` + `…-002-on-demand-generation-RESUME.md` | The #33 on-demand render plan (U1–U8) + resume note. The "why" behind the [Render service](#render-service--on-demand-badge-generation-33) section. |
 | `docs/badge-registry.md` | **Normative.** The `badge_id` = `<course_id>.<slt_hash>` convention, where the three registry artifacts live, and 11 invariants — chiefly *the name is frozen, the picture is not* (I3/I4) and *registry membership gates signing, not rendering* (I8). Closes #11. |
+| `docs/mapping.md` | Field-by-field Andamio → OB 3.0 mapping, the URN convention, and `slt_hash` semantics. Cited by `docs/badge-registry.md` as current authority. Written during the OB 3.0 prototype; moved out of `archive/` by #117. |
+| `docs/credential-imagery.md` | The v1 design decision for the `badges/` directory: imagery is presentation, never identity. Moved out of `archive/` by #117. |
 | `docs/plans/2026-07-28-001-design-per-org-issuer-dids.md` | **Designed, not built** (Phase 4 / Unit 6, issues #4 + #6). Per-org issuer identity. Headline finding: moving `issuer.id` to a per-org DID under Andamio key custody is a *downgrade* — it signals decentralization Andamio does not have. `issuer.id` stays put; per-org identity arrives as an optional org-held co-signature. Covers the `did:web` path form, the alias-as-slug choice, why the status list and the boot drift check must stay singular, the nginx/allowlist shape, and 5 open questions. |
 | `docs/plans/2026-07-28-002-design-multi-issuer-prereq-scope-pq3.md` | **Spec note** (Phase 4 / Unit 6, issue #7). PQ3 cross-issuer prereq scope vs multi-issuer: re-ratified unchanged, because `andamio:requires` references the chain, not a signature. Adds two permanent invariants (no issuer field in `requires`; prereq resolution is chain-first, DID-never). |
 
@@ -117,16 +119,14 @@ Distinct from `issuer-service/`, which signs on demand per holder as a long-runn
 
 ## Archive — OB 3.0 prototype
 
-**History, superseded.** Validated the end-to-end mapping + signing pipeline against a real preprod Cardano credential. Nothing here runs; no CI job executes out of it. **Not** baked into the served image. Two files remain current authority despite living here — `archive/mapping.md` and `archive/credential-imagery.md`, both cited by the normative `docs/badge-registry.md`.
+**History, superseded.** Validated the end-to-end mapping + signing pipeline against a real preprod Cardano credential. Nothing here runs; no CI job executes out of it. **Not** baked into the served image. Its two still-current design notes moved to `docs/mapping.md` and `docs/credential-imagery.md` (#117).
 
 | Path | Role |
 |---|---|
 | `archive/README.md` | Overview, stack choices, reference credential, reproducing locally. |
-| `archive/mapping.md` | Field-by-field Andamio → OB 3.0 mapping. |
 | `archive/validation-results.md` | Narrative + raw results from each validator. |
 | `archive/open-questions.md` | 14 questions surfaced during the spike (Q3/Q4 resolved, others tracked in the plan). |
 | `archive/CORNERS-CUT.md` | The 8 deliberate corners. The plan hardens 1, 2, 4, 5, 6, 7. |
-| `archive/credential-imagery.md` | The v1 design decision for the `badges/` directory. |
 | `archive/prerequisite-chaining.md` | PQ1–PQ6 prerequisite-chain defaults. |
 | `archive/sample-credential.jsonld` | Canonical signed sample (deliverable). |
 | `archive/samples/` | Per-recipient samples (real preprod data) — `james` and `njuguna`, plus HTML renders + policy metadata. |

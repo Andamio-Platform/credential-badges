@@ -1,6 +1,6 @@
 /**
  * Map an Andamio on-chain credential into an OpenBadgeCredential JSON-LD document.
- * See ../mapping.md for the full field-by-field rationale.
+ * See ../../docs/mapping.md for the full field-by-field rationale.
  */
 import type { AndamioCredential } from "./credential.js";
 

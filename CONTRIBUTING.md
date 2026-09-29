@@ -16,13 +16,19 @@ Most contributions need only **Python 3** — the generator is offline and deter
 git clone https://github.com/Andamio-Platform/credential-badges.git
 cd credential-badges
 make help          # list the available targets
-make badges        # render every badge from credentials.json (offline)
 make verify        # decode a built badge's rings, check they equal its on-chain hashes
 ```
 
+> **Don't run `make badges` in your checkout.** Almost every committed badge
+> carries a KMS-signed credential baked into its SVG. `make badges` rewrites
+> every SVG and strips those signatures, and restoring them takes a transcribed
+> KMS signing run. To add or change one badge, follow "Adding one badge" in
+> [`generator/README.md`](generator/README.md) or the art procedure in
+> [`docs/runbooks/badge-art.md`](docs/runbooks/badge-art.md).
+
 | Command | What it does | Needs |
 |---|---|---|
-| `make badges` | Render every badge from `credentials.json`. Deterministic + offline. | Python 3 |
+| `make badges` | Render every badge from `credentials.json`. Deterministic + offline. **Strips every baked signature**: don't run it in a checkout you'll commit from. | Python 3 |
 | `make verify` | Decode a built badge's rings and confirm they match its on-chain hashes. | Python 3 |
 | `make fetch`  | Refresh `credentials.json` from chain (andamioscan + Andamio CLI). | network, authed `andamio` CLI |
 | `make fonts`  | Rebuild `fonts.css` (subset + base64-embed the badge fonts). | network, `fonttools` + `brotli` |

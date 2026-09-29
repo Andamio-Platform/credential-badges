@@ -68,6 +68,21 @@ operator procedure: [`../docs/runbooks/badge-art.md`](../docs/runbooks/badge-art
 > refresh signed badges, scratch-build only those stems and re-bake them — the
 > single-badge procedure in [`../docs/runbooks/badge-art.md`](../docs/runbooks/badge-art.md).
 
+**Adding one badge.** Never `make badges`, and never commit a blind `make fetch`:
+a full refresh can drop published badge ids, and published ids are permanent
+([`../docs/badge-registry.md`](../docs/badge-registry.md) I3).
+
+1. Add only the new row to `credentials.json`.
+2. Scratch-build and copy in only the new stem's SVG, then rasterize its PNG and
+   OG card: badge-art runbook §4.2 and §4.4, with the new stem as `<stem>`.
+3. `make pages` and `make holder`. These regenerate derived output (pages,
+   embeds, `_registry.json`) and do not touch badge SVGs.
+4. `git diff --stat main -- badges/` lists only the new stem's files and
+   `_registry.json`. The new badge ships unsigned (`"signed": false`).
+5. After it deploys, sign and bake it with the `--badge` form of
+   [`../docs/runbooks/class-artifact-signing.md`](../docs/runbooks/class-artifact-signing.md).
+   It cannot be signed earlier, because the anchor gate fetches the live badge URL.
+
 **Rasterization lives in `../imaging/`** (a separate Node package, `@resvg/resvg-js`)
 so this Python generator stays stdlib-only and hermetic. resvg needs two things
 the badges do unusually: colors are CSS custom properties (`var(--token, …)`) and
