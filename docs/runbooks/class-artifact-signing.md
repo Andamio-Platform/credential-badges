@@ -113,6 +113,12 @@ Commit the badges and the class artifacts together — the artifact is the
 evidence for what is baked into the badge, and splitting them makes the pair
 unverifiable at a later commit.
 
+Each new or re-signed artifact also needs its expansion pin in
+`signing/class-artifact-pins.json`, in the same commit. `npm run
+test:expansion-pin` fails on any artifact without a pin and prints the value to
+add. Check that the file it names is the one you just signed before copying the
+value in: a pin records the artifact as signed, it does not check it.
+
 Then tag to deploy the static host. Tag naming: the repo went `v1.0.9` →
 `v1.2.0`, so **`v1.1` was never cut** and is a roadmap phase name, not a
 release. The next static-host release is `v1.3.0`.
@@ -124,7 +130,7 @@ against the deployed URL.
 
 Class artifacts are signed under the key epoch and carry a `credentialStatus`
 entry, so a kill-switch flip covers them (plan KTD-6). Rotation means re-signing
-and re-committing all of them — see
+and re-committing all of them, pins included — see
 [`issuer-provisioning.md`](issuer-provisioning.md) for the order, and
 [`key-compromise.md`](key-compromise.md) for the destructive path.
 
