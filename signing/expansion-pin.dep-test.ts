@@ -25,7 +25,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -66,6 +66,44 @@ async function canonicalDatasetSha256(file: string): Promise<string> {
     safe: true,
   });
   return createHash("sha256").update(nquads, "utf8").digest("hex");
+}
+
+// Class artifacts: coverage comes from the directory, pin values from the
+// committed map. Every file in class-artifacts/ must have a pin and every pin a
+// file, so a newly signed artifact cannot land unpinned. The values are never
+// computed here: a pin derived at test time would re-baseline on every run and
+// catch nothing.
+const CLASS_ARTIFACT_DIR = path.join(HERE, "class-artifacts");
+const CLASS_ARTIFACT_PINS_FILE = path.join(HERE, "class-artifact-pins.json");
+const CLASS_ARTIFACT_PINS: Record<string, string> = JSON.parse(
+  readFileSync(CLASS_ARTIFACT_PINS_FILE, "utf8"),
+);
+const classArtifactFiles = readdirSync(CLASS_ARTIFACT_DIR).filter((f) => f.endsWith(".json")).sort();
+
+test("class-artifacts/: every artifact is pinned and every pin has an artifact", async () => {
+  const unpinned = classArtifactFiles.filter((f) => !(f in CLASS_ARTIFACT_PINS));
+  const orphaned = Object.keys(CLASS_ARTIFACT_PINS).filter((f) => !classArtifactFiles.includes(f));
+  const unpinnedWithHashes = await Promise.all(
+    unpinned.map(async (f) => `  "${f}": "${await canonicalDatasetSha256(path.join(CLASS_ARTIFACT_DIR, f))}"`),
+  );
+  assert.deepEqual(
+    { unpinned, orphaned },
+    { unpinned: [], orphaned: [] },
+    (unpinned.length
+      ? "unpinned class artifacts — add their pins to class-artifact-pins.json in the same commit " +
+        "as the signed artifact, after checking the artifact is the one you just signed:\n" +
+        unpinnedWithHashes.join(",\n") + "\n"
+      : "") +
+      (orphaned.length ? `pins with no artifact (remove them): ${orphaned.join(", ")}` : ""),
+  );
+});
+
+for (const file of classArtifactFiles) {
+  if (!(file in CLASS_ARTIFACT_PINS)) continue; // reported by the coverage test above
+  SIGNED_ARTIFACTS[`class-artifacts/${file}`] = {
+    file: path.join(CLASS_ARTIFACT_DIR, file),
+    canonicalSha256: CLASS_ARTIFACT_PINS[file],
+  };
 }
 
 for (const [name, { file, canonicalSha256 }] of Object.entries(SIGNED_ARTIFACTS)) {
