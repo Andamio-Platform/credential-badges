@@ -188,7 +188,7 @@ reaches them only through a render deploy, then a cache clear.
 
    ```bash
    gcloud run services describe credential-badges-render \
-     --region us-central1 --project andamio-credentials \
+     --region europe-west4 --project andamio-credentials \
      --format='yaml(status.latestReadyRevisionName,status.traffic,spec.template.spec.containers[0].image)'
    ```
 
@@ -222,7 +222,7 @@ reaches them only through a render deploy, then a cache clear.
 5. **Invalidate again after a short drain.** A request that was in flight on
    the old revision can still write an art-less SVG to the cache. Wait longer
    than the request timeout
-   (`gcloud run services describe credential-badges-render --region us-central1 --project andamio-credentials --format='value(spec.template.spec.timeoutSeconds)'`),
+   (`gcloud run services describe credential-badges-render --region europe-west4 --project andamio-credentials --format='value(spec.template.spec.timeoutSeconds)'`),
    list the keys again and run `invalidate` a second time.
 
 ### 4.6 Static lane (committed stems)
