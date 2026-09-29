@@ -32,7 +32,7 @@ repo; that one maps the website.
 | `DEPLOY.md` | Two-service topology, WIF ref-constraint (`refs/tags/v*`), deploy triggers, the `andamio-ops#170` infra delta + apply order, versioning + permanence, rollback. |
 | `.dockerignore` | Pairs with the allowlist — keeps build context small. |
 
-GCP project: `andamio-credentials` (dedicated, project-deletion lien). Cloud Run service: `credential-badges` (us-central1). Infra source of truth: Terraform in a private operations repository.
+GCP project: `andamio-credentials` (dedicated, project-deletion lien). Cloud Run services: `credential-badges`, `credential-badges-render`, `credential-badges-issuer` (europe-west4; the signing key stays in us-central1 and is used across regions). Infra source of truth: Terraform in a private operations repository.
 
 ## Render service — on-demand badge generation (#33)
 

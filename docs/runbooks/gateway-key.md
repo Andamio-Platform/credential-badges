@@ -58,7 +58,7 @@ gcloud secrets versions list andamio-api-preprod-key --project andamio-credentia
 2. Roll the render service so running instances pick up `latest`:
    ```bash
    gcloud run services update credential-badges-render \
-     --region us-central1 --project andamio-credentials --no-traffic --tag rotate \
+     --region europe-west4 --project andamio-credentials --no-traffic --tag rotate \
      >/dev/null  # or simply redeploy the current image, which restarts instances
    ```
    The simplest reliable roll is to redeploy the current image tag (a no-op

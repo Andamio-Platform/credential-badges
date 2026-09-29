@@ -200,7 +200,7 @@ possible from outside the process anyway.
    still serving traffic:
    ```bash
    gcloud run revisions list --service credential-badges-issuer \
-     --region us-central1 --project andamio-credentials
+     --region europe-west4 --project andamio-credentials
    ```
 5. **KMS audit logs show signing on the new version only.** Any
    `asymmetric-sign` against the retired version after the flush means an
