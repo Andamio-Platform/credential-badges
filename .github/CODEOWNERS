@@ -10,6 +10,13 @@
 # extended at Rung 8.3 with the served status-list JSON (per the plan's
 # "later rungs extend this to the status-list JSON") and at Rung 8.6 with the
 # kill-switch flip tool + runbook.
+#
+# A-022 R7 (a named code owner on every public repo) adds the default owner
+# line below and a second named reviewer on every trust-critical path.
+
+# Default owner for every path. GitHub applies the last matching pattern, so
+# the trust-critical entries below still win for their paths.
+*                              @workshop-maybe
 
 # The did:web DID document and its deterministic regenerator — this publishes
 # the issuer signing key. A wrong or drifted key here silently breaks OB 3.0
@@ -17,9 +24,9 @@
 # whole /.well-known/** is gated (not just did.json) so any future sibling
 # served on this forever-public path is reviewed too. did-pin.test.ts holds the
 # pinned key constant (the actual invariant), so it is gated alongside.
-/.well-known/**                @workshop-maybe
-/tools/gen-did-json.ts         @workshop-maybe
-/tools/did-pin.test.ts         @workshop-maybe
+/.well-known/**                @workshop-maybe @adrian1-dot
+/tools/gen-did-json.ts         @workshop-maybe @adrian1-dot
+/tools/did-pin.test.ts         @workshop-maybe @adrian1-dot
 
 # The hosted OB 3.0 issuer Profile and the served JSON-LD contexts (Rung 4;
 # v1 added by the context-version bump). The Profile declares the issuer as
@@ -33,10 +40,10 @@
 # and /status/**) so any future version or stray sibling on this forever-
 # public path is reviewed too. tools/issuer-profile.test.ts pins the profile
 # shape invariant, so it is gated alongside as well.
-/issuer/profile.jsonld         @workshop-maybe
-/context/**                    @workshop-maybe
-/tools/context-freeze.test.ts  @workshop-maybe
-/tools/issuer-profile.test.ts  @workshop-maybe
+/issuer/profile.jsonld         @workshop-maybe @adrian1-dot
+/context/**                    @workshop-maybe @adrian1-dot
+/tools/context-freeze.test.ts  @workshop-maybe @adrian1-dot
+/tools/issuer-profile.test.ts  @workshop-maybe @adrian1-dot
 
 # The served key-epoch BitstringStatusList credential and its builder/tests
 # (Rung 8.3). A wrong bit here flags every credential signed under a key
@@ -44,9 +51,9 @@
 # silently breaks status checks — changes get a deliberate review. The whole
 # /status/** is gated so any future sibling on this forever-public path is
 # reviewed too.
-/status/**                             @workshop-maybe
-/signing/status-list.ts        @workshop-maybe
-/signing/status-list.test.ts @workshop-maybe
+/status/**                             @workshop-maybe @adrian1-dot
+/signing/status-list.ts        @workshop-maybe @adrian1-dot
+/signing/status-list.test.ts @workshop-maybe @adrian1-dot
 
 # The signing surface the retire-spike move concentrated under signing/
 # (credential-badges#124). sign.ts and sign-class.ts are the KMS entry points
@@ -56,35 +63,35 @@
 # dataset pins, so it is gated alongside (same pattern as did-pin.test.ts).
 # bake-class.ts is left out on purpose: it writes badges/, which is
 # presentation-layer and not gated.
-/signing/sign.ts                     @workshop-maybe
-/signing/sign-class.ts               @workshop-maybe
-/signing/sign-status-list.ts         @workshop-maybe
-/signing/class-artifacts/**          @workshop-maybe
-/signing/expansion-pin.dep-test.ts   @workshop-maybe
+/signing/sign.ts                     @workshop-maybe @adrian1-dot
+/signing/sign-class.ts               @workshop-maybe @adrian1-dot
+/signing/sign-status-list.ts         @workshop-maybe @adrian1-dot
+/signing/class-artifacts/**          @workshop-maybe @adrian1-dot
+/signing/expansion-pin.dep-test.ts   @workshop-maybe @adrian1-dot
 
 # The key-compromise kill-switch (Rung 8.6; deployment plan Decision 3 +
 # CODEOWNERS glob set). The flip tool prepares the suspension flip for a whole
 # key epoch — a wrong flip suspends every credential signed under a key
 # version, including the flagship badge — and the runbook is the procedure the
 # flip PR follows; both get a deliberate review.
-/tools/flip-status-bit.ts        @workshop-maybe
-/tools/flip-status-bit.test.ts   @workshop-maybe
-/docs/runbooks/key-compromise.md @workshop-maybe
+/tools/flip-status-bit.ts        @workshop-maybe @adrian1-dot
+/tools/flip-status-bit.test.ts   @workshop-maybe @adrian1-dot
+/docs/runbooks/key-compromise.md @workshop-maybe @adrian1-dot
 
 # Served-file allowlist controls. Adding a public, forever-served path must be
 # a deliberate reviewed act — these four files are the allowlist surface
 # (Dockerfile COPY, build-context re-includes, nginx location, CI gate).
-/Dockerfile                    @workshop-maybe
-/.dockerignore                 @workshop-maybe
-/nginx/default.conf.template   @workshop-maybe
-/scripts/ci/check-allowlist.sh @workshop-maybe
+/Dockerfile                    @workshop-maybe @adrian1-dot
+/.dockerignore                 @workshop-maybe @adrian1-dot
+/nginx/default.conf.template   @workshop-maybe @adrian1-dot
+/scripts/ci/check-allowlist.sh @workshop-maybe @adrian1-dot
 
 # Alias safety gate (plan KTD-5). Aliases are untrusted on-chain data written
 # into SVG, a format browsers execute — the live holder set contains an XSS
 # payload. This allowlist is the only control between that input and a
 # generated artifact, so widening its charset gets a deliberate review.
-/scripts/alias_gate.py            @workshop-maybe
-/scripts/tests/test_alias_gate.py @workshop-maybe
+/scripts/alias_gate.py            @workshop-maybe @adrian1-dot
+/scripts/tests/test_alias_gate.py @workshop-maybe @adrian1-dot
 
 # The liveness guard for this file. GitHub never warns about a pattern that
 # matches nothing, so a path move can silently retire any gate above — the
@@ -92,4 +99,4 @@
 # a hand check caught it. codeowners.test.ts turns that into a red build.
 # Gated alongside the thing it protects, same as did-pin.test.ts and
 # context-freeze.test.ts: deleting the guard should be a deliberate act.
-/tools/codeowners.test.ts      @workshop-maybe
+/tools/codeowners.test.ts      @workshop-maybe @adrian1-dot
