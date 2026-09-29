@@ -47,6 +47,14 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT_FILE = path.join(HERE, "..", "status", "key-epoch-2026-07.json");
 
 async function main() {
+  // status/ is committed and served, so it always exists at the right path and
+  // never at a wrong one. Check before any KMS call: a wrong OUT_FILE must fail
+  // here, loudly, not write the kill-switch artifact somewhere nothing serves.
+  const outDir = path.dirname(OUT_FILE);
+  if (!(await fs.stat(outDir).catch(() => null))?.isDirectory()) {
+    throw new Error(`status directory ${outDir} does not exist — refusing to sign (wrong OUT_FILE?)`);
+  }
+
   await clearContextCache();
   console.log("context cache cleared — all documents fetched fresh this run");
 
@@ -92,7 +100,6 @@ async function main() {
 
   if (!Array.isArray(signed.proof)) signed.proof = [signed.proof];
 
-  await fs.mkdir(path.dirname(OUT_FILE), { recursive: true });
   const tmp = `${OUT_FILE}.tmp-${process.pid}`;
   await fs.writeFile(tmp, JSON.stringify(signed, null, 2) + "\n");
   await fs.rename(tmp, OUT_FILE);
@@ -103,7 +110,14 @@ async function main() {
   console.log(`wrote ${OUT_FILE}`);
 }
 
-main().catch((e) => {
-  console.error(String(e?.stack ?? e));
-  process.exit(1);
-});
+// Guarded like sign.ts: importing this module must never run a live KMS
+// signing run and overwrite the served status list.
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+) {
+  main().catch((e) => {
+    console.error(String(e?.stack ?? e));
+    process.exit(1);
+  });
+}
