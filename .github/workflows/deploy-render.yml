@@ -17,7 +17,8 @@ permissions:
 
 env:
   GCP_PROJECT: andamio-credentials
-  GCP_REGION: us-central1
+  # Deploy region = the ops LB's active_region. The registry is separate (AR_IMAGE).
+  GCP_REGION: europe-west4
   GCP_SERVICE: credential-badges-render
   AR_IMAGE: us-central1-docker.pkg.dev/andamio-credentials/credential-badges/render
   WIF_PROVIDER: projects/780530615158/locations/global/workloadIdentityPools/credential-badges-pool/providers/github-actions
@@ -41,7 +42,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+        run: gcloud auth configure-docker "${AR_IMAGE%%/*}" --quiet
 
       # Build context MUST be the repo root: service/Dockerfile ships generator/
       # (render-core + fonts.css) AND service/. Tag with both the commit SHA and
