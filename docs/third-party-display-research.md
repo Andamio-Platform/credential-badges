@@ -1,7 +1,7 @@
 # Third-Party Display Targets — Research
 
 **Date:** 2026-08-02
-**Companions:** `archive/open-questions.md`, `archive/mapping.md`, `archive/CORNERS-CUT.md`, and `end-user-ux-research.md` — the last is **not in this repo**: it is internal strategy material whose canonical home is the private orchestration vault, and `.gitignore` keeps it out deliberately. Citations to it below are for readers with vault access.
+**Companions:** `archive/open-questions.md`, `docs/mapping.md`, `archive/CORNERS-CUT.md`, and `end-user-ux-research.md` — the last is **not in this repo**: it is internal strategy material whose canonical home is the private orchestration vault, and `.gitignore` keeps it out deliberately. Citations to it below are for readers with vault access.
 **Source trigger:** "What is a LinkedIn `certUrl`, and does this project deliver it?" — widened into where else an Andamio credential can be posted and viewed.
 
 **Status: research only. Nothing here is decided, and nothing here is a plan.**
@@ -69,7 +69,7 @@ Every third-party display target expects an email-derived identifier:
 | LinkedIn | No identifier at all — see §2; the URL carries the proof |
 
 **The important reframing:** this is already logged as an open question in two places
-(`archive/mapping.md:115`, `docs/plans/2026-05-16-001-…:182`). This research did not discover it. It found
+(`docs/mapping.md:115`, `docs/plans/2026-05-16-001-…:182`). This research did not discover it. It found
 the *forcing function* for it — and established that it gates the whole external-display surface
 rather than any one integration.
 
@@ -331,7 +331,7 @@ question is re-opened on its own terms.
 ## 8. Open decisions — none of these are made
 
 1. **Recipient identifier shape** — pseudonymous only, or additive hashed email on an export variant?
-   Gates §3, §4, and HR import. *(Already logged: `archive/mapping.md:115`, plan §182.)*
+   Gates §3, §4, and HR import. *(Already logged: `docs/mapping.md:115`, plan §182.)*
 2. **Pre-baked vs on-demand Holder Artifacts** — settles §7, and with it whether any datastore is
    needed at all.
 3. **Where issuer-organization data lives** — dbapi, committed JSON, or a new store (§6). Downstream
