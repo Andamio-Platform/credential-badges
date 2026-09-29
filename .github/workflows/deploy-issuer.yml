@@ -16,9 +16,9 @@ name: deploy-issuer
 # token — this workflow is structurally inert, not merely unused.
 #
 # THE OPS GATE (all required before the first `service-v0.1.0` tag):
-#   1. REGION DECISION — us-central1 vs europe-west4 (the KMS key currently
-#      lives in us-central1; a region move may also move/recreate the key,
-#      which re-runs the did.json pipeline).
+#   1. REGION — the service runs in europe-west4 (ISSUER_GCP_REGION); the KMS
+#      key stays in us-central1 and is signed against across regions, so a
+#      service region move never touches did.json (andamio-ops#521).
 #   2. SIGN-SA ATTACH — the Cloud Run service runs AS the sign-only SA
 #      (the service signs via the metadata-server identity; no impersonation).
 #      The deploy (CI/CD) identity and the sign identity stay distinct: a CI
@@ -108,7 +108,9 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+        # Registry host from the image path: the registry (ops registry_region)
+        # and the deploy region (ISSUER_GCP_REGION) move independently.
+        run: gcloud auth configure-docker "${AR_IMAGE%%/*}" --quiet
 
       # Build context MUST be the repo root: the image bakes context/,
       # .well-known/did.json, status/, generator/credentials.json and tools/.

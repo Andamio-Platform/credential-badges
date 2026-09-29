@@ -23,8 +23,13 @@ env:
   # probe URL in deploy-issuer.yml — a rename must touch all three.
   PUBLIC_HOST: credentials.andamio.io
   GCP_PROJECT: andamio-credentials
-  GCP_REGION: us-central1
+  # Deploy region = the ops LB's active_region (andamio-ops
+  # terraform/credentials/credential-badges). The post-deploy checks go through
+  # PUBLIC_HOST, which serves the active region, so the two must match.
+  GCP_REGION: europe-west4
   GCP_SERVICE: credential-badges
+  # One registry for every region (ops registry_region); it moves separately
+  # from GCP_REGION, so docker auth takes its host from here.
   AR_IMAGE: us-central1-docker.pkg.dev/andamio-credentials/credential-badges/app
   WIF_PROVIDER: projects/780530615158/locations/global/workloadIdentityPools/credential-badges-pool/providers/github-actions
   CICD_SA: credential-badges-cicd-sa@andamio-credentials.iam.gserviceaccount.com
@@ -59,7 +64,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+        run: gcloud auth configure-docker "${AR_IMAGE%%/*}" --quiet
 
       - name: Build + tag (SHA-pinned AND semver; never :latest)
         run: |
@@ -87,9 +92,12 @@ jobs:
             --update-env-vars "HOLDER_UPSTREAM=https://andamioscan.io/api/v2/" \
             --quiet
 
-      - name: Verify Content-Type + reachability on the *.run.app URL
+      - name: Verify Content-Type + reachability through the public host
+        # The static host's ingress is LB-only (andamio-ops#194), so its
+        # *.run.app URL answers 404. PUBLIC_HOST is the LB, which serves
+        # GCP_REGION when that is the active region (see env above).
         run: |
-          URL=$(gcloud run services describe "${GCP_SERVICE}" --region "${GCP_REGION}" --project "${GCP_PROJECT}" --format='value(status.url)')
+          URL="https://${PUBLIC_HOST}"
           assert_ct() {
             ct=$(curl -sI "${URL}$1" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
             echo "$1 Content-Type: $ct (expected $2)"
