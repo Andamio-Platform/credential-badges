@@ -1,0 +1,71 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    "https://credentials.andamio.io/context/v1.jsonld"
+  ],
+  "id": "urn:andamio:badge:mainnet:c84cc4dd93ade662f68d1aa7c2e0c04f12c4d009c8ffd8db653af342:4b7a2aaa2372fb510ed1ba244fd4768a632e34cfc729d3179b54690e6d6616ae",
+  "type": [
+    "VerifiableCredential",
+    "OpenBadgeCredential"
+  ],
+  "issuer": {
+    "id": "did:web:credentials.andamio.io",
+    "type": [
+      "Profile",
+      "AttestationHost"
+    ],
+    "name": "Andamio",
+    "url": "https://credentials.andamio.io",
+    "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
+  },
+  "validFrom": "2026-07-01T00:00:00Z",
+  "name": "Learn to use the application 5am.Earth",
+  "description": "Defines the \"Learn to use the application 5am.Earth\" credential of the \"5am.earth Andamio course\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "credentialSubject": {
+    "id": "urn:andamio:course:c84cc4dd93ade662f68d1aa7c2e0c04f12c4d009c8ffd8db653af342:4b7a2aaa2372fb510ed1ba244fd4768a632e34cfc729d3179b54690e6d6616ae",
+    "type": [
+      "AchievementSubject"
+    ],
+    "achievement": {
+      "id": "urn:andamio:course:c84cc4dd93ade662f68d1aa7c2e0c04f12c4d009c8ffd8db653af342:4b7a2aaa2372fb510ed1ba244fd4768a632e34cfc729d3179b54690e6d6616ae",
+      "type": [
+        "Achievement"
+      ],
+      "name": "Learn to use the application 5am.Earth",
+      "description": "Learn to use the application 5am.Earth — 5am.earth Andamio course",
+      "criteria": {
+        "narrative": "This credential is defined by the \"5am.earth Andamio course\" course on Andamio (Cardano mainnet). It is awarded for the \"Learn to use the application 5am.Earth\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "id": "https://andamioscan.io/courses/c84cc4dd93ade662f68d1aa7c2e0c04f12c4d009c8ffd8db653af342",
+      "type": [
+        "OnChainCredentialAnchor",
+        "Evidence"
+      ],
+      "name": "Cardano on-chain anchor",
+      "network": "mainnet",
+      "policyId": "c84cc4dd93ade662f68d1aa7c2e0c04f12c4d009c8ffd8db653af342"
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",
+    "type": "BitstringStatusListEntry",
+    "statusPurpose": "suspension",
+    "statusListIndex": "0",
+    "statusListCredential": "https://credentials.andamio.io/status/key-epoch-2026-07.json"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "created": "2026-07-01T00:00:00Z",
+      "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "zDMBNhTRFHuiw7BDkciXgsKLAUCJBH672LSvJmHLyjJwV1LgexZvxpAqACf2HjR8YmseY8R3rm7XWcFDUH5ikzb4"
+    }
+  ]
+}
