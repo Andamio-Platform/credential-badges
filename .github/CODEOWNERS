@@ -1,4 +1,5 @@
 # CODEOWNERS — trust-critical paths for credential-badges.
+# Review: auto-request only
 #
 # DOCUMENT-ONLY gate (v1). This file records who must review changes to the
 # paths below. It is intentionally NOT yet backed by branch-protection
