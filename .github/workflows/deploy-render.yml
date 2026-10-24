@@ -29,6 +29,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so the on-main ancestor check below works
+
+      - name: Assert the tagged commit is on main
+        run: |
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" FETCH_HEAD || {
+            echo "tag commit $GITHUB_SHA is not an ancestor of origin/main — refusing to deploy unreviewed code";
+            exit 1;
+          }
 
       - name: Enforce served-file allowlist
         run: bash scripts/ci/check-allowlist.sh
