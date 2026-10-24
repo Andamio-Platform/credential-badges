@@ -222,7 +222,7 @@ test("next-steps output names the hardened re-sign, the constant, and the sha-pi
   // Propagation + the required cross-verifier read (runbook residual risk 1).
   assert.match(steps, /max-age=3600/);
   assert.match(steps, /cross-verifier read/);
-  assert.match(steps, /docs\/runbooks\/key-compromise\.md/);
+  assert.match(steps, /andamio-ops\/runbooks\/credential-badges\/key-compromise\.md/);
   assert.match(steps, /NOTHING IS SIGNED/);
 });
 

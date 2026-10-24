@@ -77,7 +77,7 @@ static host (the LB routes only `/credentials/*` here).
   deploy and refuses the boot. Any mismatch kills the boot — drift is a loud
   startup failure, never a silently broken signature. The check is
   **boot-only**: rotation requires flushing/redeploying issuer instances
-  (see `docs/runbooks/key-compromise.md`).
+  (see `andamio-ops/runbooks/credential-badges/key-compromise.md`).
 - **Cache-no-double-sign**: signed artifacts are cached keyed by
   `(network, courseId, sltHash, recipientAsset, keyVersion)` — a re-request
   serves byte-identical bytes with **zero** KMS calls. Per issuance, the

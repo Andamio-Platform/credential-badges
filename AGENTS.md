@@ -19,7 +19,7 @@ changes what a signature was computed over is a breaking change even when nothin
 |---|---|
 | [`CONCEPTS.md`](CONCEPTS.md) | Shared domain vocabulary — entities, named processes, and status concepts with project-specific meaning. Terms like Baking, Class Achievement, Anchor Gate, and Validation Gate mean something specific here. Relevant when orienting to the codebase or discussing domain concepts. |
 | `docs/solutions/` | Documented solutions to past problems — bugs, conventions, best practices, workflow patterns — organised by category with YAML frontmatter (`module`, `tags`, `problem_type`, `applies_when`). Relevant when implementing or debugging in an area someone has already been burned by. |
-| `docs/runbooks/` | Operational procedures for things that touch production keys or published artifacts: class-artifact signing, key rotation, the compromise kill-switch, gateway keys. |
+| — | Operational runbooks (key rotation, the compromise kill-switch, gateway keys, class-artifact signing, badge art) live in the private `andamio-ops` repo, `runbooks/credential-badges/`. Never add operational procedures or infrastructure details to this public repo. |
 | `docs/plans/` · `docs/brainstorms/` | Decision records. A plan carries the reasoning and the rejected alternatives, not just the outcome — including decisions that were later refuted, which are left legible on purpose. |
 | `docs/residual-review-findings/` | Review findings deliberately **not** applied, and why. Read this before concluding a guard holds or a weakness is unknown — it is where a known-unfixed thing goes, so its absence from a diff is not evidence it was missed. |
 
@@ -38,7 +38,7 @@ These have all happened or come close. None of them fails loudly at the time.
   a mutation makes correctly signed credentials fail deterministically at some verifiers and pass
   at others. Ship a new version URL instead. CI enforces this; see
   `docs/solutions/conventions/never-mutate-published-jsonld-context.md`.
-- **Every KMS signing run must be transcribed.** `docs/runbooks/key-compromise.md` treats an
+- **Every KMS signing run must be transcribed.** `andamio-ops/runbooks/credential-badges/key-compromise.md` treats an
   `asymmetric-sign` entry that is not attributable to a recorded run as a compromise trigger. The
   signing tooling writes transcripts automatically — do not sign by hand around it.
 - **Validate one artifact before signing a batch.** A spec permitting a shape is not a verdict
