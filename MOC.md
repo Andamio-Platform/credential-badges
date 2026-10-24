@@ -16,8 +16,8 @@ repo; that one maps the website.
 | `/context/v0.jsonld` | `context/v0.jsonld` | no (frozen forever, `immutable` cache, sha256-pinned in `tools/context-freeze.test.ts`) | Retired signing context. Mutated in place on 2026-07-21 (the incident behind `docs/solutions/conventions/never-mutate-published-jsonld-context.md`); superseded by the byte-identical v1 at a fresh URL so caching verifiers converge. Keeps serving 200 forever, but nothing signs against it. |
 | `/issuer` | `issuer/profile.jsonld` | yes (cached, not `immutable`) | Hosted OB 3.0 issuer `Profile`, typed `["Profile","AttestationHost"]` with `id` = `did:web:credentials.andamio.io` (Rung 4 — Profile, `did.json`, and future `issuer.id` name one subject; `url` stays the homepage). Strict verifiers dereference `issuer.url` here; nginx exact-match serves the extensionless path as `application/ld+json`. **This subject signs:** all 58 committed `OpenBadgeCredential` class artifacts and the key-epoch status list name `did:web:credentials.andamio.io` as their `issuer.id`. `tools/issuer-profile.test.ts` pins the shape. |
 | `/.well-known/did.json` | `.well-known/did.json` | yes (cached, not `immutable`; mutable on key rotation) | `did:web:credentials.andamio.io` DID document. Publishes the issuer signing key (`#key-2026-07`, pinned to KMS `vc-sign-ed25519` v1). Served exact-match as `application/did+ld+json`. **`#key-2026-07` is the active signing key** — every committed OB 3.0 credential resolves its `proof.verificationMethod` to it, and the key-epoch status list can suspend everything signed under it. Regenerate with `tools/gen-did-json.ts`; the key-pin invariant test guards drift. |
-| `/status/key-epoch-2026-07.json` | `status/key-epoch-2026-07.json` | yes (`max-age=3600`; mutable on a kill-switch flip) | Signed key-epoch `BitstringStatusList` credential (Rung 8.3, plan Decision 3): `statusPurpose: "suspension"`, one bit per signing key version, bit 0 = `#key-2026-07`. Built by `signing/status-list.ts`, signed via `sign-status-list.ts`, sha-pinned in CI. Flipping a bit = the key-compromise kill-switch — see [`docs/runbooks/key-compromise.md`](docs/runbooks/key-compromise.md). |
-| `/badges/*.svg` (+ `.png`) | `badges/` | yes (cached, not `immutable`) | Presentation-layer badge imagery, shared and embedded by URL (no signed credential carries `achievement.image`). Never identity-bearing — the on-chain anchor is the credential's identity. **Build output — see [Badge generator](#badge-generator). `make badges` strips baked signatures; refresh signed badges with the single-badge procedure in `docs/runbooks/badge-art.md`.** |
+| `/status/key-epoch-2026-07.json` | `status/key-epoch-2026-07.json` | yes (`max-age=3600`; mutable on a kill-switch flip) | Signed key-epoch `BitstringStatusList` credential (Rung 8.3, plan Decision 3): `statusPurpose: "suspension"`, one bit per signing key version, bit 0 = `#key-2026-07`. Built by `signing/status-list.ts`, signed via `sign-status-list.ts`, sha-pinned in CI. Flipping a bit = the key-compromise kill-switch — see `andamio-ops/runbooks/credential-badges/key-compromise.md`. |
+| `/badges/*.svg` (+ `.png`) | `badges/` | yes (cached, not `immutable`) | Presentation-layer badge imagery, shared and embedded by URL (no signed credential carries `achievement.image`). Never identity-bearing — the on-chain anchor is the credential's identity. **Build output — see [Badge generator](#badge-generator). `make badges` strips baked signatures; refresh signed badges with the single-badge procedure in `andamio-ops/runbooks/credential-badges/badge-art.md`.** |
 | `/` | nginx config | n/a | Tiny 200 landing page (keeps health probes trivial; pointer for humans). |
 
 ## Static-host infrastructure
@@ -47,7 +47,6 @@ The second Cloud Run service (`credential-badges-render`). A `/badges/` miss on 
 | `scripts/cache-admin.py` | `invalidate` (delete cache objects — non-destructive re-render) + `reconcile [--delete]` (flag/remove orphaned objects). Mirrors `serve_badge` network logic; fails loud on inconclusive gateway errors. |
 | `.github/workflows/deploy-render.yml` | Tag-triggered deploy (`vrender-*`) via the same WIF + CICD SA. Builds `service/Dockerfile`, image-only `gcloud run deploy credential-badges-render` (preserves TF-managed SA/secrets/bucket), verifies `/healthz` + a live-rendered badge. |
 | `docs/cache.md` | TTL story (max-age + GCS lifecycle), orphan-guard, cache-admin usage. |
-| `docs/runbooks/gateway-key.md` | Gateway `X-API-Key` provisioning + rotation + compromise response (Secret Manager, network-scoped keys, dedicated service key). |
 
 Infra (out of repo): GCS cache bucket, render runtime SA (`credential-badges-render-sa`, `secretAccessor` on the two gateway keys only), two gateway-key secrets — Terraform in `andamio-ops#170`.
 
@@ -81,11 +80,7 @@ Local verification (hermetic, in CI) and live verification (network, run by a hu
 
 ## Runbooks
 
-| File | Role |
-|---|---|
-| `docs/runbooks/key-compromise.md` | **Signing-key compromise kill-switch** (Rung 8.6; production-signing precondition). Trigger criteria, status-bit-flip containment via `tools/flip-status-bit.ts` (prepares, never signs) + hardened re-sign, required cross-verifier read of the flipped live list, DID-method removal + additive key replacement, re-issuance, false-alarm stand-down. |
-| `docs/runbooks/gateway-key.md` | Gateway `X-API-Key` provisioning + rotation + compromise response (Secret Manager, network-scoped keys, dedicated service key). |
-| `docs/runbooks/badge-art.md` | Giving a live badge or course art, changing it, removing it (#131). Art spec + macOS export recipe, single-badge scratch build + re-bake (never `make badges`), render-lane deploy then cache invalidation, static-lane deploy, what stays stale. |
+Operational runbooks live in the private `andamio-ops` repo, `runbooks/credential-badges/`.
 
 ## Planning
 

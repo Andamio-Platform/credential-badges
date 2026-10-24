@@ -52,7 +52,7 @@ export const ACTIVE_KEY_STATUS_INDEX = KEY_VERSION_POSITIONS[ACTIVE_KEY_VERSION]
 // Rung 8.6 · The committed source of truth for which key-version bits are
 // currently SET (suspended). Empty = every key version fresh. Changed ONLY
 // through the key-compromise kill-switch (tools/flip-status-bit.ts +
-// docs/runbooks/key-compromise.md): the flip PR moves this constant, the
+// andamio-ops/runbooks/credential-badges/key-compromise.md): the flip PR moves this constant, the
 // re-signed status/ artifact, and the sha pin in status-list.test.ts
 // together, and CI enforces their coherence — the served list can never
 // silently disagree with the declared suspension state.

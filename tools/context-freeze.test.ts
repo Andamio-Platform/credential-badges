@@ -14,7 +14,7 @@
 //
 // Deliberately NOT pinned: status/key-epoch-*.json. The status list is mutable
 // by design — the key-compromise kill-switch (tools/flip-status-bit.ts,
-// docs/runbooks/key-compromise.md) flips suspension bits in an emergency, and a
+// andamio-ops/runbooks/credential-badges/key-compromise.md) flips suspension bits in an emergency, and a
 // byte pin here would make that runbook a CI-red event at the worst possible
 // time. Do not "pin everything" this file into covering /status/.
 

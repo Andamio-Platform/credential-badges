@@ -92,7 +92,7 @@ claim-tx slot (#18), and the comprehension gate ran and closed (#19–#21).
 - [x] Allowlist + MIME plumbing for `/.well-known/did.json` and `/status/*` (plus the `/did.json` bare-domain alias, #57)
 - [x] `/issuer` Profile typed `["Profile", "AttestationHost"]`
 - [x] CODEOWNERS on the trust-critical paths — **document-only**, deliberately not backed by branch-protection required reviewers (plan P1bis-09)
-- [x] `docs/runbooks/issuer-provisioning.md` — additive rotation (this file) + compromise kill-switch (`docs/runbooks/key-compromise.md`). Writing it surfaced a **prerequisite nobody had noticed: `tools/gen-did-json.ts` cannot emit a two-key DID document**, so no additive rotation is currently possible → [#87](https://github.com/Andamio-Platform/credential-badges/issues/87)
+- [x] `andamio-ops/runbooks/credential-badges/issuer-provisioning.md` — additive rotation (this file) + compromise kill-switch (`andamio-ops/runbooks/credential-badges/key-compromise.md`). Writing it surfaced a **prerequisite nobody had noticed: `tools/gen-did-json.ts` cannot emit a two-key DID document**, so no additive rotation is currently possible → [#87](https://github.com/Andamio-Platform/credential-badges/issues/87)
 
 ## ✅ Phase 2 — Production service (Units 3–4): closed 2026-07-23
 
@@ -125,7 +125,7 @@ that resolves live on-chain and suspension state client-side.
 - [x] Human-facing verification surface — as static badge pages + holder viewer, **not** `service/src/verify-view.ts`
 - [x] First emitted BitstringStatusList served at `/status/key-epoch-2026-07.json` (Rung 8.3, positions reserved for key versions)
 - [x] `tools/flip-status-bit.ts` CLI (Rung 8.6 — key-epoch + bit-index + purpose; prepares the flip, never signs; CODEOWNERS-gated)
-- [x] `docs/runbooks/key-compromise.md` (Rung 8.6 — subsumes the planned `status-flip.md`: trigger criteria, flip containment, cross-verifier read, DID-doc response, re-issuance)
+- [x] `andamio-ops/runbooks/credential-badges/key-compromise.md` (Rung 8.6 — subsumes the planned `status-flip.md`: trigger criteria, flip containment, cross-verifier read, DID-doc response, re-issuance)
 - [x] `docs/verifier-guidance.md` written with worked example (#19, #52) — including the `proof.created` block-time convention
 - [ ] **The signature-bearing states.** The viewer ships 2 states (verified / suspended) against the plan's 5, and by design it "does not itself assert a signature is cryptographically valid" — it reads on-chain + suspension state and points at an independent verifier. `anchored+signature-valid`, `anchored+signature-unavailable`, and `indeterminate` are the gap.
 - [x] Multi-party process visible in rendered output — shipped in #93: courseOwner pseudonym per badge, the verified andamioscan course link, and the assessor named as absent rather than blank-filled
@@ -178,7 +178,7 @@ the published schema **permits**. The reference validator rejected it anyway.
 Validating a single artifact before batching caught it for the price of one
 signature. Evidence: [`signing/validation/README.md`](signing/validation/README.md).
 
-Procedure: [`docs/runbooks/class-artifact-signing.md`](docs/runbooks/class-artifact-signing.md).
+Procedure: `andamio-ops/runbooks/credential-badges/class-artifact-signing.md`.
 
 ## Where to dig deeper
 
