@@ -49,10 +49,9 @@ were all production. The prototype it grew from is retained as history at
 [`archive/`](../archive/README.md).
 
 Transcripts under [`transcripts/`](./transcripts/) record commands run against
-the old `spike/signer-spike/` path and are **never rewritten** — the
-key-compromise runbook treats a KMS `asymmetric-sign` not attributable to a
-recorded run as a compromise trigger, so falsifying a capture to tidy a path
-would break the attribution chain. A future auditor reconciling an audit entry
+the old `spike/signer-spike/` path and are **never rewritten** — every KMS
+signing run must be attributable to a recorded transcript, so falsifying a
+capture to tidy a path would break the attribution chain. A future auditor reconciling an audit entry
 against a transcript should expect the pre-rename path there.
 
 ---
@@ -138,9 +137,8 @@ Ed25519 only:
 - **`--signer kms`**: exactly **one** `gcloud kms asymmetric-sign` call
   (Cloud KMS Ed25519 is PureEdDSA over the raw `data` bytes, never a digest;
   64-byte raw signature asserted, then base58btc-multibase encoded into
-  `proofValue` by the suite). Before signing, the KMS public key (version 1 of
-  `projects/andamio-credentials/locations/us-central1/keyRings/credential-badges-issuer/cryptoKeys/vc-sign-ed25519`)
-  is re-pinned against the **live**
+  `proofValue` by the suite). Before signing, the KMS public key (the key
+  version named in `sign.ts`) is re-pinned against the **live**
   `https://credentials.andamio.io/.well-known/did.json` — mismatch refuses to
   sign.
 
@@ -207,11 +205,8 @@ curl -X POST "https://verifybadge.org/api/validate?validatorId=OB30Inspector&oth
   -F "file=@signed-credential.json;type=application/json"
 ```
 
-KMS access: `gcloud` authenticated as a principal with
-`cloudkms.publicKeyViewer` + `cloudkms.signerVerifier` on the key (this run
-used James's own account directly; impersonation of
-`credential-badges-sign-sa@andamio-credentials.iam.gserviceaccount.com` is not
-granted to it — see PR body).
+KMS access: `gcloud` authenticated as a principal permitted to read the
+public key and sign with the key version.
 
 ## Verification results
 
@@ -261,12 +256,7 @@ Rung 6/8.2 (the previous artifact, for the record):
    context (it evolves additively only) but are no longer emitted.
 4. **`proof` committed in array form** (1EdTech OB3 Plain-JSON schema
    requirement, rung-1 finding #2).
-5. **Direct KMS access instead of SA impersonation.** Impersonating
-   `credential-badges-sign-sa@andamio-credentials.iam.gserviceaccount.com` is
-   denied for `james@andamio.io` (no `iam.serviceAccountTokenCreator`); direct
-   `get-public-key` / `asymmetric-sign` succeed. Signing behavior is identical
-   (same key version, same PureEdDSA semantics).
-6. **Rung 8.3 pre-deploy transitional state (context ahead of live).** The
+5. **Rung 8.3 pre-deploy transitional state (context ahead of live).** The
    committed `context/v0.jsonld` is an additive superset of the live one until
    the next deploy ships it. Signing/verifying locally therefore ran with
    `CONTEXT_AHEAD_OF_LIVE_OK=1`, which the document loader honors ONLY when

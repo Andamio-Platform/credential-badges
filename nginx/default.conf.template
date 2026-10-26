@@ -203,10 +203,9 @@ server {
     # Run upstream; `Host` is the upstream host (Cloud Run routes by Host), with
     # the public host preserved in X-Forwarded-Host.
     #
-    # Production alternative (hardening path, NOT this repo): an external HTTPS
-    # load balancer with a URL-map path-route `/badges/* -> render NEG`, defined
-    # in private-ops Terraform (deployment plan Decision 5). Same render service
-    # and GCS cache; only the routing layer differs.
+    # Alternative: an external HTTPS load balancer with a URL-map path-route
+    # `/badges/* -> render NEG`. Same render service and cache; only the
+    # routing layer differs.
     location @render {
         proxy_pass ${RENDER_UPSTREAM};
         proxy_ssl_server_name on;

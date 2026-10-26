@@ -31,8 +31,7 @@ jobs:
         # Hermetic self-consistency check: the committed did.json must decode to
         # the pinned key constant. Catches a bad edit to did.json — NOT a live
         # KMS rotation (the live-KMS re-fetch is env-gated on KMS_LIVE_PIN and
-        # skips here; its cloudkms.publicKeyViewer grant + scheduled reconcile
-        # land at Rung 8, per plan KTD-2). No install — tools/ is dependency-free.
+        # skips here). No install — tools/ is dependency-free.
         run: node --experimental-strip-types --test tools/*.test.ts
 
   signing-hardening:

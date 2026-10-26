@@ -2,9 +2,7 @@ name: deploy-render
 
 # On-demand badge RENDER service (#33) — the SECOND Cloud Run service.
 # Distinct from deploy.yml (the static host). Triggers ONLY on `vrender-*`
-# tags. The WIF binding is ref-constrained at the OIDC layer to refs/tags/v*
-# in the private ops Terraform, and `vrender-*` satisfies that constraint
-# while `v[0-9]*.*.*` (the static host's trigger) deliberately does NOT match
+# tags. `v[0-9]*.*.*` (the static host's trigger) deliberately does NOT match
 # a `vrender-*` ref — so a render release never double-fires the static deploy.
 on:
   push:
@@ -17,7 +15,7 @@ permissions:
 
 env:
   GCP_PROJECT: andamio-credentials
-  # Deploy region = the ops LB's active_region. The registry is separate (AR_IMAGE).
+  # The registry region is separate (AR_IMAGE).
   GCP_REGION: europe-west4
   GCP_SERVICE: credential-badges-render
   AR_IMAGE: us-central1-docker.pkg.dev/andamio-credentials/credential-badges/render
@@ -67,12 +65,9 @@ jobs:
           docker push "${AR_IMAGE}:${GITHUB_SHA}"
           docker push "${AR_IMAGE}:${GITHUB_REF_NAME}"
 
-      # The render service's runtime SA, secret-env wiring (ANDAMIO_*_API_KEY),
-      # and cache bucket are managed by the private-ops Terraform. `gcloud run
-      # deploy --image` updates ONLY the image and preserves that config — keep
-      # this step image-only so it never clobbers the TF-managed surface. The
-      # Terraform `render_image_tag` is set to the same vrender tag (step E of
-      # the apply runbook), so the two converge idempotently.
+      # The render service's runtime configuration is managed outside this
+      # workflow. `gcloud run deploy --image` updates ONLY the image and
+      # preserves that config — keep this step image-only so it never clobbers it.
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy "${GCP_SERVICE}" \
@@ -88,7 +83,7 @@ jobs:
       # this, and the issuer lane hit the same wall earlier (#62). /healthz
       # remains for Cloud Run's internal probes, which bypass the frontend.
       # The rendered-badge check below is the real verification anyway — it
-      # exercises the full live path (GCS cache + gateway key); the target is
+      # exercises the full live path (cache + gateway read); the target is
       # derived from the first entry in generator/credentials.json so it never
       # hardcodes a credential.
       - name: Verify a live-rendered badge content-type

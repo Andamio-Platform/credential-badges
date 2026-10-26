@@ -34,8 +34,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "credentials.json")
 DEFAULT_OUT = os.path.join(HERE, "..", "badges")
 
-# Courses to skip for now (kept in credentials.json). FCB Fan Engagement is done
-# last with a custom Barça palette; remove from this set when that lands.
+# Courses to skip for now (kept in credentials.json). Remove a course from this
+# set once its custom palette lands.
 SKIP_COURSES = {"5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc"}
 
 

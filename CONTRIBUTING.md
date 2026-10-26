@@ -37,14 +37,14 @@ See [`generator/README.md`](generator/README.md) for the full pipeline.
 
 ## How changes ship
 
-The deploy is **tag-triggered**, and there is intentionally **no `main`/branch deploy** — pushing a `vX.Y.Z` tag is the only thing that builds and ships the image (the Workload Identity binding is ref-constrained to `refs/tags/v*`). So merging to `main` is safe and never deploys on its own.
+The deploy is **tag-triggered**, and there is intentionally **no `main`/branch deploy** — pushing a `vX.Y.Z` tag is the only thing that builds and ships the image. So merging to `main` is safe and never deploys on its own.
 
 1. **Branch** off `main`. Name it `feature/…`, `fix/…`, `docs/…`, or `refactor/…`.
 2. **Open a PR.** CI runs the served-file allowlist check and the nginx fallback test. Keep PRs focused.
 3. **Merge to `main`** once reviewed.
 4. **Deploy** is a separate, deliberate step (maintainers): bump and push a version tag — `git tag v1.0.3 && git push origin v1.0.3`. Artifact Registry tags are immutable, so always bump; never re-push an existing tag.
 
-Full deploy mechanism, the allowlist rule, and tag policy live in [`DEPLOY.md`](DEPLOY.md).
+The deploy workflows are listed in [`DEPLOY.md`](DEPLOY.md).
 
 ### The served-file allowlist
 

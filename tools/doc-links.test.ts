@@ -12,12 +12,11 @@
 //
 // THE EXCLUSION LIST IS THE POINT
 //
-// Dated plans, brainstorms, transcripts, validator captures, and the archived
-// prototype deliberately keep links to paths that have since moved. They are
-// records of what was true when written, not instructions about where things
-// are now — AGENTS.md keeps plans legible on purpose, "including decisions
-// that were later refuted", and rewriting a KMS transcript would falsify the
-// attribution chain the key-compromise runbook depends on.
+// Transcripts, validator captures, and the archived prototype deliberately
+// keep links to paths that have since moved. They are records of what was
+// true when written, not instructions about where things are now — and
+// rewriting a KMS transcript would falsify the attribution chain for signing
+// runs.
 //
 // So this list encodes the instruction-versus-record distinction rather than
 // merely skipping inconvenient files. Adding a path here means claiming it is
@@ -38,8 +37,6 @@ const REPO = path.resolve(HERE, "..");
 
 /** Records, not instructions. See the header — this list is a claim. */
 const RECORD_PREFIXES = [
-  "docs/plans/", // dated decision records, refuted ones included
-  "docs/brainstorms/", // dated requirements records
   "archive/", // the retired prototype and its evidence
   "signing/transcripts/", // verbatim KMS run captures
   "signing/validation/", // raw external-validator captures

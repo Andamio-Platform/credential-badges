@@ -1,11 +1,10 @@
-# credential-badges-issuer (Rung 8.4) — the OB3 issuer service (deployment
-# plan Decision 5; the LB routes /credentials/* here). NOT the static host,
-# NOT the render service — the third Cloud Run service in this repo (the plan
-# predates the render service, so it says "two").
+# The OB3 issuer service (Rung 8.4; /credentials/* routes here). NOT the
+# static host, NOT the render service — the third Cloud Run service in this
+# repo.
 #
 # Build context MUST be the repo root, so the image bakes the trust-critical
 # repo artifacts the service pins at runtime:
-#   docker build -f issuer-service/Dockerfile -t credential-badges-issuer .
+#   docker build -f issuer-service/Dockerfile -t issuer-service .
 #
 #   context/v1.jsonld          — the committed Andamio context (closed loader
 #                                serves these bytes; boot check verifies live)

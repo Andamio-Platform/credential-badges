@@ -30,12 +30,9 @@ export interface Config {
   signerMode: SignerMode;
   /**
    * Full KMS CryptoKeyVersion resource name, e.g.
-   * projects/<p>/locations/<region>/keyRings/credential-badges-issuer/cryptoKeys/vc-sign-ed25519/cryptoKeyVersions/1
+   * projects/<p>/locations/<region>/keyRings/<keyring>/cryptoKeys/<key>/cryptoKeyVersions/<n>
    *
-   * REQUIRED in kms mode, deliberately with NO default: the region is an ops
-   * decision (the pre-deploy ops gate; europe-west4 vs us-central1 is
-   * undecided at build time). The spike's key lives at
-   * us-central1/credential-badges-issuer/vc-sign-ed25519 version 1.
+   * REQUIRED in kms mode, deliberately with NO default.
    */
   kmsKeyVersionName: string | null;
 }
@@ -48,7 +45,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const kmsKeyVersionName = env.KMS_KEY_VERSION_NAME ?? null;
   if (signerMode === "kms" && !kmsKeyVersionName) {
     throw new Error(
-      "KMS_KEY_VERSION_NAME is required in kms mode (full CryptoKeyVersion resource name; provided by the ops gate — no default is baked in because the region decision is pending)",
+      "KMS_KEY_VERSION_NAME is required in kms mode (full CryptoKeyVersion resource name; no default is baked in)",
     );
   }
   return {

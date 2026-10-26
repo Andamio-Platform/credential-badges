@@ -68,7 +68,7 @@ Each SLT becomes an `Alignment` pointing at e.g. `https://credentials.preprod.an
 ### Q6. The public IMS validator is OB 2.0 only
 `openbadgesvalidator.imsglobal.org` is the URL you'd intuitively reach for, but it's pinned to OB 2.0 and an old `pyld`. For OB 3.0 conformance you need the 1EdTech certification kit, which is membership-gated.
 
-**Action**: this matches the plan's expected procurement path (Plan §4). Sebastian needs to drive the membership decision before we can certify. Until then, our local validation harness (structural + JSON-LD + JWT signature) is the substitute.
+**Action**: certification needs a 1EdTech membership decision first. Until then, our local validation harness (structural + JSON-LD + JWT signature) is the substitute.
 
 ### Q7. No public reference verifier we could test against
 The plan calls for "automated interop tests against known verifiers (Credly, POK, 1EdTech reference validator)" in Phase 3. Of those:

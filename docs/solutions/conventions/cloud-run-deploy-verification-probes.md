@@ -19,7 +19,7 @@ tags: [cloud-run, deploy-verification, healthz, load-balancer, probes, ci]
 
 Three deploy lanes independently hit the same two failure modes before this was written down:
 
-1. The issuer lane's verify step probed the `*.run.app` URL, which stopped working after the LB cutover sealed the service's ingress (#62/#63 moved the probe to the public hostname).
+1. The issuer lane's verify step probed the `*.run.app` URL, which stopped working once the service was put behind the load balancer (#62/#63 moved the probe to the public hostname).
 2. The render lane's verify step probed the literal path `/healthz` on its `*.run.app` URL. The `vrender-0.1.2` deploy failed against a **healthy, correctly deployed revision**: Google's frontend intercepts `/healthz` on run.app URLs and returns a generic HTML 404 — the request never reaches the container. Request logs proved it: `/health` and `/badges/*` arrived at the app; `/healthz` never did (fixed in #66).
 
 The static lane's byte-verification probes were written against the public host from the start (#64), citing the issuer lesson.
@@ -28,7 +28,7 @@ The static lane's byte-verification probes were written against the public host 
 
 Two rules for every external deploy-verification probe:
 
-1. **Probe the public hostname (`credentials.andamio.io`), not `*.run.app`.** The LB route is the only path that proves what users and verifiers actually fetch — a run.app probe cannot see LB misroutes, and sealed ingress (`internal-and-cloud-load-balancing`) makes run.app unreachable to the runner entirely. A run.app check is acceptable only as a supplementary service-level reachability signal on a service with open ingress, never as the verification of served content.
+1. **Probe the public hostname (`credentials.andamio.io`), not `*.run.app`.** The LB route is the only path that proves what users and verifiers actually fetch — a run.app probe cannot see LB misroutes, and run.app may not be reachable from the runner at all. A run.app check is acceptable only as a supplementary service-level reachability signal, never as the verification of served content.
 2. **Never probe the literal path `/healthz` from outside.** Google's frontend swallows it on run.app URLs (HTML 404, `content-type: text/html`, no request log entry). Keep `/healthz` in the app for Cloud Run's *internal* probes — those bypass the frontend and work fine. External verification should exercise a real application path instead (a served file with a content-type or sha256 assertion, a rendered badge, a signed credential).
 
 The strongest form, used by the static lane since #64: assert **sha256 of the served body** against the checked-out tag's bytes on the public host, so `served == checkout == pinned` in one chain.

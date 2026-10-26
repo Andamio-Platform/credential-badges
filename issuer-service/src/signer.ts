@@ -10,10 +10,6 @@
 //     The service calls the SAME AsymmetricSign API over REST
 //     (cloudkms.googleapis.com) with an access token from the Cloud Run
 //     metadata server, because the runtime image carries no gcloud CLI.
-//     IDENTITY ASSUMPTION (deployment plan Decision 5): the service RUNS AS
-//     the sign SA — the ops gate attaches the sign-only service account to
-//     the Cloud Run service, so the metadata server's default token IS the
-//     sign identity. No impersonation anywhere.
 //   - EphemeralSigner — tests / CI / local runs. An in-process node:crypto
 //     Ed25519 key through the exact same seam (the spike's loopback pattern).
 //     Never deployable as production: main.ts logs loudly in ephemeral mode.

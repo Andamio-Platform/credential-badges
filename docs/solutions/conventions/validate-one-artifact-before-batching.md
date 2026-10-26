@@ -72,4 +72,4 @@ Omitting the id would have meant, in the spec's own framing, *"an earner we cann
 
 The invariant is now a regression guard rather than a memory — `signing/class-credential.test.ts` asserts the subject id exists and names the probe that requires it, so a future "simplify" cannot quietly restore the rejected shape.
 
-**Related:** issue #89 (the holder/class split that produced this artifact), and KTD-1 in [`docs/plans/2026-07-28-004-feat-fully-baked-badges-plan.md`](../../plans/2026-07-28-004-feat-fully-baked-badges-plan.md), which records the decision, its refutation, and the re-validation.
+**Related:** issue #89 (the holder/class split that produced this artifact).

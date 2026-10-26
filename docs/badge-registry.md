@@ -253,7 +253,7 @@ existing one (I3).
 | Human-readable slugs (`gimbalabs-plutus-pbl-01`) | Creates a namespace Andamio must arbitrate — uniqueness, renames, squatting, disputes. Reintroduces exactly the "Andamio is the authority" posture Decision 2 removed. Discarded before first commit (2026-05-25); no rename was ever needed. |
 | A version segment (`{course_id}.{slt_hash}.v2.svg`) | Redundant: a revision already changes `slt_hash` (I5). A separate version counter would be a second, weaker source of truth. |
 | Recipient in the path | Would multiply identical images per holder and break caching. The recipient lives in the credential and in the holder viewer subpath (`/badges/{badge_id}/{alias}`), not in the badge identity. |
-| Content-addressed image names (IPFS CID as the id) | The id would then change whenever the *art* changed, violating I3/I4 — the name must be frozen while the picture stays mutable. IPFS remains open as a *storage* option for badge art (`docs/brainstorms/2026-06-27-issuer-badge-customization-requirements.md`), which is a different question. |
+| Content-addressed image names (IPFS CID as the id) | The id would then change whenever the *art* changed, violating I3/I4 — the name must be frozen while the picture stays mutable. IPFS remains open as a *storage* option for badge art, which is a different question. |
 
 ---
 
@@ -262,8 +262,7 @@ existing one (I3).
 Issue #11's remaining open decision is whether issuer-org-owned badges live in
 this repo under Andamio's host, or in per-issuer paths / per-issuer repos.
 That decision is **coupled to the per-org issuer DID design** and is answered
-there, not here:
-[`docs/plans/2026-07-28-001-design-per-org-issuer-dids.md`](plans/2026-07-28-001-design-per-org-issuer-dids.md) §7.
+there, not here.
 
 The short version, and the part that binds this document: **whatever is decided
 about per-org hosting must not change an existing badge URL.** I3 is

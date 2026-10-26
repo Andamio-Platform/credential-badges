@@ -50,7 +50,7 @@ import { computeSltHash } from "./slt-hash.ts";
 const SCAN = "https://andamioscan.io";
 const BADGE_HOST = "https://credentials.andamio.io";
 
-// Pinned subject — James's Andamio Issuer credential on MAINNET.
+// Pinned subject — the `james` alias's Andamio Issuer credential on MAINNET.
 // Full identifiers, re-derived live from Andamioscan on 2026-07-21 and
 // re-verified against the same source on every run of this gate.
 export const SUBJECT = {

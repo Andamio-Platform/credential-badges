@@ -706,7 +706,7 @@ def test_no_holder_identity_rendered():
 
 
 def test_issuer_line_unchanged():
-    """Guard that the restyle did not quietly absorb product-circle#181."""
+    """Guard that the restyle did not quietly absorb the issuer-attribution change."""
     assert f"Issued by {page.ISSUER}" in page._page_html(REC)
     print("  ✅ issuer line still reads 'Issued by Andamio'")
 

@@ -1,12 +1,8 @@
 # Roadmap
 
-Where this repo is going, as a living checklist. **Prototype posture** —
-production-hardening details are tracked in the plan; this file is the public
-"where are we right now" view. Tick boxes as items close. When a phase
-finishes, collapse it to a one-line `✅ closed YYYY-MM-DD` summary.
-
-For *why* each item exists, follow the link into the
-[deployment plan](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md).
+Where this repo is going, as a living checklist — the public "where are we
+right now" view. Tick boxes as items close. When a phase finishes, collapse it
+to a one-line `✅ closed YYYY-MM-DD` summary.
 
 ## Release status
 
@@ -18,7 +14,7 @@ pre-generated). Live on Cardano **mainnet**.
 
 **v1.1 (the portable / verifiable layer), SHIPPED 2026-07-23.** Ed25519 signing,
 `did:web` issuer identity, and OB 3.0 signed VCs are live. The
-`credential-badges-issuer` service (deployed `service-v0.1.1`) serves a
+issuer service serves a
 KMS-signed, anchor-gated credential for any registered badge at
 `credentials.andamio.io/credentials/{network}/{policyId}/{sltHash}/{recipient}`.
 A badge's proof is now its signature *and* its Proof-Ring encoding *and* its
@@ -45,22 +41,16 @@ and per-holder baked artifacts.
 
 Static host live at `https://credentials.andamio.io`; real badge imagery deployed
 with the URN-shaped naming convention in production use; repo made public
-(PR #9); plan refined through 5 strategic decisions, 2 `/document-review` passes,
-and 10 P1bis findings; pre-flight verifier spike reached 1EdTech
-`VALID, errors=0, warnings=0` on the production-shape credential (PR #12), with 3
-mapper findings folded into Decision 2 / Unit 3 / Unit 4.
+(PR #9); pre-flight verifier spike reached 1EdTech
+`VALID, errors=0, warnings=0` on the production-shape credential (PR #12).
 
 ## ✅ On-demand badge generation (#33, v1.0 mainnet core): closed 2026-06-29
 
 **Shipped + verified live.** Any credential renders and serves on demand at
 `credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg`: static-first, with an
-nginx `404 → @render` fallback to the `credential-badges-render` Cloud Run
-service (course/module titles read from the **mainnet** andamio-api gateway, SVG
-cached in GCS). U1–U8 done; cutover applied (Terraform + gateway keys,
-`vrender-0.1.1` render image, `RENDER_UPSTREAM` wired, static host on `v0.1.4`).
-End-to-end confirmed: a not-pre-generated credential renders through the public
-host. Two-service topology, deploy triggers, and apply order in
-[`DEPLOY.md`](DEPLOY.md).
+nginx `404 → @render` fallback to the render service (course/module titles
+read from the **mainnet** andamio-api gateway, SVG cached in GCS). End-to-end
+confirmed: a not-pre-generated credential renders through the public host.
 
 ---
 
@@ -71,8 +61,6 @@ anchor" into an independently verifiable OB 3.0 / VC is live; Phase 3 has a
 remainder, and Phase 4 is untouched.
 
 ## ✅ Phase 0 — Evidence gate: closed 2026-07-23
-
-[Plan reference](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md#phase-0--must-resolve-before-units-36-lock-re-scoped-2026-05-22).
 
 All seven issues (#15–#21) closed. The verifier gate was **redefined mid-phase**
 from "≥3 independent verifiers" to "**2 independents + loopback**": spruce ✅
@@ -85,37 +73,27 @@ claim-tx slot (#18), and the comprehension gate ran and closed (#19–#21).
 
 ## ✅ Phase 1 — Crypto + CI foundation (Units 1–2): closed 2026-07-23
 
-[Plan reference](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md#phase-1--cryptographic--ci-foundation-units-12).
-
-- [x] GCP KMS Ed25519 sign key — dedicated sign identity (`credential-badges-sign-sa`), no auto-rotation, `cloudkms` DATA_READ/DATA_WRITE audit logs. **Deviation: the key is `SOFTWARE`, not HSM** → [#87](https://github.com/Andamio-Platform/credential-badges/issues/87)
+- [x] Cloud KMS Ed25519 signing key
 - [x] `tools/gen-did-json.ts` — emits `/.well-known/did.json` from the KMS pubkey; `tools/did-pin.test.ts` holds the key-pin invariant
 - [x] Allowlist + MIME plumbing for `/.well-known/did.json` and `/status/*` (plus the `/did.json` bare-domain alias, #57)
 - [x] `/issuer` Profile typed `["Profile", "AttestationHost"]`
-- [x] CODEOWNERS on the trust-critical paths — **document-only**, deliberately not backed by branch-protection required reviewers (plan P1bis-09)
-- [x] `andamio-ops/runbooks/credential-badges/issuer-provisioning.md` — additive rotation (this file) + compromise kill-switch (`andamio-ops/runbooks/credential-badges/key-compromise.md`). Writing it surfaced a **prerequisite nobody had noticed: `tools/gen-did-json.ts` cannot emit a two-key DID document**, so no additive rotation is currently possible → [#87](https://github.com/Andamio-Platform/credential-badges/issues/87)
+- [x] CODEOWNERS on the trust-critical paths
+- [x] `andamio-ops/runbooks/credential-badges/issuer-provisioning.md` + compromise kill-switch (`andamio-ops/runbooks/credential-badges/key-compromise.md`)
 
 ## ✅ Phase 2 — Production service (Units 3–4): closed 2026-07-23
 
-[Plan reference](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md#phase-2--production-assembly-service-units-34).
-
-Shipped in #61, deployed `service-v0.1.1`. The ops-repo Terraform delta is
-applied and verified live: external HTTPS LB routes `/credentials/*` to the
-issuer's serverless NEG, Cloud Run ingress is `internal-and-cloud-load-balancing`
-(the LB is the only path), the service runs as the sign-only SA distinct from the
-deploy identity, and the WIF provider is ref-constrained to `refs/tags/service-v*`
-in its own pool. The service refuses to boot on `did.json`, context, or
+Shipped in #61; `/credentials/*` on the public host routes to the issuer
+service. The service refuses to boot on `did.json`, context, or
 status-list drift, and treats a 4xx from the static host as drift rather than
 unreachability. Every signed credential is loopback-verified before it is served.
 
 Two deviations carried forward: the service lives at `issuer-service/`, not
 `service/` (the render service took that path in #33), and **multi-mapper
-dispatch (P1bis-05) was not built** — the badge registry gates the service to
+dispatch was not built** — the badge registry gates the service to
 Course V2 badges and a single mapper serves them. It becomes additive work when a
 new local-state shape ships.
 
 ## Phase 3 — Verification surface (Unit 5)
-
-[Plan reference](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md#phase-3--verification-surface--status-list-emission--verifier-guidance-unit-5).
 
 Partly shipped, and **not in the shape the plan anticipated**: instead of one
 server-rendered `verify-view.ts`, the surface is static — a per-badge page at
@@ -125,21 +103,19 @@ that resolves live on-chain and suspension state client-side.
 - [x] Human-facing verification surface — as static badge pages + holder viewer, **not** `service/src/verify-view.ts`
 - [x] First emitted BitstringStatusList served at `/status/key-epoch-2026-07.json` (Rung 8.3, positions reserved for key versions)
 - [x] `tools/flip-status-bit.ts` CLI (Rung 8.6 — key-epoch + bit-index + purpose; prepares the flip, never signs; CODEOWNERS-gated)
-- [x] `andamio-ops/runbooks/credential-badges/key-compromise.md` (Rung 8.6 — subsumes the planned `status-flip.md`: trigger criteria, flip containment, cross-verifier read, DID-doc response, re-issuance)
+- [x] `andamio-ops/runbooks/credential-badges/key-compromise.md` (Rung 8.6)
 - [x] `docs/verifier-guidance.md` written with worked example (#19, #52) — including the `proof.created` block-time convention
 - [ ] **The signature-bearing states.** The viewer ships 2 states (verified / suspended) against the plan's 5, and by design it "does not itself assert a signature is cryptographically valid" — it reads on-chain + suspension state and points at an independent verifier. `anchored+signature-valid`, `anchored+signature-unavailable`, and `indeterminate` are the gap.
 - [x] Multi-party process visible in rendered output — shipped in #93: courseOwner pseudonym per badge, the verified andamioscan course link, and the assessor named as absent rather than blank-filled
 - [x] **Class artifacts baked — 58 of 58.** Every rendered badge now carries a signed, holder-free Class Achievement, validated **VALID 13/13** against the 1EdTech OB30Inspector (both as a signed artifact and extracted from a baked SVG). The flagship no longer misreports: its shared file carried one holder's credential on a coordinate with six holders.
-- [ ] **Per-holder baked artifacts.** The holder half of the same work — a pre-baked artifact per badge-holder pair (215 today), cached rather than committed. Plan: [`docs/plans/2026-07-28-004-feat-fully-baked-badges-plan.md`](docs/plans/2026-07-28-004-feat-fully-baked-badges-plan.md). PNGs remain unbaked (0 of 116).
+- [ ] **Per-holder baked artifacts.** The holder half of the same work — a pre-baked artifact per badge-holder pair (215 today), cached rather than committed. PNGs remain unbaked (0 of 116).
 
 ## Phase 4 — Hygiene + design-not-built (Unit 6)
-
-[Plan reference](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md#phase-4--hygiene--deferred-path-design-unit-6).
 
 - [ ] T2 per-org issuer DIDs — **designed, not built** (Issues #4, #6)
 - [ ] PQ3 cross-issuer prereq scope — design note (Issue #7)
 - [ ] `docs/badge-registry.md` — `badge_id` convention + invariants (Issue #11)
-- [ ] 1EdTech membership-gated conformance kit — post-launch credibility marker (rescheduled per Decision 1)
+- [ ] 1EdTech membership-gated conformance kit — post-launch credibility marker
 
 ---
 
@@ -182,9 +158,8 @@ Procedure: `andamio-ops/runbooks/credential-badges/class-artifact-signing.md`.
 
 ## Where to dig deeper
 
-- **Deployment plan (the "why"):** [`docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md)
 - **Repo map for new contributors:** [`MOC.md`](MOC.md)
-- **Deploy mechanism:** [`DEPLOY.md`](DEPLOY.md)
+- **Deploy workflows:** [`DEPLOY.md`](DEPLOY.md)
 - **Original spike (validated end-to-end):** [`archive/README.md`](archive/README.md)
 - **Phase 0 pre-flight verifier evidence:** [`archive/verifier-spike/results/SUMMARY.md`](archive/verifier-spike/results/SUMMARY.md)
 - **Issuer service (the signing oracle):** [`issuer-service/README.md`](issuer-service/README.md)

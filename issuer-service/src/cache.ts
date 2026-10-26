@@ -9,9 +9,8 @@
 //   - MemoryArtifactStore (always on): per-instance in-memory map.
 //   - An optional second-level ArtifactStore (the GCS-style seam) can be
 //     injected for cross-instance / cross-restart persistence. No GCS client
-//     ships in this build — the seam is the contract the ops-gated follow-up
-//     implements (a GCS bucket in the deploy region, written with the runtime
-//     SA). Keeping it an injected interface means adding it never touches the
+//     ships in this build — the seam is the contract a persistent store
+//     implements. Keeping it an injected interface means adding it never touches the
 //     signing path.
 
 export interface ArtifactStore {

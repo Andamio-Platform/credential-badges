@@ -1,15 +1,4 @@
-# CODEOWNERS — trust-critical paths for credential-badges.
-#
-# DOCUMENT-ONLY gate (v1). This file records who must review changes to the
-# paths below. It is intentionally NOT yet backed by branch-protection
-# required-reviewers — a named team with >=2 required reviewers is deferred to
-# productionization (deployment plan P1bis-09; "v1 has James as owner"). The
-# cheap companion control is disabling force-push to the default branch.
-#
-# Scoped to Rungs 3-4 (did:web resolves; issuer Profile = AttestationHost),
-# extended at Rung 8.3 with the served status-list JSON (per the plan's
-# "later rungs extend this to the status-list JSON") and at Rung 8.6 with the
-# kill-switch flip tool + runbook.
+# CODEOWNERS — reviewers for the trust-critical paths below.
 
 # The did:web DID document and its deterministic regenerator — this publishes
 # the issuer signing key. A wrong or drifted key here silently breaks OB 3.0
@@ -64,8 +53,7 @@
 /signing/expansion-pin.dep-test.ts   @workshop-maybe
 /signing/class-artifact-pins.json    @workshop-maybe
 
-# The key-compromise kill-switch (Rung 8.6; deployment plan Decision 3 +
-# CODEOWNERS glob set). The flip tool prepares the suspension flip for a whole
+# The key-compromise kill-switch (Rung 8.6). The flip tool prepares the suspension flip for a whole
 # key epoch — a wrong flip suspends every credential signed under a key
 # version, including the flagship badge — so it gets a deliberate review. The
 # runbook the flip PR follows lives in andamio-ops (runbooks/credential-badges/).
@@ -80,7 +68,7 @@
 /nginx/default.conf.template   @workshop-maybe
 /scripts/ci/check-allowlist.sh @workshop-maybe
 
-# Alias safety gate (plan KTD-5). Aliases are untrusted on-chain data written
+# Alias safety gate. Aliases are untrusted on-chain data written
 # into SVG, a format browsers execute — the live holder set contains an XSS
 # payload. This allowlist is the only control between that input and a
 # generated artifact, so widening its charset gets a deliberate review.

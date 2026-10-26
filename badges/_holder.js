@@ -1,6 +1,5 @@
 // _holder.js — client module for the standalone holder credential viewer (#73),
-// extended with the Phase 3 verification states (plan
-// docs/plans/2026-07-28-003-feat-phase3-verification-states-plan.md).
+// extended with the Phase 3 verification states.
 //
 // Served static at /badges/_holder.js, loaded by the _holder.html shell. It
 // reads {stem}+{alias} from the URL, resolves the holder's LIVE state, and
@@ -41,9 +40,8 @@
 //     without vendoring a large JSON-LD/RDF stack into the SERVED allowlist.
 //     Inferring it from `signed: true` (a proof is PRESENT) would be exactly the
 //     overclaim this viewer's own copy disclaims. The correct home is a
-//     server-side verify endpoint on credential-badges-issuer, which already
-//     loopback-verifies with a closed document loader — blocked on the Phase 2
-//     ops gate. Until then the honest answer is "signature not checked here".
+//     server-side verify endpoint on the issuer service, which already
+//     loopback-verifies with a closed document loader. Until then the honest answer is "signature not checked here".
 //
 //   revoked-signal — the deployment plan defines it as "claim tx exists but the
 //     pair is now absent from the recipient's current global state", and REQUIRES

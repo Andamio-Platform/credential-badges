@@ -87,7 +87,7 @@ The OB 3.0 spec ([imsglobal.org/spec/ob/v3p0/cert/](https://www.imsglobal.org/sp
 - The test platform itself appears to require 1EdTech membership credentials.
 - Per task constraints, we did not create accounts.
 
-**Action item**: route to Sebastian (per Plan §5 team table) for membership cost + access to the conformance kit. He'll need a fresh credential generated against whatever the kit's input format is — `npm run generate` will produce one on demand.
+**Action item**: obtain membership + access to the conformance kit. That will need a fresh credential generated against whatever the kit's input format is — `npm run generate` will produce one on demand.
 
 ## Layer 6 — W3C VC Test Suite (NOT RUN)
 

@@ -63,5 +63,4 @@ KMS calls:      1 ✓
 
 - `docs/solutions/conventions/never-mutate-published-jsonld-context.md` — the incident class that motivates cache-migration re-signs
 - `andamio-ops/runbooks/credential-badges/key-compromise.md` Phase 4 — the NEW-key counterpart; its re-sign mechanics should stay aligned with this doc rather than duplicating them
-- `docs/plans/2026-07-23-001-fix-context-v1-bump-and-resign-plan.md` (R4 — the gates as plan requirements)
 - PRs #59 (re-sign + re-bake precedent), #64, #65 (the verified execution)

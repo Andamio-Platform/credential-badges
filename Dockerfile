@@ -25,7 +25,7 @@ RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 # service URL (#33, U5) without baking a deploy-specific host into the image.
 #
 # RENDER_UPSTREAM is where a /badges/ cache-miss is proxied (KTD-4). The real
-# Cloud Run URL is injected at deploy (U7 / private-ops Terraform). The default
+# Cloud Run URL is injected at deploy (U7). The default
 # must be an IP literal, NOT a domain: nginx resolves a literal proxy_pass
 # hostname at STARTUP and fails to boot if it can't — so a placeholder domain
 # would break the container (and the CI smoke test) whenever the env var is

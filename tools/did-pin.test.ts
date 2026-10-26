@@ -1,7 +1,7 @@
 // KEY-PIN INVARIANT — the drift guard.
 //
 // The committed `.well-known/did.json` MUST publish exactly the KMS
-// `vc-sign-ed25519` version 1 public key. If the committed key is ever wrong or
+// signing key's public key. If the committed key is ever wrong or
 // silently rotated, this test goes RED — a loud CI failure instead of a silent
 // verification break for every credential.
 //

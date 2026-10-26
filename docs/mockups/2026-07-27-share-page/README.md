@@ -1,7 +1,7 @@
 # Share-page mockups — 2026-07-27 · **retired 2026-08-01**
 
 **The files are gone. The work they were for shipped.** This page stays so that the links
-to it from `#99`, `#101`, `#103` and `product-circle#150` still resolve to an explanation
+to it from `#99`, `#101` and `#103` still resolve to an explanation
 rather than a 404.
 
 Two interactive mockups of the per-badge share page lived here — `brand-conformant.html`
@@ -47,7 +47,7 @@ until there is data.
 ## Issuer attribution
 
 The one thing in `brand-conformant.html` that has *not* shipped is issuer attribution — it
-named the course owner rather than the platform. That is tracked at `product-circle#181`,
-is unplanned, and carries a data dependency. It is not blocked on anything here: when it is
+named the course owner rather than the platform. It is unplanned and carries a data
+dependency. It is not blocked on anything here: when it is
 planned it should be specified against the page as it exists then, not against a mockup
 that predates it.

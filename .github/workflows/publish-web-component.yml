@@ -6,8 +6,7 @@ name: publish-web-component
 # double-fires: `v[0-9]*.*.*` (static host, deploy.yml), `vrender-*` (render),
 # `service-v*` (issuer). `wc-v1.2.3` matches none of those.
 #
-# This lane authenticates to NPM, not GCP, so the GCP-WIF `refs/tags/v*`
-# constraint is irrelevant here. Prerequisites (external, one-time):
+# This lane authenticates to NPM, not GCP. Prerequisites (external, one-time):
 #   - the `@andamio` npm org exists (it does), and
 #   - an `NPM_TOKEN` repo secret with publish rights to it.
 # Until NPM_TOKEN is set the publish step fails LOUD (npm 401) rather than
@@ -39,7 +38,7 @@ jobs:
       # Supply-chain guard: only publish code that was reviewed on main. A tag
       # pushed to an arbitrary off-main commit (or a compromised push) is refused
       # here even though provenance would still sign it — provenance attests
-      # origin, not review. (Belt-and-suspenders with repo tag/branch protection.)
+      # origin, not review.
       - name: Assert the tagged commit is on main
         run: |
           git fetch --no-tags origin main

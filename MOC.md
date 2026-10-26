@@ -15,8 +15,8 @@ repo; that one maps the website.
 | `/context/v1.jsonld` | `context/v1.jsonld` | no (versioned, `immutable` cache, sha256-pinned in `tools/context-freeze.test.ts`) | The CURRENT signing context — JSON-LD context for Andamio's OB 3.0 extension terms (`AttestationHost`, `OnChainCredentialAnchor`, `onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`, `courseOwner`, flat evidence terms). Referenced by every signed credential; byte-frozen forever. New terms ship as `/context/v2.jsonld`, never as an edit. |
 | `/context/v0.jsonld` | `context/v0.jsonld` | no (frozen forever, `immutable` cache, sha256-pinned in `tools/context-freeze.test.ts`) | Retired signing context. Mutated in place on 2026-07-21 (the incident behind `docs/solutions/conventions/never-mutate-published-jsonld-context.md`); superseded by the byte-identical v1 at a fresh URL so caching verifiers converge. Keeps serving 200 forever, but nothing signs against it. |
 | `/issuer` | `issuer/profile.jsonld` | yes (cached, not `immutable`) | Hosted OB 3.0 issuer `Profile`, typed `["Profile","AttestationHost"]` with `id` = `did:web:credentials.andamio.io` (Rung 4 — Profile, `did.json`, and future `issuer.id` name one subject; `url` stays the homepage). Strict verifiers dereference `issuer.url` here; nginx exact-match serves the extensionless path as `application/ld+json`. **This subject signs:** all 58 committed `OpenBadgeCredential` class artifacts and the key-epoch status list name `did:web:credentials.andamio.io` as their `issuer.id`. `tools/issuer-profile.test.ts` pins the shape. |
-| `/.well-known/did.json` | `.well-known/did.json` | yes (cached, not `immutable`; mutable on key rotation) | `did:web:credentials.andamio.io` DID document. Publishes the issuer signing key (`#key-2026-07`, pinned to KMS `vc-sign-ed25519` v1). Served exact-match as `application/did+ld+json`. **`#key-2026-07` is the active signing key** — every committed OB 3.0 credential resolves its `proof.verificationMethod` to it, and the key-epoch status list can suspend everything signed under it. Regenerate with `tools/gen-did-json.ts`; the key-pin invariant test guards drift. |
-| `/status/key-epoch-2026-07.json` | `status/key-epoch-2026-07.json` | yes (`max-age=3600`; mutable on a kill-switch flip) | Signed key-epoch `BitstringStatusList` credential (Rung 8.3, plan Decision 3): `statusPurpose: "suspension"`, one bit per signing key version, bit 0 = `#key-2026-07`. Built by `signing/status-list.ts`, signed via `sign-status-list.ts`, sha-pinned in CI. Flipping a bit = the key-compromise kill-switch — see `andamio-ops/runbooks/credential-badges/key-compromise.md`. |
+| `/.well-known/did.json` | `.well-known/did.json` | yes (cached, not `immutable`; mutable on key rotation) | `did:web:credentials.andamio.io` DID document. Publishes the issuer signing key (`#key-2026-07`, held in Cloud KMS). Served exact-match as `application/did+ld+json`. **`#key-2026-07` is the active signing key** — every committed OB 3.0 credential resolves its `proof.verificationMethod` to it, and the key-epoch status list can suspend everything signed under it. Regenerate with `tools/gen-did-json.ts`; the key-pin invariant test guards drift. |
+| `/status/key-epoch-2026-07.json` | `status/key-epoch-2026-07.json` | yes (`max-age=3600`; mutable on a kill-switch flip) | Signed key-epoch `BitstringStatusList` credential (Rung 8.3): `statusPurpose: "suspension"`, one bit per signing key version, bit 0 = `#key-2026-07`. Built by `signing/status-list.ts`, signed via `sign-status-list.ts`, sha-pinned in CI. Flipping a bit = the key-compromise kill-switch — see `andamio-ops/runbooks/credential-badges/key-compromise.md`. |
 | `/badges/*.svg` (+ `.png`) | `badges/` | yes (cached, not `immutable`) | Presentation-layer badge imagery, shared and embedded by URL (no signed credential carries `achievement.image`). Never identity-bearing — the on-chain anchor is the credential's identity. **Build output — see [Badge generator](#badge-generator). `make badges` strips baked signatures; refresh signed badges with the single-badge procedure in `andamio-ops/runbooks/credential-badges/badge-art.md`.** |
 | `/` | nginx config | n/a | Tiny 200 landing page (keeps health probes trivial; pointer for humans). |
 
@@ -28,27 +28,25 @@ repo; that one maps the website.
 | `nginx/default.conf.template` | Per-extension MIME map (`application/ld+json` for `.jsonld`), exact-match for `/issuer`, cache headers, root landing page. `^~ /badges/` owns badge serving with `try_files $uri @render` — a miss proxies to `RENDER_UPSTREAM` (injected at container start). |
 | `scripts/ci/check-allowlist.sh` | Fails CI if any repo file outside the allowlist would end up served. `IGNORED_PREFIXES` covers tooling/build/docs/signing/archive/`service` paths that are explicitly **not** served. |
 | `.github/workflows/ci.yml` | PR check — allowlist + docker build + smoke-test served Content-Types + nginx `@render` fallback e2e. |
-| `.github/workflows/deploy.yml` | Tag-triggered deploy (`v[0-9]*.*.*`) via Workload Identity Federation. Builds, pushes SHA + semver tags (never `:latest`), deploys to Cloud Run, verifies Content-Types on the live `*.run.app` URL. |
-| `DEPLOY.md` | Two-service topology, WIF ref-constraint (`refs/tags/v*`), deploy triggers, the `andamio-ops#170` infra delta + apply order, versioning + permanence, rollback. |
+| `.github/workflows/deploy.yml` | Tag-triggered deploy (`v[0-9]*.*.*`) via Workload Identity Federation. Builds, pushes SHA + semver tags (never `:latest`), deploys to Cloud Run, verifies Content-Types on the live host. |
+| `DEPLOY.md` | Pointer to the deploy workflows. |
 | `.dockerignore` | Pairs with the allowlist — keeps build context small. |
 
-GCP project: `andamio-credentials` (dedicated, project-deletion lien). Cloud Run services: `credential-badges`, `credential-badges-render`, `credential-badges-issuer` (europe-west4; the signing key stays in us-central1 and is used across regions). Infra source of truth: Terraform in a private operations repository.
+The static host, the render service and the issuer service each run on Cloud Run.
 
 ## Render service — on-demand badge generation (#33)
 
-The second Cloud Run service (`credential-badges-render`). A `/badges/` miss on the static host falls back here, which renders the badge on demand (titles from the andamio-api gateway) and caches the SVG in GCS. See [`DEPLOY.md`](DEPLOY.md) for the topology and [README "How badges resolve"](README.md#how-badges-resolve).
+The second Cloud Run service. A `/badges/` miss on the static host falls back here, which renders the badge on demand (titles from the andamio-api gateway) and caches the SVG in GCS. See [README "How badges resolve"](README.md#how-badges-resolve).
 
 | File | Role |
 |---|---|
 | `service/app.py` | Stdlib WSGI app (gunicorn). `/healthz` + `/badges/<name>.svg` → `serve_badge` (cache-first, gateway on cold miss, network-ordered, never caches non-200). |
 | `service/cache.py` | `GCSCache` — `get`/`put`/`list_keys`/`delete` against the render cache bucket. |
-| `service/Dockerfile` | **Root build context** — ships `generator/` (render-core + `fonts.css`) + `service/`. Runtime env: `BADGE_NETWORKS`, `BADGE_CACHE_BUCKET`, `ANDAMIO_*_API_KEY` (TF-wired secrets). |
+| `service/Dockerfile` | **Root build context** — ships `generator/` (render-core + `fonts.css`) + `service/`. Runtime env: `BADGE_NETWORKS`, `BADGE_CACHE_BUCKET`, `ANDAMIO_*_API_KEY`. |
 | `service/requirements.txt` | gunicorn + google-cloud-storage. |
 | `scripts/cache-admin.py` | `invalidate` (delete cache objects — non-destructive re-render) + `reconcile [--delete]` (flag/remove orphaned objects). Mirrors `serve_badge` network logic; fails loud on inconclusive gateway errors. |
-| `.github/workflows/deploy-render.yml` | Tag-triggered deploy (`vrender-*`) via the same WIF + CICD SA. Builds `service/Dockerfile`, image-only `gcloud run deploy credential-badges-render` (preserves TF-managed SA/secrets/bucket), verifies `/healthz` + a live-rendered badge. |
+| `.github/workflows/deploy-render.yml` | Tag-triggered deploy (`vrender-*`). Builds `service/Dockerfile`, image-only `gcloud run deploy` (preserves the service's runtime config), verifies `/healthz` + a live-rendered badge. |
 | `docs/cache.md` | TTL story (max-age + GCS lifecycle), orphan-guard, cache-admin usage. |
-
-Infra (out of repo): GCS cache bucket, render runtime SA (`credential-badges-render-sa`, `secretAccessor` on the two gateway keys only), two gateway-key secrets — Terraform in `andamio-ops#170`.
 
 ## Badge generator
 
@@ -87,13 +85,9 @@ Operational runbooks live in the private `andamio-ops` repo, `runbooks/credentia
 | File | Role |
 |---|---|
 | `ROADMAP.md` | **Living public checklist** of what's next, by phase. Tick boxes as items close. Start here if you want the "where are we right now" view. |
-| `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md` | The Andamio OB 3.0 Issuer deployment plan — the "why" behind ROADMAP. Promotes the spike into a deployed signing service (`credential-badges-issuer`) sitting next to the static host behind an external HTTPS LB. 5 strategic decisions + 2 `/document-review` passes + 10 P1bis findings (resolved 2026-05-25). Prototype posture documented; production-hardening checklist tracks the upgrade path. **Status when this MOC was written:** P1bis-refined; Phase 0 pre-flight verifier spike closed (PR #12). |
-| `docs/plans/2026-06-25-002-feat-dynamic-on-demand-badge-generation-plan.md` + `…-002-on-demand-generation-RESUME.md` | The #33 on-demand render plan (U1–U8) + resume note. The "why" behind the [Render service](#render-service--on-demand-badge-generation-33) section. |
 | `docs/badge-registry.md` | **Normative.** The `badge_id` = `<course_id>.<slt_hash>` convention, where the three registry artifacts live, and 11 invariants — chiefly *the name is frozen, the picture is not* (I3/I4) and *registry membership gates signing, not rendering* (I8). Closes #11. |
 | `docs/mapping.md` | Field-by-field Andamio → OB 3.0 mapping, the URN convention, and `slt_hash` semantics. Cited by `docs/badge-registry.md` as current authority. Written during the OB 3.0 prototype; moved out of `archive/` by #117. |
 | `docs/credential-imagery.md` | The v1 design decision for the `badges/` directory: imagery is presentation, never identity. Moved out of `archive/` by #117. |
-| `docs/plans/2026-07-28-001-design-per-org-issuer-dids.md` | **Designed, not built** (Phase 4 / Unit 6, issues #4 + #6). Per-org issuer identity. Headline finding: moving `issuer.id` to a per-org DID under Andamio key custody is a *downgrade* — it signals decentralization Andamio does not have. `issuer.id` stays put; per-org identity arrives as an optional org-held co-signature. Covers the `did:web` path form, the alias-as-slug choice, why the status list and the boot drift check must stay singular, the nginx/allowlist shape, and 5 open questions. |
-| `docs/plans/2026-07-28-002-design-multi-issuer-prereq-scope-pq3.md` | **Spec note** (Phase 4 / Unit 6, issue #7). PQ3 cross-issuer prereq scope vs multi-issuer: re-ratified unchanged, because `andamio:requires` references the chain, not a signature. Adds two permanent invariants (no issuer field in `requires`; prereq resolution is chain-first, DID-never). |
 
 ## Signing package — `signing/`
 
@@ -120,11 +114,11 @@ Distinct from `issuer-service/`, which signs on demand per holder as a long-runn
 |---|---|
 | `archive/README.md` | Overview, stack choices, reference credential, reproducing locally. |
 | `archive/validation-results.md` | Narrative + raw results from each validator. |
-| `archive/open-questions.md` | 14 questions surfaced during the spike (Q3/Q4 resolved, others tracked in the plan). |
-| `archive/CORNERS-CUT.md` | The 8 deliberate corners. The plan hardens 1, 2, 4, 5, 6, 7. |
+| `archive/open-questions.md` | 14 questions surfaced during the spike (Q3/Q4 resolved). |
+| `archive/CORNERS-CUT.md` | The 8 deliberate corners the prototype cut. |
 | `archive/prerequisite-chaining.md` | PQ1–PQ6 prerequisite-chain defaults. |
 | `archive/sample-credential.jsonld` | Canonical signed sample (deliverable). |
-| `archive/samples/` | Per-recipient samples (real preprod data) — `james` and `njuguna`, plus HTML renders + policy metadata. |
+| `archive/samples/` | Per-recipient samples (real preprod data), plus HTML renders + policy metadata. |
 | `archive/src/` | TS implementation: `mapper.ts`, `sign.ts` (VC-JWT), `sign-di.ts` (Data Integrity), `path-b.ts` (programmatic builder), `verify.ts`, `plutus.ts`, `keys.ts`, `credential.ts`, `validate.ts`, `inspect.ts`, `render.ts`, `build.ts`, `generate.ts`. |
 | `archive/package.json` + `archive/tsconfig.json` | Build config. |
 
@@ -143,6 +137,6 @@ Pre-flight verifier spike — confirms the target verifier set actually handles 
 ## Conventions
 
 - **Allowlist or it doesn't ship.** To serve a new path, add an explicit `COPY` line in `Dockerfile`, the matching entry in `scripts/ci/check-allowlist.sh`, **and** a `!`-re-include in `.dockerignore` (its `*` base excludes everything, including dot-dirs like `.well-known/`). All must change together; CI enforces the allowlist, and trust-critical served paths are CODEOWNERS-gated.
-- **Versioned `vN.jsonld` files are immutable once published.** Fix typos by shipping a new version. Artifact Registry has `immutable_tags = true`; re-pushing an existing image tag is rejected.
-- **No `:latest`, no branch deploy, no `workflow_dispatch` deploy.** Only `git tag vX.Y.Z && git push origin vX.Y.Z` deploys, and the WIF binding is ref-constrained to `refs/tags/v*` at the OIDC layer.
+- **Versioned `vN.jsonld` files are immutable once published.** Fix typos by shipping a new version. Image tags are immutable; re-pushing an existing image tag is rejected.
+- **No `:latest`, no branch deploy, no `workflow_dispatch` deploy.** Only `git tag vX.Y.Z && git push origin vX.Y.Z` deploys.
 - **Signing code and history are committed but not served.** `docs/`, `signing/`, `archive/`, and tooling are in `IGNORED_PREFIXES` — they live in the repo for transparency and history but never ship in the Docker image. `signing/` is production; `archive/` is history.

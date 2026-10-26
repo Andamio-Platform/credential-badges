@@ -13,8 +13,8 @@ Each sample is a project-participation OB 3.0 credential whose `andamio:requires
 
 ### Real-recipient demonstrations (Path B)
 
-- **`sustain-and-maintain-gimbalabs-james-real.jsonld`** — **Real-recipient credential** for James (alias `james`, Andamio Access Token V2 — Scaffolding Era). Anchored to James's actual mainnet `ujames` user token + `gjames` global state reference UTXO. The global state datum's credential map contains entries for *both* `Getting Started at Gimbalabs` (course slt_hash `ac35904d...75ce7e44`) and `Sustain and Maintain Gimbalabs` (project state_hash `8ca2f043...4220781b`), independently verifiable on-chain (round-trip confirmed 2026-05-12 — see `../out/verify-results-sustain-and-maintain-gimbalabs-james-real.md`).
-- **`cardano-xp-project-njuguna-real.jsonld`** — **Real-recipient credential** for Njuguna (alias `njuguna`, Andamio Access Token V2 — Scaffolding Era). Anchored to Njuguna's actual mainnet `unjuguna` user token + `gnjuguna` global state reference UTXO. The global state datum's credential map contains entries for *both* `Join Cardano XP` (course slt_hash `d2c8d52e...0751646d`) and the `Cardano XP` project (project state_hash `5b57d48f...8abb7c6c`), independently verifiable on-chain (round-trip confirmed 2026-05-12 — see `../out/verify-results-cardano-xp-project-njuguna-real.md`). Cross-issuer prereq pair: Cardano XP project requires Join Cardano XP course completion.
+- **`sustain-and-maintain-gimbalabs-james-real.jsonld`** — **Real-recipient credential** (alias `james`, Andamio Access Token V2 — Scaffolding Era). Anchored to the recipient's actual mainnet `ujames` user token + `gjames` global state reference UTXO. The global state datum's credential map contains entries for *both* `Getting Started at Gimbalabs` (course slt_hash `ac35904d...75ce7e44`) and `Sustain and Maintain Gimbalabs` (project state_hash `8ca2f043...4220781b`), independently verifiable on-chain (round-trip confirmed 2026-05-12 — see `../out/verify-results-sustain-and-maintain-gimbalabs-james-real.md`).
+- **`cardano-xp-project-njuguna-real.jsonld`** — **Real-recipient credential** (alias `njuguna`, Andamio Access Token V2 — Scaffolding Era). Anchored to the recipient's actual mainnet `unjuguna` user token + `gnjuguna` global state reference UTXO. The global state datum's credential map contains entries for *both* `Join Cardano XP` (course slt_hash `d2c8d52e...0751646d`) and the `Cardano XP` project (project state_hash `5b57d48f...8abb7c6c`), independently verifiable on-chain (round-trip confirmed 2026-05-12 — see `../out/verify-results-cardano-xp-project-njuguna-real.md`). Cross-issuer prereq pair: Cardano XP project requires Join Cardano XP course completion.
 
 Both real-recipient samples demonstrate the full Path B mapping: real recipient identity, real attestation proofs, real prerequisite chain enforcement.
 
@@ -70,11 +70,11 @@ See `../../docs/mapping.md` for the full convention and `../prerequisite-chainin
 
 | Element | Status |
 |---|---|
-| Recipient identity (alias, Access Token NFT pair, wallet address, IPFS image) | **Real mainnet** — James's actual `ujames` user token + `gjames` global state reference |
+| Recipient identity (alias, Access Token NFT pair, wallet address, IPFS image) | **Real mainnet** — the recipient's actual `ujames` user token + `gjames` global state reference |
 | User-token holder address (recipient's wallet) | **Real mainnet** |
 | `gjames` global state script address + UTXO + datum hash | **Real mainnet** — independently verifiable |
-| Course completion attestation (slt_hash for Getting Started at Gimbalabs: `ac35904d...75ce7e44`) | **Real on-chain** — entry in James's `gjames` global state datum map, used in both `achievement.id` URN and `andamio:requires.achievementId` URN |
-| Project participation attestation (state_hash for Sustain and Maintain Gimbalabs: `8ca2f043...4220781b`) | **Real on-chain** — entry in James's `gjames` global state datum map, used in the `achievement.id` URN |
+| Course completion attestation (slt_hash for Getting Started at Gimbalabs: `ac35904d...75ce7e44`) | **Real on-chain** — entry in the recipient's `gjames` global state datum map, used in both `achievement.id` URN and `andamio:requires.achievementId` URN |
+| Project participation attestation (state_hash for Sustain and Maintain Gimbalabs: `8ca2f043...4220781b`) | **Real on-chain** — entry in the recipient's `gjames` global state datum map, used in the `achievement.id` URN |
 | Proof block | **Present (demo-grade)** — W3C Data Integrity proof, `eddsa-rdfc-2022`, signed by a throwaway `did:key`. `issuer.id` is rewritten to that key so the proof verifies. Clears the 1EdTech "missing a proof" error. Production issuer/key: `credential-badges` #3–#8. **Corners cut: `CORNERS-CUT.md`.** Re-run `npm run sign-di` after any sample edit. |
 | All other elements | Same as schema demos (real on-chain anchors) |
 
@@ -105,7 +105,7 @@ Andamio credentials carry **revision-precise, type-generalized identity by defau
 
 1. ~~The `andamio:` JSON-LD context is not yet published.~~ **Resolved 2026-05-15.** The context is live at `https://credentials.andamio.io/context/v0.jsonld` (served with `application/ld+json`) and wired into every sample's `@context`. The samples now use the **bare terms** (`onChainAnchor`, `onChainAttestation`, `accessToken`, `requires`, `prereqAttestation`) the context defines, so JSON-LD expansion resolves them as proper RDF instead of dropping them (njuguna sample: 0 → 39 `andamio:` namespace IRIs after wiring). Remaining caveat: the context is `v0` (shape may still change pre-1.0) and the issuer is still a throwaway `did:key`, not the production `did:web:credentials.andamio.io`.
 2. **Alignment URLs are not present.** Project participation credentials don't decompose into SLT-style alignments the way course completions do. Worth a separate design pass on whether to add project-specific alignment shapes.
-3. **The Cardano XP chain is schema-only**, not real-recipient — James (the recipient used for Path B) has the *Join Cardano XP* course attestation in his global state but does NOT have the *Cardano XP* project attestation. Either the project policy ID needs verification or James simply hasn't joined that project; needs confirmation.
+3. **The Cardano XP chain is schema-only**, not real-recipient — the recipient used for Path B has the *Join Cardano XP* course attestation in their global state but does NOT have the *Cardano XP* project attestation. Either the project policy ID needs verification or the recipient simply hasn't joined that project; needs confirmation.
 
 ## v1 design defaults baked in
 
@@ -144,7 +144,7 @@ with **0 errors, 0 warnings**; chain verification is **7 passed, 0 failed**.
 Path B (Access Token integration) is **partially landed** as of 2026-04-23:
 
 - ✅ **Architecture decoded**: `u<alias>` user token (held in recipient wallet) + `g<alias>` global state reference token (held at Andamio script address) + global state datum containing `Constr [alias_bytes, map<policyId, typed_hash>]` (typed_hash = slt_hash for course entries, state_hash for project entries)
-- ✅ **Real-recipient sample produced** for the Sustain and Maintain Gimbalabs chain (James as recipient)
+- ✅ **Real-recipient sample produced** for the Sustain and Maintain Gimbalabs chain
 - ✅ **Three new extension fields prototyped**: `andamio:accessToken`, `andamio:onChainAttestation`, `andamio:prereqAttestation`
 - ⏳ **Cardano XP chain** still schema-only — needs a recipient wallet that has both `Join Cardano XP` course AND `Cardano XP` project in their global state map
 - ⏳ **Mapper extension** — current samples were hand-written. Updating `src/mapper.ts` to produce the Path B shape from the existing on-chain inputs is the next code step.
@@ -153,7 +153,7 @@ Path B (Access Token integration) is **partially landed** as of 2026-04-23:
 ## Next steps
 
 - ~~Resolve `open-questions.md` Q4 (publish `andamio:` JSON-LD context).~~ **Done 2026-05-15** — context published, samples rewired to bare terms, expansion verified.
-- Identify the 4 unknown policy IDs in James's global state map (worth a 5-min Andamio API lookup).
+- Identify the 4 unknown policy IDs in the recipient's global state map (worth a 5-min Andamio API lookup).
 - Verify the Cardano XP project policy ID and find a real recipient with both course + project for that chain.
 - Update `src/mapper.ts` to produce Path B credentials programmatically.
 - Build verifier harness (Q13) for Path B credentials.

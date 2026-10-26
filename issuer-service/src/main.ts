@@ -3,9 +3,8 @@
 //
 // Modes:
 //   SIGNER_MODE=kms (default)  — production. Requires KMS_KEY_VERSION_NAME
-//     (full CryptoKeyVersion resource name; the ops gate provides it — no
-//     default region is baked in). The service must run AS the sign SA
-//     (metadata-server identity); the boot drift check proves the KMS key
+//     (full CryptoKeyVersion resource name; no default is baked in) and a
+//     metadata-server identity; the boot drift check proves the KMS key
 //     matches the live did.json before any signing endpoint opens.
 //   SIGNER_MODE=ephemeral — local runs / smoke tests. An in-process Ed25519
 //     key through the same seam; the drift check against the live did.json is

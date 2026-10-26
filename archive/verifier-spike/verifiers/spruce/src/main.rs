@@ -2,8 +2,7 @@
 //!
 //! Verifies the Data Integrity `eddsa-rdfc-2022` proof and `did:web` resolution
 //! on the constructed OB 3.0 credential. Closes the second of three independent
-//! verifiers in the Phase 0 gate — issue #15 and the Rung-1 harness plan
-//! (`docs/plans/2026-07-09-001-feat-rung1-verifier-harness-plan.md`, U1).
+//! verifiers in the Phase 0 gate — issue #15.
 //!
 //! Pinned against the `ssi` crate v0.16 (see Cargo.toml). Per plan KTD5 this
 //! binary is a THIN ADAPTER: the decode + `verify` calls below are the only

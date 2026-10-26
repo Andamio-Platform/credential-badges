@@ -1,10 +1,6 @@
 name: deploy
 
-# Triggers ONLY on semver version tags. This matches the WIF binding, which is
-# ref-constrained at the OIDC assertion level to refs/tags/v* in the
-# private ops Terraform. A push to a branch or a workflow_dispatch cannot
-# mint a deploy token even if this file were tampered with on a feature
-# branch — enforcement is at token-mint time.
+# Triggers ONLY on semver version tags.
 #
 # The pattern is `v[0-9]*.*.*` (not `v*.*.*`) so the render service's
 # `vrender-*` tags (deploy-render.yml) never double-fire the static deploy:
@@ -23,9 +19,8 @@ env:
   # probe URL in deploy-issuer.yml — a rename must touch all three.
   PUBLIC_HOST: credentials.andamio.io
   GCP_PROJECT: andamio-credentials
-  # Deploy region = the ops LB's active_region (andamio-ops
-  # terraform/credentials/credential-badges). The post-deploy checks go through
-  # PUBLIC_HOST, which serves the active region, so the two must match.
+  # The post-deploy checks go through PUBLIC_HOST, which must serve this
+  # region for them to test the revision just deployed.
   GCP_REGION: europe-west4
   GCP_SERVICE: credential-badges
   # One registry for every region (ops registry_region); it moves separately
@@ -103,9 +98,7 @@ jobs:
             --quiet
 
       - name: Verify Content-Type + reachability through the public host
-        # The static host's ingress is LB-only (andamio-ops#194), so its
-        # *.run.app URL answers 404. PUBLIC_HOST is the LB, which serves
-        # GCP_REGION when that is the active region (see env above).
+        # Probe through PUBLIC_HOST, the URL verifiers actually fetch.
         run: |
           URL="https://${PUBLIC_HOST}"
           assert_ct() {

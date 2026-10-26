@@ -23,8 +23,6 @@ its pinned-subject posture).
 GET /credentials/{network}/{policyId}/{sltHash}/{recipient}
 ```
 
-The deployment plan's Unit-4 route, verbatim
-(`docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`).
 `policyId` **is** the course id (Andamio V2: a course's id is its mint
 policy); `recipient` is the on-chain alias. The `{recipient}` segment is
 load-bearing: a badge `(course_id, slt_hash)` alone does not identify a
@@ -65,7 +63,7 @@ static host (the LB routes only `/credentials/*` here).
   text signed into `criteria.narrative` is exactly what the chain commits to.
   There is **no caller-supplied subject override**: every signed field is
   re-derived from chain reads.
-- **Fail-closed startup drift check** (plan Decision 4 / P1-06): before the
+- **Fail-closed startup drift check**: before the
   listener opens, the service proves its KMS key version's public key is the
   one published in the **live** `did.json`, that the live Andamio context and
   the live key-epoch status list equal the committed bytes, that the active
@@ -76,8 +74,7 @@ static host (the LB routes only `/credentials/*` here).
   unreachability: the host answering without the artifact is a broken static
   deploy and refuses the boot. Any mismatch kills the boot — drift is a loud
   startup failure, never a silently broken signature. The check is
-  **boot-only**: rotation requires flushing/redeploying issuer instances
-  (see `andamio-ops/runbooks/credential-badges/key-compromise.md`).
+  **boot-only** (see `andamio-ops/runbooks/credential-badges/key-compromise.md`).
 - **Cache-no-double-sign**: signed artifacts are cached keyed by
   `(network, courseId, sltHash, recipientAsset, keyVersion)` — a re-request
   serves byte-identical bytes with **zero** KMS calls. Per issuance, the
@@ -96,32 +93,6 @@ static host (the LB routes only `/credentials/*` here).
 - **Registered badges only**: requests outside `generator/credentials.json`
   are refused before any chain read.
 
-## Rate limiting & abuse
-
-**There is no service-level rate limiting, by design.** Enforcement lives at
-the load-balancer / Cloud Armor layer, not in this process; the Cloud Run
-ingress must be **internal-and-cloud-load-balancing** so the LB path is the
-only path (the ops PR B delta). What the service itself does bound:
-
-- **Miss-flood cost against Andamioscan**: every uncached request runs the
-  anchor gate's live reads. A flood of requests for coordinates that do not
-  exist on chain (guaranteed cache misses) turns into Andamioscan load — the
-  registry check bounds it to registered badges, but the recipient segment is
-  unbounded. Mitigation is the LB layer plus the tracked follow-ups below.
-- **Cold-start discovery-scan cost**: an uncached recipient whose claim is
-  not in the warm locator cache triggers the newest-first discovery scan of
-  the transactions index — O(index pages) against Andamioscan in the worst
-  case, per cold coordinate.
-- **KMS spend**: bounded by **singleflight per cache key** (implemented) — K
-  concurrent first requests for one coordinate produce exactly one gate + one
-  KMS sign — and by the signed-artifact cache (a warm hit costs zero KMS
-  calls and zero chain reads).
-
-Tracked mitigations beyond this build: the second-level artifact store (the
-GCS-shaped `ArtifactStore` seam, so cache warmth survives restarts and spans
-instances) and a filtered claims endpoint on Andamioscan (replacing the
-discovery scan with one indexed query).
-
 ## Signing seam
 
 `{ id, algorithm: "Ed25519", async sign({data}) }` — constructor-injected.
@@ -130,33 +101,9 @@ discovery scan with one indexed query).
   `gcloud kms asymmetric-sign` (PureEdDSA over the raw `data` bytes, raw
   64-byte signature). The service calls the same AsymmetricSign API over REST
   with a metadata-server token, because the runtime image carries no gcloud.
-  **Identity assumption: the service runs AS the sign-only SA** — the ops
-  gate attaches it to the Cloud Run service; no impersonation anywhere.
 - **`makeEphemeralSigner()`** (tests/CI/local): an in-process Ed25519 key
   through the same seam — the spike's loopback pattern. CI runs the full
   request path with it against recorded Andamioscan fixtures.
-
-## ✅ The ops gate — CLOSED; the service is deployed and live
-
-All six items are satisfied. `service-v0.1.0` was tagged 2026-07-21 and
-`service-v0.1.1` deployed 2026-07-23; `/credentials/*` serves publicly today.
-Re-verified read-only against `andamio-credentials` on 2026-07-28:
-
-| # | Item | Observed |
-|---|---|---|
-| 1 | Region decision | `us-central1` |
-| 2 | Sign-SA attach | runs as `credential-badges-sign-sa@…`, distinct from the deploy identity `credential-badges-issuer-cicd@…` |
-| 3 | Sign-only WIF | provider condition `assertion.repository_owner == 'Andamio-Platform' && assertion.ref.startsWith('refs/tags/service-v')`, in its own pool (`credential-badges-issuer-pool`) |
-| 4 | LB delta | `/credentials/*` returns 200 `application/ld+json`; Cloud Run ingress `internal-and-cloud-load-balancing`, so the LB is the only path |
-| 5 | KMS IAM scope-down | sole binding on `vc-sign-ed25519` is the sign SA → `roles/cloudkms.signerVerifier`; keyring policy empty; `cloudkms` DATA_READ + DATA_WRITE audit logs enabled. **Deviation:** the binding is on the *key*, not the *key version* the plan specifies — benign at one version, but a new version would inherit sign rights automatically ([#87](https://github.com/Andamio-Platform/credential-badges/issues/87)) |
-| 6 | Repo variables | all five set |
-
-> **This section previously read "required before `service-v0.1.0` can ever be
-> tagged" and was left unedited after the deploy.** That staleness propagated:
-> the Phase 3 design work (#93) read it, concluded the service was undeployable,
-> and deferred a `/verify` endpoint as "dead code behind an LB route that does
-> not exist." The route exists. Keep this section current — it is load-bearing
-> for anything reasoning about what the service can host.
 
 ## Local run (ephemeral signer — no KMS, no GCP)
 
@@ -176,11 +123,10 @@ Andamioscan — only the key material and issuer id differ from production.
 Docker (build context = repo root):
 
 ```
-docker build -f issuer-service/Dockerfile -t credential-badges-issuer .
-docker run --rm -p 8080:8080 -e SIGNER_MODE=ephemeral credential-badges-issuer
+docker build -f issuer-service/Dockerfile -t issuer-service .
+docker run --rm -p 8080:8080 -e SIGNER_MODE=ephemeral issuer-service
 ```
 
 Production mode (`SIGNER_MODE=kms`, the default) requires
-`KMS_KEY_VERSION_NAME` (full CryptoKeyVersion resource name — provided by
-the ops gate; deliberately no default) and a metadata server, i.e. it only
-meaningfully runs on Cloud Run as the sign SA.
+`KMS_KEY_VERSION_NAME` (full CryptoKeyVersion resource name; deliberately
+no default) and a metadata server, i.e. it only meaningfully runs on Cloud Run.
