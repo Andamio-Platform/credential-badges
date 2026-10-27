@@ -6,8 +6,8 @@
 // on-chain anchor is real and matches the pinned subject identity BEFORE any
 // signing is allowed. `sign.ts` imports `checkAnchor()` and calls it in-process:
 // if any check below fails, `checkAnchor` throws and the signer exits with ZERO
-// KMS operations. This is the deployment plan's "signing is HARD-gated on a
-// positive on-chain anchor check" decision, scoped to the spike's one subject.
+// KMS operations: signing is HARD-gated on a positive on-chain anchor check,
+// scoped to the spike's one subject, so the signer is never an open oracle.
 //
 // SEALED (finding 4, code half): `checkAnchor` takes NO parameters. The pinned
 // SUBJECT is the only subject it can check, and the `Anchor` it returns is the

@@ -8,7 +8,7 @@
 // Scope of the CI check: this is a SELF-CONSISTENCY guard. In CI it proves the
 // committed did.json decodes to the pinned constant (PINNED_RAW_HEX) — it does
 // NOT re-read live KMS (the CI/CD SA has no cloudkms.publicKeyViewer grant; that
-// grant + a scheduled live reconciliation land at Rung 8, per plan KTD-2). So CI
+// grant + a scheduled live reconciliation land at Rung 8). So CI
 // catches repo-internal drift (a bad edit to did.json), not a live key rotation.
 // Opt-in live check: set KMS_LIVE_PIN=1 with an authed gcloud to re-fetch v1.
 

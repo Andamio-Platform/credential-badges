@@ -326,7 +326,7 @@ question is re-opened on its own terms.
 ## 8. Open decisions — none of these are made
 
 1. **Recipient identifier shape** — pseudonymous only, or additive hashed email on an export variant?
-   Gates §3, §4, and HR import. *(Already logged: `docs/mapping.md:115`, plan §182.)*
+   Gates §3, §4, and HR import. *(Already logged: `docs/mapping.md:115`.)*
 2. **Pre-baked vs on-demand Holder Artifacts** — settles §7, and with it whether any datastore is
    needed at all.
 3. **Where issuer-organization data lives** — dbapi, committed JSON, or a new store (§6). Downstream

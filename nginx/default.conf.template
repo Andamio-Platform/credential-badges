@@ -81,8 +81,8 @@ server {
         try_files /.well-known/did.json =404;
     }
 
-    # Key-epoch BitstringStatusList credentials (Rung 8.3, deployment plan
-    # Decision 3). Subject credentials point into /status/ from their
+    # Key-epoch BitstringStatusList credentials (Rung 8.3). Subject
+    # credentials point into /status/ from their
     # credentialStatus entry; verifiers dereference the URL to read the
     # key-version suspension bit. The W3C Bitstring Status List spec
     # prescribes no single media type ("might be any media type registered
@@ -117,7 +117,7 @@ server {
         try_files $uri =404;
     }
 
-    # Badge imagery — static-first with on-demand render fallback (#33, KTD-4).
+    # Badge imagery — static-first with on-demand render fallback (#33).
     #
     # `^~` makes this a prefix match that OWNS /badges/ and short-circuits the
     # generic image regex below — so the 404 fallback is scoped to badge paths
@@ -149,7 +149,7 @@ server {
         # from stock mime.types; a missing page is a clean 404 (never @render).
         try_files $uri $uri.html =404;
 
-        # Badge image (#33, KTD-4): a baked/cached badge serves straight from
+        # Badge image (#33): a baked/cached badge serves straight from
         # disk; on a miss, @render proxies to the on-demand render service (it
         # checks the GCS cache, renders, persists, returns the SVG). Badge art is
         # MUTABLE (the credential references the URL, not the bytes; the on-chain
@@ -178,7 +178,7 @@ server {
         }
 
         # Holder viewer (#73): the per-holder credential view at
-        # /badges/{stem}/{alias} — the subpath KTD-7 of the #70 plan reserved.
+        # /badges/{stem}/{alias} — the subpath the share page (#70) reserved.
         # A single committed static shell (_holder.html) whose client JS reads
         # {stem}+{alias} from location.pathname, resolves live on-chain +
         # suspension state (via the /holder-api/ proxy below and the same-origin
@@ -186,14 +186,14 @@ server {
         # a malformed stem/alias never matches, so it falls through to the outer
         # try_files =404. The .svg/.png/.html sibling routes are untouched (the
         # holder path carries no such extension), so credential-referenced image
-        # URLs never move (R3).
+        # URLs never move.
         location ~ "^/badges/[0-9a-f]{56}\.[0-9a-f]{64}/[A-Za-z0-9_-]{1,64}$" {
             add_header Cache-Control "public, max-age=86400";
             try_files /badges/_holder.html =404;
         }
     }
 
-    # On-demand render fallback target (#33, KTD-4). RENDER_UPSTREAM is injected
+    # On-demand render fallback target (#33). RENDER_UPSTREAM is injected
     # at container start by the nginx image's envsubst templating (see
     # Dockerfile) — the render service's Cloud Run URL in production, a stub in
     # the CI fallback test. `proxy_pass` with no URI component forwards the
@@ -215,7 +215,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Holder-state proxy (#73, KTD-2). andamioscan.io sends NO CORS headers, so a
+    # Holder-state proxy (#73). andamioscan.io sends NO CORS headers, so a
     # browser cross-origin fetch from this host is blocked; the holder viewer
     # reads a holder's live on-chain state SAME-ORIGIN through here. Mirrors
     # @render: HOLDER_UPSTREAM is the andamioscan `/api/v2/` base, injected at
@@ -225,7 +225,7 @@ server {
     # Live state must not cache — `no-store` on the proxied response, and the
     # client also fetches with cache:"no-store". Fail-loud: an upstream non-2xx
     # passes through unchanged (no error_page masking), so the client renders an
-    # explicit error, never a fabricated "verified" (R6).
+    # explicit error, never a fabricated "verified".
     location ^~ /holder-api/ {
         # Read-only surface: the viewer only ever GETs holder state. Deny every
         # other method so this same-origin relay can't be used to reach a

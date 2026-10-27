@@ -4,9 +4,8 @@
 // registered badge.
 //
 // Everything trust-affecting is a build-time constant or a fail-closed env
-// read — never derived from request input (deployment plan: "The issuer DID
-// is a fixed server-side constant; it is never derived from request input
-// and has no fallback key/DID path").
+// read — never derived from request input. The issuer DID is a fixed
+// server-side constant with no fallback key/DID path.
 
 export const ISSUER_DID = "did:web:credentials.andamio.io";
 export const STATIC_HOST = "https://credentials.andamio.io";
@@ -15,7 +14,7 @@ export const ANDAMIO_CONTEXT_URL = `${STATIC_HOST}/context/v1.jsonld`;
 export const SCAN_URL = "https://andamioscan.io";
 
 // The one network this deployment serves. The route's {network} segment is a
-// closed trust-affecting enum (plan Unit 4); a request for the OTHER valid
+// closed trust-affecting enum; a request for the OTHER valid
 // network returns 404 wrong-network, anything else is 400. Andamioscan (the
 // gate's read path) indexes mainnet; a preprod deployment would point
 // SCAN_URL at a preprod indexer AND need a preprod slot->time formula, so

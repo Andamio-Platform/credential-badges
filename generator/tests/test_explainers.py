@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U1 tests for the two badge explainers (generator/explainers.py, #72).
+"""Tests for the two badge explainers (generator/explainers.py, #72).
 
 Guards the audience framing + the verification contract: well-formed branded
 HTML, the holder share walk-through, the check-this NON-ANDAMIO path end to end
@@ -63,7 +63,7 @@ def test_share_page_covers_options_and_framing():
 
 
 def test_check_page_walks_non_andamio_path():
-    """Covers R6. The check page walks the full independent path."""
+    """The check page walks the full independent path."""
     html = explainers._check_page()
     assert "without trusting" in html and "Andamio" in html
     assert "did:web:credentials.andamio.io" in html, "resolve-issuer step missing"
@@ -81,7 +81,7 @@ def test_check_page_names_four_party_anchor():
 
 
 def test_hash_and_anchor_level_no_reveal_link():
-    """Covers KTD-6. Both pages state the hash-and-anchor level and note the raw
+    """Both pages state the hash-and-anchor level and note the raw
     artifact stays private / reveal path coming — with NO reveal URL linked."""
     for build in (explainers._share_page, explainers._check_page):
         html = build()
@@ -231,7 +231,7 @@ def _assert_canon_not_inlined(src):
             f"canon {name} ({literal}) inlined — import it from canon.py"
 
 
-# --- canon conformance (#102 U1) -------------------------------------------
+# --- canon conformance (#102) ----------------------------------------------
 # Mirrors the share page's suite in test_page.py, so the three surfaces cannot
 # drift apart without a red test.
 

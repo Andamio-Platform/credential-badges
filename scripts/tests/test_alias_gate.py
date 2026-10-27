@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""U4 tests for the alias safety gate — stdlib only, no network.
+"""Tests for the alias safety gate — stdlib only, no network.
 
 The gate is the only thing standing between a hostile on-chain alias and a
-generated SVG (plan KTD-5). Two aliases in the live holder set are unusable
+generated SVG. Two aliases in the live holder set are unusable
 and both appear here as fixtures: one is an XSS payload, one contains a space.
 
 Runnable directly:

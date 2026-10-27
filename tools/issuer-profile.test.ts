@@ -74,9 +74,9 @@ function assertContextDefinesTerms(context: any): void {
   assert.equal(c["AttestationHost"], "andamio:AttestationHost");
   assert.equal(c["OnChainCredentialAnchor"], "andamio:OnChainCredentialAnchor");
   assert.equal(c["@protected"], true, "context must stay @protected");
-  // Rung 8.3 additive terms (plan P1bis-04 + Decision 2 flat evidence dialect).
+  // Rung 8.3 additive terms (attestation terms + the flat evidence dialect).
   // courseOwner / assessor are @id-typed (URN references, expanded as IRIs);
-  // the four flat anchor terms are the Decision-2 evidence field names,
+  // the four flat anchor terms are the evidence field names,
   // registered top-level so the flat evidence entry expands with no dropped
   // terms. Same shapes the rung-1 throwaway context proved against spruce +
   // 1EdTech (archive/verifier-spike/publish/context/v0.jsonld).

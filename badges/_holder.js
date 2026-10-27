@@ -19,7 +19,7 @@
 // not-held badge was simply absent from the list, and an absence in an unordered
 // list reads as confirmation. The verdict answers the URL's own question first.
 //
-// STATE VOCABULARY — deliberately narrower than it looks (deployment plan Unit 5):
+// STATE VOCABULARY — deliberately narrower than it looks:
 //
 //   anchored              the holder's on-chain state records this credential and
 //                         the badge artifact carries no signature at all.
@@ -27,7 +27,7 @@
 //                         carries a Data Integrity proof — which THIS PAGE DOES
 //                         NOT CHECK. Never "valid".
 //   suspended             signature present + the key-epoch bit is set. A
-//                         KEY-VERSION signal, not "didn't earn it" (P1bis-02).
+//                         KEY-VERSION signal, not "didn't earn it".
 //   indeterminate         the answer is not known: a read failed, or the status
 //                         list could not be read for a signed badge.
 //   not-found             (verdict only) the holder's live on-chain state does
@@ -43,18 +43,18 @@
 //     server-side verify endpoint on the issuer service, which already
 //     loopback-verifies with a closed document loader. Until then the honest answer is "signature not checked here".
 //
-//   revoked-signal — the deployment plan defines it as "claim tx exists but the
-//     pair is now absent from the recipient's current global state", and REQUIRES
+//   revoked-signal — defined as "claim tx exists but the pair is now absent
+//     from the recipient's current global state", and it REQUIRES
 //     it be distinguishable from indexer lag before it may be shown. Client-side
 //     it never is: Andamioscan exposes no freshness/confirmation-depth signal,
 //     and there is no by-holder claim-event index to establish a claim ever
 //     happened (probed 2026-07-28: /events/credential-claims/alias/{alias} and
-//     the collection root both 404). The plan's own rule — indeterminate, never
+//     the collection root both 404). The standing rule — indeterminate, never
 //     revoked, when freshness is inconclusive — makes `not-found` the correct
 //     output for absence. DO NOT add revoked-signal from absence alone; a
 //     negative test in tools/holder-viewer.test.ts guards this.
 //
-// Fail-loud (R6): if live holder state can't load, the page says so and shows
+// Fail-loud: if live holder state can't load, the page says so and shows
 // NOTHING as verified. Soft dependencies (status list, course owners) may only
 // ever DOWNGRADE a state or omit a field — never upgrade one, never blank-fill
 // (the same omit-never-blank rule map-credential.ts applies to `assessor`).
@@ -69,7 +69,7 @@ export const REGISTRY_URL = "/badges/_registry.json";
  *  id returns 200 ("Course Dashboard - Andamioscan"), a bogus one returns 404 —
  *  so the link shape is verified, not assumed. No public-explorer deep link is
  *  emitted: cardanoscan 403s every non-browser client and cexplorer returns 200
- *  for bogus paths, so neither URL shape could be verified (plan KTD-4). The
+ *  for bogus paths, so neither URL shape could be verified. The
  *  course id is rendered as a copyable value instead, and /badges/how-to-check
  *  walks the public-explorer route. */
 export const SCAN_COURSE_URL = "https://andamioscan.io/courses";
@@ -181,7 +181,7 @@ export function courseOwners(completed) {
  *
  *  Explicit boolean checks throughout: only a confirmed `false` reads as
  *  not-suspended. null (status unavailable) or any non-boolean falls through to
- *  `indeterminate` — never assume a state we did not actually confirm (R6). */
+ *  `indeterminate` — never assume a state we did not actually confirm. */
 export function badgeStateFor({ signed, keyEpochSuspended }) {
   if (!signed) return BADGE_STATES.ANCHORED;
   if (keyEpochSuspended === true) return BADGE_STATES.SUSPENDED;
@@ -225,7 +225,7 @@ export function buildViewModel({ holderState, registry, keyEpochSuspended, arriv
  *  question an employer following the LinkedIn certUrl is actually asking.
  *
  *  Derived from `holderStems` (the raw on-chain claim set), NOT from the
- *  registry intersection (plan KTD-1): a stem missing from _registry.json means
+ *  registry intersection: a stem missing from _registry.json means
  *  "we have no badge art for it", not "the holder does not hold it", and
  *  reporting not-found on that basis would be wrong about a real credential.
  *
@@ -257,7 +257,7 @@ export function arrivalVerdict({ ok, holderState, arrivedStem, registry, keyEpoc
 }
 
 /** LinkedIn add-to-profile deep link with the HOLDER page as certUrl — the real
- *  "this person holds this, verified" target (KTD-7). Only offered for a
+ *  "this person holds this, verified" target. Only offered for a
  *  confirmed, non-suspended badge (see renderBadges). */
 export function certUrlFor(origin, stem, alias, moduleTitle) {
   const holderUrl = `${origin}/badges/${stem}/${alias}`;
@@ -284,7 +284,7 @@ function timedFetch(fetchImpl, ms) {
 
 /** Resolve the holder view. Returns {ok, alias, origin, verdict, badges?, error?}.
  *
- *  Holder-state failure is fatal (R6): never returns badges when the on-chain
+ *  Holder-state failure is fatal: never returns badges when the on-chain
  *  read failed, timed out, or returned a malformed body — and the failure return
  *  always carries `alias` (so the caller never renders "undefined") and a
  *  `verdict` (so the caller always has something explicit to render, rather than
@@ -351,7 +351,7 @@ export async function loadHolderView({ stem, alias, fetchImpl = fetch, origin = 
 
   // buildViewModel parses the externally-owned holder-state shape; a malformed
   // 200 body (e.g. a non-iterable completed_courses) throws here — catch it so
-  // it fails loud too, never leaving the caller with an unhandled rejection (R6).
+  // it fails loud too, never leaving the caller with an unhandled rejection.
   try {
     const badges = buildViewModel({ holderState, registry, keyEpochSuspended, arrivedStem: stem, owners });
     const verdict = arrivalVerdict({
@@ -365,9 +365,8 @@ export async function loadHolderView({ stem, alias, fetchImpl = fetch, origin = 
 
 // ---- DOM bootstrap (browser only) ----------------------------------------
 
-// Designed copy per state (deployment plan Unit 5: "designed copy, not raw
-// state-name labels"). The chip is the short form; VERDICT_COPY carries the
-// sentence a human verifier actually reads.
+// Designed copy per state, not raw state-name labels. The chip is the short
+// form; VERDICT_COPY carries the sentence a human verifier actually reads.
 //
 // "signature-unavailable" used to read "Signed & anchored", which an employer
 // scans as an endorsement. What is true is narrower: a signature is PRESENT and
@@ -492,7 +491,7 @@ function renderBadges(root, view) {
     meta.append(mt, el("p", "ct", b.courseTitle));
     meta.append(el("span", `state ${b.state}`, STATE_LABEL[b.state] || b.state));
 
-    // Multi-party attribution (deployment plan Unit 5): the course owner is the
+    // Multi-party attribution: the course owner is the
     // party who vouches for what the credential MEANS — Andamio only attests the
     // anchor. Omitted entirely when the soft read gave us nothing, never
     // blank-filled. The ASSESSOR is deliberately absent here and named as absent
@@ -509,7 +508,7 @@ function renderBadges(root, view) {
     // half of the credential's identity a reader can chase without trusting
     // Andamio. The credential's CLAIM TX hash is not reachable from the browser
     // (no by-holder claim-event index upstream), so it is not offered. The link
-    // target is verified (plan KTD-4); no unverified public-explorer deep link
+    // target is verified; no unverified public-explorer deep link
     // is emitted.
     const anchor = el("p", "anchor");
     anchor.append(document.createTextNode("On-chain course id: "));
@@ -522,7 +521,7 @@ function renderBadges(root, view) {
     anchor.append(scan);
     meta.append(anchor);
 
-    // Add-to-LinkedIn only for a confirmed, non-suspended badge (KTD-5) — never
+    // Add-to-LinkedIn only for a confirmed, non-suspended badge — never
     // offer to profile-add something in a suspended or couldn't-verify state.
     if (b.state === BADGE_STATES.ANCHORED || b.state === BADGE_STATES.SIGNATURE_UNAVAILABLE) {
       const li2 = el("a", "li", "Add to LinkedIn profile");

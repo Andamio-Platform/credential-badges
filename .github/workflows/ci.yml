@@ -183,7 +183,7 @@ jobs:
           assert_ct /badges/$STEM.png    image/png
           assert_ct /badges/$STEM.og.png image/png
           # A .png MISS returns a clean 404 — the @render fallback is SVG-only
-          # (#69 KTD-7); build-time raster artifacts are never rendered on demand.
+          # (#69); build-time raster artifacts are never rendered on demand.
           png_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/$STEM.nope.png")
           echo "/badges/<miss>.png -> $png_404 (expected 404, not a 502 render-proxy error)"
           test "$png_404" = "404"
@@ -257,14 +257,14 @@ jobs:
           holder_404=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/badges/nothex/james")
           echo "/badges/nothex/james -> $holder_404 (expected 404, not the shell)"
           test "$holder_404" = "404"
-          # The holder-state proxy (#73, KTD-2) is WIRED: the default HOLDER_UPSTREAM
+          # The holder-state proxy (#73) is WIRED: the default HOLDER_UPSTREAM
           # is an IP-literal discard, so a request 502s (connection refused) —
           # proving the location matches and forwards. A 404 would mean the proxy
           # location is missing; a 200 would mean an unexpected upstream answered.
           holder_api=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/holder-api/users/james/state")
           echo "/holder-api/users/james/state -> $holder_api (expected 502 — proxy wired to discard upstream, NOT 404)"
           test "$holder_api" = "502"
-          # R3 regression: the badge IMAGE URL is byte-for-byte unchanged — the
+          # Regression: the badge IMAGE URL is byte-for-byte unchanged — the
           # extensionless page must NOT shadow or move /badges/{stem}.svg.
           assert_ct /badges/$STEM.svg     image/svg+xml
           # Direct .html access serves the same page bytes as text/html (the
@@ -299,5 +299,5 @@ jobs:
           curl -sf http://localhost:8080/did.json -o alias.json
           cmp canonical.json alias.json && echo "/did.json is byte-identical to /.well-known/did.json"
           docker rm -f cb
-      - name: Test on-demand render fallback (#33, U5) — static-first + @render proxy
+      - name: Test on-demand render fallback (#33) — static-first + @render proxy
         run: IMAGE=credential-badges:ci bash scripts/ci/test-nginx-fallback.sh

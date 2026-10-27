@@ -1,6 +1,6 @@
-# Badge cache: staleness, TTL, and invalidation (#33, U6 · KTD-7)
+# Badge cache: staleness, TTL, and invalidation (#33)
 
-The on-demand render path (KTD-1) serves a badge from a **GCS cache bucket** on a
+The on-demand render path serves a badge from a **GCS cache bucket** on a
 hit and renders-then-caches on a miss. This doc covers the cache's one liability —
 **staleness** — and the tooling that bounds it: `scripts/cache-admin.py`.
 
@@ -69,7 +69,7 @@ unique `course_id` **once** per run (kinder to the API rate limit).
   so `reconcile` **aborts with a non-zero exit** instead of guessing. We count on
   the gateway client; if it breaks we stop — because mis-flagging a live course
   would delete a real badge. (A `401 auth` on one network is *not* read as
-  "missing": per the U1 finding keys are network-scoped, so a 401 means the key
+  "missing": keys are network-scoped, so a 401 means the key
   for that network is wrong — an ops problem, not an absent course.)
 
 ## Tests

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U1 tests for the self-pruning reconciler (generator/reconcile.py, #31).
+"""Tests for the self-pruning reconciler (generator/reconcile.py, #31).
 
 Guards the orphan-shield contract: every served badges/ artifact must map to a
 non-skipped credentials.json record, protected/placeholder and unrecognized
@@ -74,7 +74,7 @@ def test_orphan_svg_pruned():
 
 
 def test_orphan_pruned_across_all_types():
-    """Covers R6. Dropping a credential prunes svg + png + og.png + html (#70)
+    """Dropping a credential prunes svg + png + og.png + html (#70)
     for its stem."""
     expected = {STEM_A}  # STEM_B dropped from the registry
     d = _mkdir_badges({

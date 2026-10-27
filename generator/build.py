@@ -15,7 +15,8 @@ Usage:
     python3 build.py <outdir>   # write elsewhere (e.g. to verify reproduction)
     python3 build.py <outdir> --only <badge_id> [--only <badge_id> ...]
                                 # scratch-build just those stems (the safe way to
-                                # refresh one signed badge: andamio-ops/runbooks/credential-badges/badge-art.md)
+                                # refresh one signed badge; see the badge-art
+                                # runbook in the private andamio-ops repo)
     python3 build.py <outdir> --art-dir <dir>
                                 # art from <dir> instead of generator/art/ (tests,
                                 # make verify). A flag, never an environment variable,

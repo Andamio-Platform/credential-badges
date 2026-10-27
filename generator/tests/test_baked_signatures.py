@@ -3,9 +3,10 @@
 into its committed badge SVG.
 
 Giving a signed badge art means rebuilding its SVG and re-baking its class
-artifact (andamio-ops/runbooks/credential-badges/badge-art.md). Forget the re-bake and the badge silently
-loses its signature — and test_render_parity.py cannot see it, because it
-compares an unbaked committed SVG byte-for-byte and so passes. This guard reads
+artifact (the badge-art runbook, in the private andamio-ops repo). Forget the
+re-bake and the badge silently loses its signature — and test_render_parity.py
+cannot see it, because it compares an unbaked committed SVG byte-for-byte and
+so passes. This guard reads
 what ships: for each signing/class-artifacts/<badge_id>.json, the credential
 extracted from badges/<badge_id>.svg (service/bake.py, held to the TypeScript
 splice by test_bake.py) must equal the artifact's bytes.

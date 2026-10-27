@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U6 tests for the cache-admin tool — stdlib only, gateway + GCS injected.
+"""Tests for the cache-admin tool — stdlib only, gateway + GCS injected.
 
 Runnable directly:
     python3 scripts/tests/test_cache_admin.py

@@ -1,5 +1,6 @@
-// Closed, allowlisted JSON-LD document loader — the deployment plan's
-// "production document loader is closed and build-time-pinned" decision.
+// Closed, allowlisted, build-time-pinned JSON-LD document loader: no request-
+// time network fetch, so canonicalization carries no SSRF or availability
+// dependency.
 // Origin: spike/signer-spike/document-loader.ts (Rung 8 hardened), adapted
 // from a per-run CLI to a long-running service:
 //

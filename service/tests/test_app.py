@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U4 tests for serve_badge — stdlib only, render + cache injected.
+"""Tests for serve_badge — stdlib only, render + cache injected.
 
 Runnable directly:
     python3 service/tests/test_app.py
@@ -102,7 +102,7 @@ def test_all_unresolvable_is_404_and_not_cached():
     st, headers, _ = serve_badge(NAME, cache=cache, networks=["mainnet", "preprod"],
                                  render_fn=raise_render(GatewayError(502, "unresolvable")))
     assert st == 404, st
-    assert cache.get(KEY) is None, "a failed read must NEVER be cached (KTD-3b)"
+    assert cache.get(KEY) is None, "a failed read must NEVER be cached"
     assert h(headers)["cache-control"] == "no-store"
     print("  ✅ unresolvable on all networks -> 404, nothing cached, no-store")
 

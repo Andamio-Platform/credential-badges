@@ -78,7 +78,7 @@ claim-tx slot (#18), and the comprehension gate ran and closed (#19–#21).
 - [x] Allowlist + MIME plumbing for `/.well-known/did.json` and `/status/*` (plus the `/did.json` bare-domain alias, #57)
 - [x] `/issuer` Profile typed `["Profile", "AttestationHost"]`
 - [x] CODEOWNERS on the trust-critical paths
-- [x] `andamio-ops/runbooks/credential-badges/issuer-provisioning.md` + compromise kill-switch (`andamio-ops/runbooks/credential-badges/key-compromise.md`)
+- [x] Issuer-provisioning and compromise kill-switch runbooks (in the private `andamio-ops` repo)
 
 ## ✅ Phase 2 — Production service (Units 3–4): closed 2026-07-23
 
@@ -93,9 +93,9 @@ dispatch was not built** — the badge registry gates the service to
 Course V2 badges and a single mapper serves them. It becomes additive work when a
 new local-state shape ships.
 
-## Phase 3 — Verification surface (Unit 5)
+## Phase 3 — Verification surface
 
-Partly shipped, and **not in the shape the plan anticipated**: instead of one
+Partly shipped, and **not in the shape first designed**: instead of one
 server-rendered `verify-view.ts`, the surface is static — a per-badge page at
 `/badges/{stem}` (#76–#78) and a holder viewer at `/badges/{stem}/{alias}` (#79)
 that resolves live on-chain and suspension state client-side.
@@ -103,14 +103,14 @@ that resolves live on-chain and suspension state client-side.
 - [x] Human-facing verification surface — as static badge pages + holder viewer, **not** `service/src/verify-view.ts`
 - [x] First emitted BitstringStatusList served at `/status/key-epoch-2026-07.json` (Rung 8.3, positions reserved for key versions)
 - [x] `tools/flip-status-bit.ts` CLI (Rung 8.6 — key-epoch + bit-index + purpose; prepares the flip, never signs; CODEOWNERS-gated)
-- [x] `andamio-ops/runbooks/credential-badges/key-compromise.md` (Rung 8.6)
+- [x] Key-compromise runbook, in the private `andamio-ops` repo (Rung 8.6)
 - [x] `docs/verifier-guidance.md` written with worked example (#19, #52) — including the `proof.created` block-time convention
-- [ ] **The signature-bearing states.** The viewer ships 2 states (verified / suspended) against the plan's 5, and by design it "does not itself assert a signature is cryptographically valid" — it reads on-chain + suspension state and points at an independent verifier. `anchored+signature-valid`, `anchored+signature-unavailable`, and `indeterminate` are the gap.
+- [ ] **The signature-bearing states.** The viewer ships 2 states (verified / suspended) against the 5 first designed, and by design it "does not itself assert a signature is cryptographically valid" — it reads on-chain + suspension state and points at an independent verifier. `anchored+signature-valid`, `anchored+signature-unavailable`, and `indeterminate` are the gap.
 - [x] Multi-party process visible in rendered output — shipped in #93: courseOwner pseudonym per badge, the verified andamioscan course link, and the assessor named as absent rather than blank-filled
 - [x] **Class artifacts baked — 58 of 58.** Every rendered badge now carries a signed, holder-free Class Achievement, validated **VALID 13/13** against the 1EdTech OB30Inspector (both as a signed artifact and extracted from a baked SVG). The flagship no longer misreports: its shared file carried one holder's credential on a coordinate with six holders.
 - [ ] **Per-holder baked artifacts.** The holder half of the same work — a pre-baked artifact per badge-holder pair (215 today), cached rather than committed. PNGs remain unbaked (0 of 116).
 
-## Phase 4 — Hygiene + design-not-built (Unit 6)
+## Phase 4 — Hygiene + design-not-built
 
 - [ ] T2 per-org issuer DIDs — **designed, not built** (Issues #4, #6)
 - [ ] PQ3 cross-issuer prereq scope — design note (Issue #7)
@@ -154,7 +154,7 @@ the published schema **permits**. The reference validator rejected it anyway.
 Validating a single artifact before batching caught it for the price of one
 signature. Evidence: [`signing/validation/README.md`](signing/validation/README.md).
 
-Procedure: `andamio-ops/runbooks/credential-badges/class-artifact-signing.md`.
+Procedure: the class-artifact-signing runbook, in the private `andamio-ops` repo.
 
 ## Where to dig deeper
 

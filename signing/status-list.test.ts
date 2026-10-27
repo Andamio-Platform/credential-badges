@@ -1,7 +1,7 @@
 // Rung 8.3 · Status-list builder invariants — hermetic (node builtins only,
 // no network, no KMS, no npm install).
 //
-// Pins the deployment plan's Decision 3 shape: 131,072-bit list (W3C minimum),
+// Pins the key-epoch shape: 131,072-bit list (W3C minimum),
 // statusPurpose "suspension", one bit per key version with bit 0 = key-2026-07
 // and bit 0 = 0 (not suspended), multibase-"u" base64url-no-pad GZIP encoding,
 // and deterministic bytes (same bitstring -> same encodedList).
@@ -108,7 +108,7 @@ test("decode refuses a non-multibase encodedList (the rung-1 prefixless dialect)
   assert.throws(() => decodeStatusList(prefixless), /missing "u" prefix/);
 });
 
-test("statusListEntry: the subject credential's credentialStatus shape (Decision 3)", () => {
+test("statusListEntry: the subject credential's credentialStatus shape", () => {
   assert.deepEqual(statusListEntry(), {
     id: `${STATUS_LIST_URL}#0`,
     type: "BitstringStatusListEntry",

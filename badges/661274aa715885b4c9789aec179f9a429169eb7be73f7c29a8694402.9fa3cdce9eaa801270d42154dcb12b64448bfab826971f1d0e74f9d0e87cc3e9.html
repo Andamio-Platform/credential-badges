@@ -32,7 +32,7 @@ html,body{margin:0;}
 body{background:var(--paper);color:var(--ink);font-family:"Inter",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.55;min-height:100vh;}
 .nav{display:flex;align-items:center;gap:10px;padding:0 24px;height:5rem;border-bottom:1px solid var(--rule);}
 /* Cross-host navigation off the static trust surface, same tab, deliberate
-   (#101 KTD10). The mark is inline SVG, never an <img src>: a logo pulled from
+   (#101). The mark is inline SVG, never an <img src>: a logo pulled from
    another origin would breach the no-external-assets invariant and make every
    credential view beacon to a host this page's integrity does not cover. */
 .brand{display:inline-flex;align-items:center;text-decoration:none;}
@@ -83,7 +83,7 @@ h1{font-size:clamp(24px,3.2vw,34px);font-weight:600;line-height:1.15;letter-spac
 .explainers{display:flex;flex-wrap:wrap;gap:18px;margin:18px 0 0;}
 .explainer{font-size:13px;color:var(--blue);text-decoration:none;border-bottom:1px solid transparent;display:inline-flex;align-items:center;gap:8px;}
 .explainer:hover{border-bottom-color:var(--blue);}
-/* The page's ONE orange accent (#101 KTD9), on the verification route — the
+/* The page's ONE orange accent (#101), on the verification route — the
    stranger's whole reason for being here. It marks the PATH, never the
    conclusion: nothing here may read as "a signature was checked". Carried by a
    non-text tile, never text colour — brand orange on paper is ~2.8:1 and fails
@@ -96,7 +96,8 @@ a{color:var(--blue);}
   .specimen{padding-right:0;}
   .detail{padding-left:0;border-left:0;border-top:1px solid var(--cell);margin-top:22px;padding-top:22px;}
   /* Cap the specimen so the first holder action stays above the fold on a
-     phone — the holder's most likely visit, and the one viewport R3 omits. */
+     phone — the holder's most likely visit, and one the desktop fold sizes
+     do not cover. */
   .badge{max-width:200px;}
   .plate{padding:16px;}
   .btn{min-height:44px;}

@@ -123,7 +123,7 @@ export function makeKmsSigner(): RawSigner {
 }
 
 // Loopback signer: ephemeral Ed25519 keypair through the SAME seam.
-// Exported for sign-class.ts (plan U3), which reuses the proven loopback
+// Exported for sign-class.ts, which reuses the proven loopback
 // signer rather than hand-rolling a second one.
 export function makeLocalSigner(): { signer: RawSigner; overrides: Record<string, any> } {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");

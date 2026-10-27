@@ -3,16 +3,16 @@
 
   GET /badges/{course_id}.{slt_hash}.svg
     - GCS cache hit  -> serve the cached SVG (no gateway call)
-    - cache miss      -> render via the generator render-core (U3), write the SVG
+    - cache miss      -> render via the generator render-core, write the SVG
                          to the GCS cache, and serve it
   GET /healthz       -> 200 ok
 
-Keys are network-scoped (U1 finding) and the deployed badge set spans networks,
+Keys are network-scoped and the deployed badge set spans networks,
 so the service tries its configured networks in order and uses the typed
 GatewayError kind to decide: 'unresolvable'/'not_found' may just be the wrong
 network -> try the next; 'auth'/'timeout'/'transport'/'config' is an upstream/ops
-problem -> stop. A failed read is NEVER cached (KTD-3b): only a 200 render is
-put() into the cache.
+problem -> stop. A failed read is NEVER cached (the gateway cannot tell "not
+found" from "upstream down"): only a 200 render is put() into the cache.
 
 The request logic (serve_badge) is a pure, dependency-injected function so it is
 testable without a web framework or google-cloud-storage installed. `application`
@@ -27,7 +27,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(REPO, "generator"))
 
-import render                       # noqa: E402  (generator render-core, U3)
+import render                       # noqa: E402  (generator render-core)
 from api_client import GatewayError  # noqa: E402
 from build import SKIP_COURSES       # noqa: E402  (single source of truth for withheld courses)
 
@@ -61,7 +61,7 @@ def serve_badge(name, *, cache, networks, render_fn=render.render_badge, placeho
     `name` is the path segment after /badges/ (e.g. "<cid>.<slt>.svg").
     `cache` has get(key)->bytes|None and put(key, bytes). `networks` is the ordered
     list of networks to try. `render_fn(course_id, slt_hash, network)->svg_str`
-    defaults to the U3 render-core. `placeholder` (bytes) is served on failure when
+    defaults to the render-core. `placeholder` (bytes) is served on failure when
     provided, else a short text body."""
     m = BADGE_RE.match(name)
     if not m:
@@ -98,7 +98,7 @@ def serve_badge(name, *, cache, networks, render_fn=render.render_badge, placeho
                 continue           # maybe wrong network — try the next one
             break                  # transient/config — stop hammering
         try:
-            cache.put(key, svg)    # only a successful render is ever cached (KTD-3b)
+            cache.put(key, svg)    # only a successful render is ever cached
         except Exception:          # a cache write blip must not discard a good render:
             log.warning("cache.put failed for %s; serving the rendered badge anyway", key, exc_info=True)
         return _svg(200, svg, cacheable=True)

@@ -5,8 +5,8 @@
 // Serves exactly what canonicalization and verification need — the W3C/OB3
 // contexts (network-cached under out/ctx-cache), the LIVE production Andamio
 // context, and the LIVE production did:web document — and refuses anything
-// else. Mirrors the deployment plan's "production document loader is closed"
-// decision at spike scale.
+// else. A closed loader keeps request-time network fetches (an SSRF and
+// availability dependency) off the canonicalization path.
 //
 // Live-vs-cached split (the finding-2 fix):
 //   - `fetchLiveDidDocument` (feeds the KMS key pin, in-sign did:web
@@ -135,9 +135,10 @@ async function liveAndamioContext(): Promise<any> {
   const repo = JSON.parse(await fs.readFile(REPO_CONTEXT_FILE, "utf8"));
   if (JSON.stringify(doc) !== JSON.stringify(repo)) {
     // TRANSITIONAL, EXPLICITLY OPTED-IN (Rung 8.3): when this repo ADDS terms
-    // to the pre-stable v0 context (P1bis-04 + the flat evidence dialect), the
-    // committed context is briefly ahead of the live host — the deploy that
-    // publishes it ships from this very branch. Under CONTEXT_AHEAD_OF_LIVE_OK=1
+    // to the pre-stable v0 context (the attestation terms + the flat evidence
+    // dialect), the committed context is briefly ahead of the live host — the
+    // deploy that publishes it ships from this very branch. Under
+    // CONTEXT_AHEAD_OF_LIVE_OK=1
     // and ONLY when the committed context is a strict additive superset of the
     // live one (every live term byte-identical; committed only adds), the
     // loader serves the COMMITTED bytes so signing canonicalizes against the

@@ -1,7 +1,7 @@
 // class-credential.ts — builds the CLASS artifact: what a badge *means*,
 // with nobody claimed to have earned it.
 //
-// Why this shape (plan KTD-1, as revised by validation). OB 3.0 has no
+// Why this shape (as revised by validation). OB 3.0 has no
 // container for a signed Achievement definition, so the class artifact is an
 // ordinary `OpenBadgeCredential` whose SUBJECT IS THE ACHIEVEMENT rather than a
 // person.
@@ -33,14 +33,14 @@
 //                               it anyway (holder dialect omits it too).
 //   * `courseOwner`           — meaningful, but only available from a live
 //                               chain read. This builder is offline and
-//                               deterministic by design (R3), so adding it
+//                               deterministic by design, so adding it
 //                               would mean either a per-badge network call at
 //                               build time or carrying owner in the registry.
 //
 // `validFrom` IS required by the OB 3.0 AchievementCredential schema (checked
 // against the published schema on 2026-07-28: required = @context, id, type,
 // credentialSubject, issuer, validFrom). A definition has no issuance moment
-// and a wall-clock value would break byte-stability (R3), so it is pinned to
+// and a wall-clock value would break byte-stability, so it is pinned to
 // the signing-key epoch — deterministic, stable across re-signs under the same
 // key, and honest: this is when Andamio published this definition under this
 // key. The same constant dates the proof.
@@ -133,7 +133,7 @@ export function buildClassCredential(rec: BadgeRecord, network: string): unknown
         "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means.",
     },
     // Required by the OB 3.0 schema. Pinned to the signing-key epoch rather
-    // than wall-clock so re-signing is byte-stable (R3).
+    // than wall-clock so re-signing is byte-stable.
     validFrom: KEY_EPOCH_PUBLISHED,
     name: moduleTitle,
     // The prose is the mitigation the machine-readable shape cannot provide.
@@ -173,7 +173,7 @@ export function buildClassCredential(rec: BadgeRecord, network: string): unknown
       },
     ],
     // Key-epoch suspension signal — the kill-switch covers definitions as well
-    // as assertions (KTD-6).
+    // as assertions: one bit flip disowns both.
     credentialStatus: statusListEntry(),
   };
 }

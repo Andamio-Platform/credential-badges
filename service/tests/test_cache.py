@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U4 tests for the badge cache — stdlib only, GCS faked.
+"""Tests for the badge cache — stdlib only, GCS faked.
 
 Runnable directly:
     python3 service/tests/test_cache.py

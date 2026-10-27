@@ -1,4 +1,4 @@
-// U2 expansion check for the class credential — requires the jsonld dep, so it
+// Expansion check for the class credential — requires the jsonld dep, so it
 // lives outside the hermetic `npm test` suite (same split as
 // expansion-pin.dep-test.ts).
 //
@@ -7,7 +7,7 @@
 // the context does not define is silently dropped during expansion — it never
 // reaches the signed bytes. That is the failure mode this file exists to catch,
 // and it matters twice over here, because the human-readable prose is the only
-// mitigation available for the identityless shape (KTD-1). Prose that gets
+// mitigation available for the identityless shape. Prose that gets
 // dropped in expansion is decorative, not a mitigation.
 //
 // Run: npm run test:class-expansion
@@ -80,7 +80,7 @@ test("canonicalization is deterministic across builds", async () => {
   const rec = registry()[0];
   const a = await signedBytes(buildClassCredential(rec, NETWORK));
   const b = await signedBytes(buildClassCredential(rec, NETWORK));
-  assert.equal(a, b, "canonical N-Quads must be byte-stable (R3)");
+  assert.equal(a, b, "canonical N-Quads must be byte-stable");
 });
 
 test("every registered badge canonicalizes, and each produces distinct bytes", async () => {

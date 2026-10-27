@@ -1,6 +1,6 @@
-// Startup drift-check tests — the fail-closed boot gate (deployment plan
-// Decision 4 / P1-06). Hermetic: injected fetch, injected key material. The
-// live-did fixture is the REAL production did.json recorded 2026-07-21.
+// Startup drift-check tests — the fail-closed boot gate. Hermetic: injected
+// fetch, injected key material. The live-did fixture is the REAL production
+// did.json recorded 2026-07-21.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

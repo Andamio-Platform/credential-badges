@@ -23,8 +23,8 @@ make verify        # decode a built badge's rings, check they equal its on-chain
 > carries a KMS-signed credential baked into its SVG. `make badges` rewrites
 > every SVG and strips those signatures, and restoring them takes a transcribed
 > KMS signing run. To add or change one badge, follow "Adding one badge" in
-> [`generator/README.md`](generator/README.md) or the art procedure in
-> `andamio-ops/runbooks/credential-badges/badge-art.md`.
+> [`generator/README.md`](generator/README.md) or the badge-art runbook (the
+> private `andamio-ops` repo, `runbooks/credential-badges/`).
 
 | Command | What it does | Needs |
 |---|---|---|

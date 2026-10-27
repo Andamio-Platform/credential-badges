@@ -3,7 +3,7 @@
 
 Guards the shell frame (well-formed branded HTML with the client-JS hooks the
 _holder.js DOM bootstrap targets), the suspension-UX framing + signature-honesty
-gate (this viewer OWNS the human suspension rendering, P1bis-02, and must not
+gate (this viewer OWNS the human suspension rendering and must not
 overclaim a universal signature — mirrors test_explainers), the badge registry
 shape (stem -> {course_title, module_title, signed}, SKIP_COURSES-filtered,
 flagship signed), and byte-parity to the committed artifacts.
@@ -68,7 +68,7 @@ def test_verdict_region_starts_hidden():
 
 
 def test_legend_names_every_surfaced_state():
-    """Deployment plan Unit 5 wants designed copy per state, not raw state names.
+    """Designed copy per state, not raw state names.
     The legend must describe every state the client can render."""
     norm = " ".join(holder._shell().split())
     for phrase in ("Anchored on-chain",
@@ -93,7 +93,7 @@ def test_legend_disclaims_the_two_states_it_cannot_produce():
 
 
 def test_shell_makes_the_multi_party_process_visible():
-    """Unit 5: courseOwner + assessor + chain + Andamio visible in the rendered
+    """courseOwner + assessor + chain + Andamio visible in the rendered
     output. The assessor is NOT derivable from any on-chain surface, so it is
     named as absent rather than dropped — and the teacher roster must not be
     passed off as the assessor."""
@@ -110,7 +110,7 @@ def test_shell_makes_the_multi_party_process_visible():
 
 
 def test_shell_owns_suspension_framing():
-    """Covers P1bis-02: the viewer explains suspension for a human as a
+    """The viewer explains suspension for a human as a
     key-version issue, NOT 'didn't earn it', with the chain authoritative.
     Prose is checked against whitespace-normalized text (the shell wraps lines)."""
     html = holder._shell()
@@ -268,7 +268,7 @@ def _assert_canon_not_inlined(src):
             f"canon {name} ({literal}) inlined — import it from canon.py"
 
 
-# --- canon conformance (#102 U3) -------------------------------------------
+# --- canon conformance (#102) ----------------------------------------------
 # Mirrors test_page.py and test_explainers.py so the three surfaces cannot drift.
 
 def test_canon_values_imported_not_inlined():

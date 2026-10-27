@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U3 tests for the Open Graph card composition (generator/og.py, #69).
+"""Tests for the Open Graph card composition (generator/og.py, #69).
 
 Guards the card SVG's shape and content: correct 1200x630 canvas, credential
 title + course title + issuer wordmark present, long titles wrapped to fit, the

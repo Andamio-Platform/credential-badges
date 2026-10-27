@@ -1,13 +1,13 @@
-// Startup drift check (deployment plan Decision 4, refined per P1-06) — the
-// fail-closed boot gate. The service REFUSES to open its listener unless the
-// signing identity it is configured with is provably the identity the world
+// Startup drift check — the fail-closed boot gate, so drift between the
+// signing key and the published did.json is a startup failure, never a
+// silently broken signature. The service REFUSES to open its listener unless
+// the signing identity it is configured with is provably the identity the world
 // resolves:
 //
 //   1. ACTIVE KEY VERSION IS IN THE REGISTRY: the active key version must
 //      have a bit position in the compiled-in key-version registry —
 //      otherwise the emitted credentialStatus.statusListIndex would be a
-//      silent semantic error (plan: "converts a silent semantic error into a
-//      loud startup failure").
+//      silent semantic error; this check makes it a loud startup failure.
 //   2. LIVE did.json CARRIES THE ACTIVE KEY: fetch the live
 //      https://credentials.andamio.io/.well-known/did.json with bounded
 //      retry (5 attempts, exponential backoff, ~50s total). The active

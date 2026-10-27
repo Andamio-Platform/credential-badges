@@ -1,6 +1,6 @@
 """Byte-exact OB 3.0 bake splice — Python port of tools/bake-signed-vc.ts.
 
-Why a port rather than reuse (plan U5, KTD-7 posture): holder artifacts are
+Why a port rather than reuse: holder artifacts are
 produced on the render path, and the alternative — serving baked images from
 the issuer — would put image serving and cache reads inside the one process
 holding KMS sign permission. Keeping that process narrow is the same posture

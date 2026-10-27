@@ -12,8 +12,8 @@
 // from request input.
 //
 // Checks (all must pass; signing is unreachable otherwise):
-//   1. GLOBAL-STATE GATE (the deployment plan's core gate, verbatim): the
-//      recipient's current global-state credential map contains the course
+//   1. GLOBAL-STATE GATE: the recipient's current global-state credential
+//      map contains the course
 //      (policyId) AND the on-chain claimed-credential hash for it byte-equals
 //      the requested sltHash, AND the state record's alias byte-equals the
 //      resolved recipient. (/api/v2/users/{alias}/state)

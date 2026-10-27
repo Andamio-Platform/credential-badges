@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U2 parity + safety tests for the gen.py parameterized-render refactor.
+"""Parity + safety tests for the gen.py parameterized-render refactor.
 
 Guards the refactor's core promise: render_svg() (parameter-driven, concurrency-
 safe) produces byte-identical output to the badges already committed in ../badges/,

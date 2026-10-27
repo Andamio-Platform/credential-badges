@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Badge SVG cache. The render service writes a rendered badge here on a cache
-miss so repeat requests are served without a re-render or a gateway call (KTD-1).
+miss so repeat requests are served without a re-render or a gateway call.
 
 Two implementations behind one tiny interface (get/put):
   - MemoryCache: process-local dict, for tests and local dev.
   - GCSCache:    a Google Cloud Storage bucket, for the deployed service.
 
-KTD-3b invariant lives in the caller (app.serve_badge), not here: only a
-successful (200) render is ever put() — a failed read must never be cached.
+The never-cache-a-failure invariant lives in the caller (app.serve_badge), not
+here: only a successful (200) render is ever put() — a failed read must never
+be cached.
 """
 
 
@@ -59,7 +60,7 @@ class GCSCache:
         blob.upload_from_string(body, content_type="image/svg+xml")
 
     def delete(self, key):
-        """Remove a cache object (U6 cache-admin invalidate/reconcile). Idempotent:
+        """Remove a cache object (cache-admin invalidate/reconcile). Idempotent:
         a missing object is not an error — the badge simply re-renders on the next
         request, so invalidation is always non-destructive. Returns True if the
         object existed."""
@@ -70,5 +71,5 @@ class GCSCache:
         return True
 
     def list_keys(self):
-        """All object names in the cache bucket (U6 cache-admin reconcile)."""
+        """All object names in the cache bucket (cache-admin reconcile)."""
         return [b.name for b in self._bucket.list_blobs()]

@@ -1,5 +1,5 @@
-// The in-repo badge registry (deployment plan R5: "Badge registry: in this
-// repo. badge_id is the <course_id>.<slt_hash> URN itself").
+// The in-repo badge registry: badge_id is the <course_id>.<slt_hash> URN
+// itself (one Andamio Credential, one OB3 Achievement).
 //
 // generator/credentials.json is the repo's source of truth for which badges
 // exist and for their display titles (course_title / module_title) — the

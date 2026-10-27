@@ -4,7 +4,7 @@
 #
 # Build context MUST be the repo root, so the image bakes the trust-critical
 # repo artifacts the service pins at runtime:
-#   docker build -f issuer-service/Dockerfile -t issuer-service .
+#   docker build -f issuer-service/Dockerfile -t credential-badges-issuer .
 #
 #   context/v1.jsonld          — the committed Andamio context (closed loader
 #                                serves these bytes; boot check verifies live)
@@ -12,7 +12,7 @@
 #                                artifact; live did.json is authoritative)
 #   status/                    — the served key-epoch status list (post-sign
 #                                status check reads these bytes)
-#   generator/credentials.json — the badge registry (R5): titles + the set of
+#   generator/credentials.json — the badge registry: titles + the set of
 #                                badges this service will ever sign for
 #   tools/gen-did-json.ts      — the canonical dependency-free multibase/SPKI
 #                                encoder (imported by src/signer.ts)

@@ -64,7 +64,7 @@ hard-gated on a **live on-chain anchor check**, and verified by independent
 verifiers. The first time a real Andamio credential got a real signature.
 
 The committed artifact is [`signed-credential.json`](./signed-credential.json) —
-since Rung 8.3 in its FINAL production shape: the deployment plan's flat
+since Rung 8.3 in its FINAL production shape: the flat
 `evidence` anchor dialect (`network`/`policyId`/`asset`/`claimTxHash`),
 top-level `courseOwner` attribution (assessor omitted — the on-chain record
 names none), and a `credentialStatus` BitstringStatusListEntry pointing at the
@@ -88,8 +88,8 @@ version, bit 0 = `#key-2026-07` = 0).
 | badge | <https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg> |
 
 `validFrom` and `proof.created` are both pinned to the claim-tx `block_time`,
-derived deterministically from the slot (mainnet Shelley formula), per the
-deployment plan's determinism decision.
+derived deterministically from the slot (mainnet Shelley formula), so neither
+field varies with when the credential happens to be signed.
 
 ## The anchor-gate contract (`check-anchor.ts`)
 
@@ -237,21 +237,21 @@ Rung 6/8.2 (the previous artifact, for the record):
    `BitstringStatusListEntry` (`statusListIndex: "0"` = the signing key
    version's registry position; see `status-list.ts`).
 2. ~~**No top-level `courseOwner` / `assessor` fields.**~~ **SUPERSEDED at
-   Rung 8.3.** The P1bis-04 context update registers `courseOwner` and
+   Rung 8.3.** The context update registers `courseOwner` and
    `assessor` in `context/v0.jsonld` (additive; existing terms byte-untouched),
    and the mapper emits `courseOwner`
    (`urn:andamio:mainnet:course-owner:gjames`). `assessor` stays omitted for
-   THIS credential because the on-chain record names no assessor — that is the
-   plan's omit-never-blank rule, not a deviation.
+   THIS credential because the on-chain record names no assessor — an absent
+   party is omitted, never blank-filled, so this is not a deviation.
 3. ~~**The anchor rides inside `evidence` as nested blocks.**~~ **SUPERSEDED
    at Rung 8.3.** The context update registers the flat anchor terms
    (`network`, `policyId`, `asset`, `claimTxHash`) top-level, and the evidence
-   entry now carries the plan's Decision-2 flat dialect ("no other field name
-   is correct"). `policyId` **is** the course id; `asset` is the recipient's
+   entry now carries the flat dialect, the one anchor field set the mapper
+   emits. `policyId` **is** the course id; `asset` is the recipient's
    Access Token global-state asset (`gjames`) — Course V2 mints no
    per-credential native asset (the claim burns the course-state token and
    updates the recipient's global state), so the student-state asset is the
-   honest fill for the plan's anchor field set. The nested
+   honest fill for the `asset` anchor field. The nested
    `onChainAnchor`/`onChainAttestation` scoped terms remain defined in the
    context (it evolves additively only) but are no longer emitted.
 4. **`proof` committed in array form** (1EdTech OB3 Plain-JSON schema

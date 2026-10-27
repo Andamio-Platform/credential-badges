@@ -1,4 +1,4 @@
-// U2 tests for the class-credential builder.
+// Tests for the class-credential builder.
 //
 // The failure mode being defended against is a field that reads as an identity
 // claim. That is much easier to assert absent than to notice present, so the
@@ -102,7 +102,7 @@ test("references the production contexts and the hosted issuer profile", () => {
   assert.deepEqual(c.type, ["VerifiableCredential", "OpenBadgeCredential"]);
 });
 
-test("carries a credentialStatus entry so the kill-switch covers it (KTD-6)", () => {
+test("carries a credentialStatus entry so the kill-switch covers it", () => {
   const c = buildClassCredential(SAMPLE, NETWORK) as any;
   assert.equal(c.credentialStatus.type, "BitstringStatusListEntry");
   assert.equal(c.credentialStatus.statusPurpose, "suspension");
@@ -126,7 +126,7 @@ test("human-readable text says this is a definition, not an earning claim", () =
     "the description must state plainly that nobody is claimed to have earned it",
   );
   // The machine-readable shape cannot express "definition", so the prose is
-  // the mitigation KTD-1 relies on — it must not read as an earning claim.
+  // the mitigation the class shape relies on — it must not read as an earning claim.
   assert.ok(!/\bhas earned\b|\bcompleted the\b/.test(prose), `prose reads as an earning claim: ${prose}`);
 });
 
@@ -167,13 +167,13 @@ test("validFrom is deterministic, not wall-clock", () => {
   const b = (buildClassCredential(SAMPLE, NETWORK) as any).validFrom;
   assert.equal(a, b);
   assert.match(a, /^\d{4}-\d{2}-\d{2}T/);
-  // A wall-clock value would break byte-stability across re-signs (R3).
+  // A wall-clock value would break byte-stability across re-signs.
   assert.ok(Math.abs(Date.now() - Date.parse(a)) > 60_000, "validFrom looks like wall-clock");
 });
 
 // ------------------------------ determinism -------------------------------- //
 
-test("two builds for the same badge are byte-identical (R3)", () => {
+test("two builds for the same badge are byte-identical", () => {
   const a = JSON.stringify(buildClassCredential(SAMPLE, NETWORK));
   const b = JSON.stringify(buildClassCredential(SAMPLE, NETWORK));
   assert.equal(a, b);
