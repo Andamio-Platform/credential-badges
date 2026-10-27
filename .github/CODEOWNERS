@@ -65,7 +65,7 @@
 # The key-compromise kill-switch (Rung 8.6). The flip tool prepares the suspension flip for a whole
 # key epoch — a wrong flip suspends every credential signed under a key
 # version, including the flagship badge — so it gets a deliberate review. The
-# runbook the flip PR follows lives in andamio-ops (runbooks/credential-badges/).
+# runbook the flip PR follows lives in the private andamio-ops repo.
 /tools/flip-status-bit.ts        @workshop-maybe @adrian1-dot
 /tools/flip-status-bit.test.ts   @workshop-maybe @adrian1-dot
 
