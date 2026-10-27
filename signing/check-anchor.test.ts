@@ -76,8 +76,8 @@ function installFakeAndamioscan(opts: FakeOptions = {}): void {
           tx_hash: SUBJECT.claimTxHash,
           alias: SUBJECT.alias,
           course_id: SUBJECT.courseId,
-          credential_hash: "34d2418e23ba3f8d1aa3468f6b3f60c720bddd8db46bb7b7a72256cb40bdeff8",
-          credentials: [SUBJECT.sltHash],
+          state_commitment_hash: "34d2418e23ba3f8d1aa3468f6b3f60c720bddd8db46bb7b7a72256cb40bdeff8",
+          credential_hashes: [SUBJECT.sltHash],
         },
       );
     }
@@ -190,19 +190,31 @@ test("REFUSES a tampered claim event alias", async () => {
       tx_hash: SUBJECT.claimTxHash,
       alias: "mallory",
       course_id: SUBJECT.courseId,
-      credentials: [SUBJECT.sltHash],
+      credential_hashes: [SUBJECT.sltHash],
     },
   });
   await assert.rejects(() => checkAnchor(), /alias mismatch/);
 });
 
-test("REFUSES a claim event whose credentials do not include the pinned slt_hash", async () => {
+test("REFUSES a claim event in the pre-rename shape (credentials, no credential_hashes)", async () => {
   installFakeAndamioscan({
     claim: {
       tx_hash: SUBJECT.claimTxHash,
       alias: SUBJECT.alias,
       course_id: SUBJECT.courseId,
-      credentials: ["0000000000000000000000000000000000000000000000000000000000000000"],
+      credentials: [SUBJECT.sltHash],
+    },
+  });
+  await assert.rejects(() => checkAnchor(), /does not include slt_hash/);
+});
+
+test("REFUSES a claim event whose credential_hashes do not include the pinned slt_hash", async () => {
+  installFakeAndamioscan({
+    claim: {
+      tx_hash: SUBJECT.claimTxHash,
+      alias: SUBJECT.alias,
+      course_id: SUBJECT.courseId,
+      credential_hashes: ["0000000000000000000000000000000000000000000000000000000000000000"],
     },
   });
   await assert.rejects(() => checkAnchor(), /does not include slt_hash/);

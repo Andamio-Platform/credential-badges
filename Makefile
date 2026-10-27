@@ -22,7 +22,7 @@ help:
 	@echo "  make holder    - generate the holder viewer shell + registry -> badges/_holder.html, _registry.json"
 	@echo "  make web-component - copy the andamio-badge source -> embed/andamio-badge.js (served bundle; byte-identical, CI-pinned)"
 	@echo "  make reconcile - prune badges/ artifacts (svg/png/og.png/html/embed.html) with no credentials.json record"
-	@echo "  make verify    - round-trip a built badge's rings back to its on-chain hashes"
+	@echo "  make verify    - round-trip a committed badge's rings, and a fresh placeholder-art badge's, back to their on-chain hashes"
 	@echo "  make fetch     - refresh $(GEN)/credentials.json from chain (needs network + authed 'andamio' CLI)"
 	@echo "  make fonts     - rebuild $(GEN)/fonts.css from Google Fonts (needs network + fonttools)"
 
@@ -55,8 +55,20 @@ web-component:
 reconcile:
 	$(PY) $(GEN)/reconcile.py
 
+# Decodes a committed badge AND a freshly built one carrying the placeholder art
+# (#131): proves the art build path leaves the ring geometry and the baked
+# metadata intact. It cannot see visual bleed into the ring band; that is the
+# ring-band check in imaging/rasterize.test.ts. The art badge is built into a temp
+# dir from the test fixture via --art-dir, so placeholder art never enters
+# badges/. decode.py exits non-zero on any ring mismatch.
 verify:
-	@f=$$(ls badges/*.*.svg | head -1); echo "decoding $$f"; $(PY) $(GEN)/decode.py "$$f"
+	@set -e; f=$$(ls badges/*.*.svg | head -1); stem=$$(basename "$$f" .svg); \
+	echo "decoding $$f"; $(PY) $(GEN)/decode.py "$$f"; \
+	out=$$(mktemp -d); art=$$(mktemp -d); trap 'rm -rf "$$out" "$$art"' EXIT; \
+	cp $(GEN)/tests/fixtures/art/placeholder.jpg "$$art/$${stem%%.*}.jpg"; \
+	$(PY) $(GEN)/build.py "$$out" --only "$$stem" --art-dir "$$art" >/dev/null; \
+	grep -q '<image ' "$$out/$$stem.svg" || { echo "❌ placeholder-art badge carries no <image>"; exit 1; }; \
+	echo "decoding $$stem with placeholder plate art"; $(PY) $(GEN)/decode.py "$$out/$$stem.svg"
 
 fetch:
 	$(PY) $(GEN)/fetch.py

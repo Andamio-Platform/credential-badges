@@ -7,7 +7,7 @@
  * in the global-state map.
  *
  * This does NOT recompute completionHash from raw SLT lists — that round-trip
- * is a follow-up (see mapping.md). Datum-membership is sufficient to prove the
+ * is a follow-up (see docs/mapping.md). Datum-membership is sufficient to prove the
  * recipient's on-chain record bears the exact pairs the credential claims.
  *
  * Usage:

@@ -27,7 +27,7 @@
 //    URN over the course owner's Access Token global-state asset, same
 //    ASCII-"g"+alias derivation as the recipient. `assessor` (implication 4)
 //    is OMITTED — the on-chain record for this credential yields no assessor
-//    (the claim event carries alias/course/credentials only), and the plan
+//    (the claim event carries alias/course/credential_hashes only), and the plan
 //    says omit, never blank-fill.
 //  - `credentialStatus` (Decision 3): BitstringStatusListEntry, statusPurpose
 //    "suspension", statusListIndex = the signing key version's registry

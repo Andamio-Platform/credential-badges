@@ -73,7 +73,7 @@ printf %s '<PREPROD_KEY>' | gcloud secrets versions add andamio-api-preprod-key 
 # E. real-image cutover — in envs/credentials.tfvars set
 #      render_use_placeholder_image = false
 #      render_image_tag             = "vrender-0.1.0"
-#    then re-apply credential-badges (attaches secrets, real probe, real image).
+#    then re-apply credential-badges (attaches secrets, real image).
 
 # F. wire the static host: read the render_service_url output, set the static
 #    host's RENDER_UPSTREAM to it, cut a v[0-9]*.*.* tag to redeploy. A
@@ -122,7 +122,7 @@ served copy at `/embed/andamio-badge.js` ships on the normal static `v*` deploy;
 3. Builds the image, tags it with **both** the commit SHA and the semver tag. Never `:latest`.
 4. Pushes both tags. Artifact Registry rejects any re-push of an existing tag (immutable) — bump the version instead.
 5. `gcloud run deploy` the semver tag.
-6. Verifies content types on the deployed `*.run.app` URL (service-level reachability), runs the context freeze-pin test against the tagged checkout, and asserts sha256 of every served `context/*.jsonld` on the **public host** (`credentials.andamio.io`) — the LB route is what verifiers fetch (see `docs/solutions/conventions/cloud-run-deploy-verification-probes.md`).
+6. Verifies content types through the public host (the static host is LB-only, andamio-ops#194), runs the context freeze-pin test against the tagged checkout, and asserts sha256 of every served `context/*.jsonld` on the **public host** (`credentials.andamio.io`) — the LB route is what verifiers fetch (see `docs/solutions/conventions/cloud-run-deploy-verification-probes.md`).
 
 There is **no** `main`-push or `workflow_dispatch` deploy path by design.
 

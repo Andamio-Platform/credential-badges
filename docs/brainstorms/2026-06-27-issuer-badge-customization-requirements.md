@@ -197,7 +197,10 @@ first credential is ever generated.
 
 - **Per-badge and layered/override customization grain.** Rejected as design-tool
   creep. Per-course is the deliberate ceiling; we are not building a badge design
-  studio.
+  studio. *(2026-09-23, credential-badges#131: per-badge grain is allowed for
+  Andamio's hand-set badge art and still rejected for issuer self-serve. The
+  course-level fallback lets a later self-serve feature replace the hand-set input
+  without changing any `badge_id`.)*
 - **Image as part of credential identity.** Permanently outside the product's
   identity — image is presentation-layer forever (R9). We are not building
   image-anchored credentials.

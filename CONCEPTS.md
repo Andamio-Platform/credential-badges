@@ -13,6 +13,9 @@ The badge designated as the end-to-end proof artifact — the one exercised agai
 ### Baking
 Embedding a signed object byte-transparently into a badge SVG's credential block, replacing the unsigned hook the generator emits. The embedded object is either a Class Achievement or a Holder Artifact — the two are never interchangeable. Regenerating a badge un-bakes it, so a bake must follow any regeneration of a signed badge. Extraction must round-trip byte-identical to the signed artifact.
 
+### Badge Art
+The hand-set image drawn in a badge's plate, behind its titles. Andamio sets it per badge or per course; a badge with its own art ignores the course's. Drawn only: it sits outside every signature and never enters the credential, so it proves nothing, and changing it means rebuilding and re-baking the badge, never re-signing it.
+
 ### Class Achievement
 The signed, holder-free object describing what a badge *means* — its achievement, issuer, and on-chain anchor — asserting that nobody in particular earned it. One per badge, immutable (a badge's identity commits to its content, so changed content is a different badge), and safe to publish at a shared address because it names no person.
 

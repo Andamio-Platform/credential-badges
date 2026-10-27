@@ -21,12 +21,12 @@
 //   2. The claim tx is DISCOVERED server-side (never caller-supplied): the
 //      slot-descending transactions index is scanned for
 //      StudentCourseCredentialClaim rows, each resolved at the per-tx claim
-//      endpoint until one matches (alias, course_id, credentials ∋ sltHash).
+//      endpoint until one matches (alias, course_id, credential_hashes ∋ sltHash).
 //      A warm locator cache short-circuits the scan; the cached (tx, slot) is
 //      then re-verified by the spike's BINARY SEARCH over the slot-descending
 //      index (O(log pages), decay-proof — finding 5) plus a fresh per-tx
 //      claim-event re-read, so a poisoned locator entry can never survive.
-//   3. The claim event's (tx_hash, alias, course_id, credentials) byte-equal
+//   3. The claim event's (tx_hash, alias, course_id, credential_hashes) byte-equal
 //      the resolved subject.
 //   4. Course details: the sltHash is a real module credential, its SLT texts
 //      are non-empty, and Blake2b-256 over their Plutus Data CBOR encoding
@@ -183,7 +183,7 @@ export async function findClaimTxRow(
 
 // Server-side claim-tx discovery: walk the index newest-first, resolve each
 // StudentCourseCredentialClaim row at the per-tx claim endpoint, stop at the
-// first event matching (alias, courseId, credentials ∋ sltHash).
+// first event matching (alias, courseId, credential_hashes ∋ sltHash).
 async function discoverClaimTx(
   getJson: (url: string) => Promise<any>,
   s: Subject,
@@ -205,8 +205,8 @@ async function discoverClaimTx(
       if (
         event.alias === s.alias &&
         event.course_id === s.courseId &&
-        Array.isArray(event.credentials) &&
-        event.credentials.includes(s.sltHash)
+        Array.isArray(event.credential_hashes) &&
+        event.credential_hashes.includes(s.sltHash)
       ) {
         return { txHash: row.tx_hash, slot: row.slot, event };
       }
@@ -307,10 +307,10 @@ export async function checkAnchor(s: Subject, deps: GateDeps): Promise<Anchor> {
     refuse("anchor-mismatch", `claim event alias mismatch: expected ${s.alias}, got ${event.alias}`);
   if (event.course_id !== s.courseId)
     refuse("anchor-mismatch", `claim event course_id mismatch: expected ${s.courseId}, got ${event.course_id}`);
-  if (!Array.isArray(event.credentials) || !event.credentials.includes(s.sltHash))
+  if (!Array.isArray(event.credential_hashes) || !event.credential_hashes.includes(s.sltHash))
     refuse(
       "anchor-mismatch",
-      `claim event credentials [${(event.credentials ?? []).join(", ")}] does not include slt_hash ${s.sltHash}`,
+      `claim event credential_hashes [${(event.credential_hashes ?? []).join(", ")}] does not include slt_hash ${s.sltHash}`,
     );
 
   // 4. Course details: sltHash is a real module credential and its SLT texts

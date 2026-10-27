@@ -39,7 +39,7 @@ Twelve of thirteen probes passed. Issuer resolution, `did:web`, the Data Integri
 
 **Hold the bar at 0 errors *and* 0 warnings.** "No errors" is a weaker gate that lets shape drift accumulate.
 
-The procedure lives in [`docs/runbooks/class-artifact-signing.md`](../../runbooks/class-artifact-signing.md) (Phase 3). Evidence for both passes, including the full validator responses, is committed at [`signing/validation/README.md`](../../../signing/validation/README.md).
+The procedure lives in `andamio-ops/runbooks/credential-badges/class-artifact-signing.md` (Phase 3). Evidence for both passes, including the full validator responses, is committed at [`signing/validation/README.md`](../../../signing/validation/README.md).
 
 ## Why This Matters
 

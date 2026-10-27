@@ -9,12 +9,7 @@ It was `spike/` until the production half was promoted out. What lives here now:
 
 **The production code went to [`signing/`](../signing/README.md).** That is where the KMS signing path, the 58 signed class artifacts, and the KMS transcripts live.
 
-**Two files here are still current authority, archived by location only:**
-
-- [`mapping.md`](mapping.md) — the Andamio → OB 3.0 field mapping and the URN convention. `docs/badge-registry.md` cites it for `slt_hash` semantics.
-- [`credential-imagery.md`](credential-imagery.md) — the v1 design decision for `badges/`.
-
-Do not prune either one while `docs/badge-registry.md` still points at them. Tracked as [#117](https://github.com/Andamio-Platform/credential-badges/issues/117) — the fix is to promote them into `docs/`, not to delete them.
+The two design notes from here that are still current authority, the field mapping and the v1 imagery decision, now live in [`docs/mapping.md`](../docs/mapping.md) and [`docs/credential-imagery.md`](../docs/credential-imagery.md) ([#117](https://github.com/Andamio-Platform/credential-badges/issues/117)). Everything left in this directory is history.
 
 ---
 
@@ -95,7 +90,6 @@ If a future variant fetches Blockfrost data live, copy `.env.example` to `.env.l
 ```
 ob3-prototype/
 ├── README.md                      this file
-├── mapping.md                     field-by-field Andamio -> OB 3.0 mapping
 ├── validation-results.md          narrative + raw results from each validator
 ├── open-questions.md              gaps surfaced during the spike
 ├── sample-credential.jsonld       the deliverable signed credential

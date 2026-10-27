@@ -2,7 +2,7 @@
 
 **Status:** v1 design ratified 2026-04-23. Sample artifacts in `samples/` use this shape against real Andamio mainnet policies.
 **Date:** 2026-04-20 (initial), 2026-04-23 (v1 ratified, samples landed)
-**Companion to:** `open-questions.md` (Q4 — unaliased `andamio:` context), `mapping.md`, `README.md`, `samples/README.md`
+**Companion to:** `open-questions.md` (Q4 — unaliased `andamio:` context), `../docs/mapping.md`, `README.md`, `samples/README.md`
 
 ---
 
@@ -64,7 +64,7 @@ Add a namespaced property under the `andamio` JSON-LD context (which is already 
 ]
 ```
 
-> **Credential identity** (ratified 2026-04-23): every Andamio credential has the three-part identity `{local_state_type}:{policyId}:{completionHash}`. Prereqs are referenced by the full three-part URN so the check is version-precise: a revised course with a new `completionHash` is a distinguishable prereq. Mainnet URNs are production-implicit (omit network); preprod URNs are test-explicit. See `mapping.md` for the full convention.
+> **Credential identity** (ratified 2026-04-23): every Andamio credential has the three-part identity `{local_state_type}:{policyId}:{completionHash}`. Prereqs are referenced by the full three-part URN so the check is version-precise: a revised course with a new `completionHash` is a distinguishable prereq. Mainnet URNs are production-implicit (omit network); preprod URNs are test-explicit. See `../docs/mapping.md` for the full convention.
 
 ### Property semantics
 
@@ -206,5 +206,5 @@ For the v1 shape used in `samples/`, the open questions resolve as:
 - `open-questions.md` Q4 — `andamio:onChainAnchor` context publishing (shared dependency)
 - `open-questions.md` Q9 — credential burns / revocation (interacts with PQ1)
 - `open-questions.md` Q14 — Cardano XP interop (XP is a natural prereq source: "held 100 XP" → unlocks a course)
-- `mapping.md` — where the new property would slot into the document shape
+- `../docs/mapping.md` — where the new property would slot into the document shape
 - `README.md` — update to mention prerequisite chaining once we've decided to ship

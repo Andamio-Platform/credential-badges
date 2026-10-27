@@ -55,6 +55,34 @@ the SVG byte-parity test owns visual correctness.
 guarding `_placeholder.svg`. `scripts/ci/check-orphans.sh` (a `--check` mode)
 fails CI on any orphan.
 
+**Badge art (#131).** A badge can carry a hand-set JPEG drawn in its core plate.
+Files live in `art/`, named `<course_id>.<slt_hash>.jpg` (one badge) or
+`<course_id>.jpg` (every badge of the course). `art.py` validates them and
+resolves the lookup for `build.py`, `og.py` and the render service;
+`python3 art.py --check` validates the directory on its own. `build.py` takes
+`--only <badge_id>` (repeatable) to scratch-build just those stems, and
+`--art-dir <dir>` for tests and `make verify`. Giving a live badge art is an
+operator procedure: `andamio-ops/runbooks/credential-badges/badge-art.md`.
+
+> **`make badges` strips every baked signature** (credential-badges#128). To
+> refresh signed badges, scratch-build only those stems and re-bake them — the
+> single-badge procedure in `andamio-ops/runbooks/credential-badges/badge-art.md`.
+
+**Adding one badge.** Never `make badges`, and never commit a blind `make fetch`:
+a full refresh can drop published badge ids, and published ids are permanent
+([`../docs/badge-registry.md`](../docs/badge-registry.md) I3).
+
+1. Add only the new row to `credentials.json`.
+2. Scratch-build and copy in only the new stem's SVG, then rasterize its PNG and
+   OG card: badge-art runbook §4.2 and §4.4, with the new stem as `<stem>`.
+3. `make pages` and `make holder`. These regenerate derived output (pages,
+   embeds, `_registry.json`) and do not touch badge SVGs.
+4. `git diff --stat main -- badges/` lists only the new stem's files and
+   `_registry.json`. The new badge ships unsigned (`"signed": false`).
+5. After it deploys, sign and bake it with the `--badge` form of
+   `andamio-ops/runbooks/credential-badges/class-artifact-signing.md`.
+   It cannot be signed earlier, because the anchor gate fetches the live badge URL.
+
 **Rasterization lives in `../imaging/`** (a separate Node package, `@resvg/resvg-js`)
 so this Python generator stays stdlib-only and hermetic. resvg needs two things
 the badges do unusually: colors are CSS custom properties (`var(--token, …)`) and
@@ -66,6 +94,7 @@ and hands resvg the decoded font buffers. See `../imaging/`.
 - `build.py` — render orchestrator (snapshot → SVGs), then self-prunes. Per-course palette + light interior.
 - `gen.py` — the SVG generator (palette-driven, ring encoder, OB3 metadata, inlines `fonts.css`).
 - `colors.py` — the 10 palettes + the light-interior transform.
+- `art.py` — badge art lookup and validation (`art/`, JPEG only); `--check` validates the directory.
 - `og.py` — composes the 1200x630 Open Graph card SVG per credential (reuses palette + fonts).
 - `page.py` — generates the static display/share page per credential (#70): server-delivered Open Graph tags in `<head>`, served at the extensionless `/badges/{stem}` URL, with the **share actions** (#71 — download SVG/PNG, copy link, X/LinkedIn intents, Web Share, copy-embed, LinkedIn add-to-profile) filled into the page and a small inline progressive-enhancement script. Also emits the **minimal embed variant** `badges/{stem}.embed.html`, served at `/badges/{stem}.embed` (the iframe target). Reserves `/badges/{stem}/{alias}` for the holder viewer (#73).
 - `explainers.py` — generates the two general explainers (#72): `how-to-share.html` (holder) and `how-to-check.html` (verifier, adapting `../docs/verifier-guidance.md`), linked from every badge page. Non-hex stems, so inert to the reconciler; guarded by `imaging/check-artifacts.ts`.

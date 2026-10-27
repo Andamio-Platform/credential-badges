@@ -65,7 +65,12 @@ def course_titles(course_id):
 
 
 def main():
+    # andamioscan wraps the course list in {"data": [...]} (the details endpoint
+    # is still bare). Accept both shapes: iterating the wrapper dict yields its
+    # keys, which crashes on c["course_id"] before anything is written.
     courses = scan("/api/v2/courses") or []
+    if isinstance(courses, dict):
+        courses = courses.get("data") or []
     out = []
     for c in courses:
         cid = c["course_id"]

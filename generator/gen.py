@@ -145,10 +145,30 @@ def lay_title(text, base, maxw, factor, min_one, floor=15):
     longest=max(len(l) for l in lines)
     return lines, max(min(base, int(maxw/(factor*longest))), floor)
 
-def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=PAL_ANDAMIO):
+# Plate art (#131): the hand-set image sits in the core plate under a scrim that
+# keeps the titles and hashes legible, so the art reads as a tint. The opacity was
+# tuned against a worst-case (hard checker) image, not only the flat placeholder:
+# busy art is what defeats legibility. Loosening it later rewrites every
+# art-bearing SVG and forces a re-bake of each signed one.
+PLATE_SCRIM_OPACITY = "0.78"
+
+def _plate_art(image, c):
+    """Clipped image + scrim for the core plate. The clipPath geometry is the same
+    in every badge, so an id collision between two inlined badges is harmless
+    (a <pattern> fill would instead swap their pictures). The scrim fallback is a
+    paren-free literal because imaging/rasterize.ts inlineCssVars rejects parens."""
+    return (f'<defs><clipPath id="plate-art"><circle cx="{CX}" cy="{CY}" r="411"/></clipPath></defs>'
+            f'<image href="{image}" x="{CX-412}" y="{CY-412}" width="824" height="824" '
+            'preserveAspectRatio="xMidYMid slice" clip-path="url(#plate-art)"/>'
+            f'<circle cx="{CX}" cy="{CY}" r="411" fill="{c("core1")}" fill-opacity="{PLATE_SCRIM_OPACITY}"/>')
+
+def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=PAL_ANDAMIO, image=None):
     """Render a badge SVG from explicit inputs — no module globals are read or
     mutated, so concurrent calls with different inputs are safe (per-request use).
-    `build_svg(pal)` is the legacy globals-driven wrapper around this."""
+    `build_svg(pal)` is the legacy globals-driven wrapper around this.
+
+    `image` is an optional data:image/jpeg URI (resolved by art.py) drawn inside
+    the core plate. None emits nothing extra, so no-image output is unchanged."""
     COURSE_TITLE=course_title; MODULE_TITLE=module_title
     COURSE_ID=course_id; SLT_HASH=slt_hash; NETWORK=network
     P=fill_defaults(pal)
@@ -194,6 +214,8 @@ def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=
 
     p.append(f'<circle cx="{CX}" cy="{CY}" r="424" fill="none" stroke="{c("hair")}" stroke-width="1.25" opacity="0.55"/>')
     p.append(f'<circle cx="{CX}" cy="{CY}" r="412" fill="url(#core)" stroke="{c("hair")}" stroke-width="1.5"/>')
+    if image:
+        p.append(_plate_art(image, c))
 
     def T(y,s,size,fill,cls="mono",w=None,ls=None):
         a=f'<text class="{cls}" x="{CX}" y="{y}" text-anchor="middle" font-size="{size}" fill="{fill}"'

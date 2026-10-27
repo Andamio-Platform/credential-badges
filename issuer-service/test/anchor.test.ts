@@ -102,6 +102,23 @@ test("REFUSES a credential absent from the recipient's global-state credential m
   );
 });
 
+test("REFUSES a claim event in the pre-rename shape (credentials, no credential_hashes) — unknown-claim", async () => {
+  // andamioscan renamed the field (credential-badges#134). The gate reads only
+  // credential_hashes, so an event carrying the old name never matches.
+  const { credential_hashes, ...rest } = fixture("scan-claim-event-7cb75099.json");
+  const oldShape = { ...rest, credentials: credential_hashes };
+  const { fetchImpl } = makeFixtureFetch({
+    override: (url) =>
+      url.endsWith(`/api/v2/events/credential-claims/claim/${SUBJECT.claimTxHash}`)
+        ? new Response(JSON.stringify(oldShape), { status: 200 })
+        : undefined,
+  });
+  await assert.rejects(
+    checkAnchor(REQ, GATE_DEPS(fetchImpl)),
+    (e: any) => e instanceof GateRefusal && e.kind === "unknown-claim",
+  );
+});
+
 test("REFUSES tampered SLT text (blake2b commitment mismatch) — anchor-mismatch", async () => {
   const tamperedCourse = fixture("scan-course-details-ae192632.json");
   tamperedCourse.modules[0].module.slts[0] = "I can claim something the chain never committed to.";

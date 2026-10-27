@@ -26,6 +26,23 @@ import explainers  # noqa: E402
 import canon  # noqa: E402
 import gen  # noqa: E402
 
+# "any … verifier" naming OB 3 in any spelling within the same short phrase.
+_ANY_VERIFIER_CLAIM = re.compile(
+    r"\bany\b[^.;]{0,40}?\b(?:OB\s?3|Open\s+Badges\s+3)[^.;]{0,30}?\bverifier",
+    re.IGNORECASE,
+)
+
+
+def _list_items(html):
+    """The inner HTML of each <li>, so a gate can assert inside one step."""
+    return re.findall(r"<li>(.*?)</li>", html, re.DOTALL)
+
+
+def _text(html):
+    """Tag-free, whitespace-collapsed text, so a claim split across markup or
+    line breaks still matches."""
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html))
+
 
 def test_both_pages_well_formed():
     for build in (explainers._share_page, explainers._check_page):
@@ -85,6 +102,15 @@ def test_check_page_does_not_overclaim_signature():
     assert "on signed" in html.lower() or "signed</strong> badges" in html, \
         "signature step must be scoped to signed badges"
     assert "the chain still backs" in html, "must say the chain backs an unsigned badge"
+    # The qualifier must sit inside the step it bounds (credential-badges#106):
+    # the Status note above is a different paragraph, and satisfied the check on
+    # its own when step 2's "(on a signed badge)" was deleted.
+    step = next((li for li in _list_items(html) if "check the signature" in li), None)
+    assert step is not None, "signature step missing"
+    assert re.search(r"on\s+a\s+signed\s+badge", step), \
+        "signature step must be scoped to signed badges within the step itself"
+    assert "isn't signed yet" in step, \
+        "signature step must say what to do when a badge is not signed"
     print("  ✅ check page is signing-status honest (no universal-signature overclaim)")
 
 
@@ -116,6 +142,11 @@ def test_wording_gate():
     for build in (explainers._share_page, explainers._check_page):
         html = build()
         assert "any OB3 verifier" not in html
+        # A pattern, not one literal (credential-badges#106): "any OB 3.0
+        # verifier", "any OB3-compatible verifier" and "any Open Badges 3.0
+        # verifier" all make the claim the literal above forbids.
+        m = _ANY_VERIFIER_CLAIM.search(_text(html))
+        assert m is None, f"universal-verifier claim: {m.group(0)!r}"
     assert "DI-capable OB 3.0 / VC verifier" in explainers._check_page()
     print("  ✅ wording gate: DI-capable OB 3.0 / VC verifiers, never 'any OB3 verifier'")
 

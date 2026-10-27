@@ -16,7 +16,7 @@
 // vc.issue fallback, post-sign loopback verification, the exactly-once signer
 // assertion, and atomic artifact writes.
 //
-// TRANSCRIPTS ARE NOT OPTIONAL. docs/runbooks/key-compromise.md treats "a KMS
+// TRANSCRIPTS ARE NOT OPTIONAL. andamio-ops/runbooks/credential-badges/key-compromise.md treats "a KMS
 // asymmetric-sign entry not attributable to a known, transcribed run" as a
 // compromise trigger. A batch of 58 signs that leaves no record would either
 // trip that trigger or, worse, quietly erode it. Every kms run writes a

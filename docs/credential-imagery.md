@@ -1,7 +1,7 @@
 # Credential Imagery — Associating Images with Andamio Credentials
 
 **Date:** 2026-04-20
-**Companions:** `README.md`, `open-questions.md`, `prerequisite-chaining.md`, `end-user-ux-research.md`, `mapping.md`
+**Companions:** `archive/README.md`, `archive/open-questions.md`, `archive/prerequisite-chaining.md`, `end-user-ux-research.md`, `docs/mapping.md`
 **Scope:** v1 design decision + deferred full architecture
 
 ---

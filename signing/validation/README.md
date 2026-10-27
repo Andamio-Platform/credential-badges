@@ -89,6 +89,6 @@ make.
 
 ## Related
 
-- Procedure: [`../../docs/runbooks/class-artifact-signing.md`](../../docs/runbooks/class-artifact-signing.md)
+- Procedure: `andamio-ops/runbooks/credential-badges/class-artifact-signing.md`
 - Phase 0 holder-credential evidence: [`../../archive/verifier-spike/results/onedtech.md`](../../archive/verifier-spike/results/onedtech.md)
 - Builder: [`../class-credential.ts`](../class-credential.ts)

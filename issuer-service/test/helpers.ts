@@ -2,8 +2,10 @@
 // Andamioscan + badge-host reads. Every fixture under test/fixtures/ is a
 // REAL RECORDED RESPONSE for the known subject credential (James's mainnet
 // "Andamio Issuer" credential — the spike/signer-spike subject), recorded
-// 2026-07-21. Any URL outside the fixture set throws, so a test can never
-// silently reach the network.
+// 2026-07-21. The claim event was re-recorded 2026-09-24 after andamioscan
+// renamed its `credentials` field to `credential_hashes` (credential-badges#134).
+// Any URL outside the fixture set throws, so a test can never silently reach
+// the network.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";

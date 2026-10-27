@@ -19,7 +19,7 @@
 // Checks (all must pass):
 //   1. The claim event resolves for the pinned tx hash (per-tx resolution —
 //      only classifier-confirmed StudentCourseCredentialClaim rows live at
-//      that endpoint), and its (course_id, credentials[]) pair byte-equals the
+//      that endpoint), and its (course_id, credential_hashes[]) pair byte-equals the
 //      pinned (courseId, sltHash), and its alias byte-equals the pinned
 //      recipient.
 //   2. The tx appears in the Andamioscan transactions index as a
@@ -193,9 +193,9 @@ export async function checkAnchor(): Promise<Anchor> {
     fail(`claim event alias mismatch: expected ${S.alias}, got ${claim.alias}`);
   if (claim.course_id !== S.courseId)
     fail(`claim event course_id mismatch: expected ${S.courseId}, got ${claim.course_id}`);
-  if (!Array.isArray(claim.credentials) || !claim.credentials.includes(S.sltHash))
+  if (!Array.isArray(claim.credential_hashes) || !claim.credential_hashes.includes(S.sltHash))
     fail(
-      `claim event credentials [${(claim.credentials ?? []).join(", ")}] does not include slt_hash ${S.sltHash}`,
+      `claim event credential_hashes [${(claim.credential_hashes ?? []).join(", ")}] does not include slt_hash ${S.sltHash}`,
     );
 
   // 2. Transactions index: tx confirmed as StudentCourseCredentialClaim at the

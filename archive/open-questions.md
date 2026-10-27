@@ -26,7 +26,7 @@ This is OB 3.0–allowed in any of these forms. **Decision needed before Phase 2
 
 ### Q3. Issuer identity — who is the issuing authority?
 
-> **Consolidated 2026-05-15.** This question previously appeared in three places that didn't reference each other: this Q3 (DID method), `mapping.md:105` ("a shared Andamio issuer DID with per-org sub-issuers — open question"), and `prerequisite-chaining.md` PQ3 / `samples/README.md:115` (cross-issuer scope = same-protocol only). They are one decision. The live work is now tracked as **`credential-badges` issues #3–#8** (#3 is the anchor decision); this section is the rationale of record.
+> **Consolidated 2026-05-15.** This question previously appeared in three places that didn't reference each other: this Q3 (DID method), `../docs/mapping.md:105` ("a shared Andamio issuer DID with per-org sub-issuers — open question"), and `prerequisite-chaining.md` PQ3 / `samples/README.md:115` (cross-issuer scope = same-protocol only). They are one decision. The live work is now tracked as **`credential-badges` issues #3–#8** (#3 is the anchor decision); this section is the rationale of record.
 
 **Reframe.** "Who is the issuer?" answers differently per layer:
 
