@@ -90,10 +90,12 @@ check() { # description, condition-already-evaluated ($1 desc, $2 ok/empty)
 }
 
 # Pick any real baked badge. Deliberately pipe-free: the earlier
-# `ls | grep -v | head -1` raced — `head` closed the pipe, `grep` took SIGPIPE
-# and exited non-zero, and under `bash -e` that surfaced as a spurious
-# "grep: write error: Broken pipe" / exit 2 on an unrelated PR. Timing-
-# dependent, so it passed far more often than it failed.
+# `ls | grep -v | head -1` raced — `head` exited first, `grep` took SIGPIPE
+# and exited 141, and `set -o pipefail` (above) promoted that to the
+# pipeline's status, so `-e` aborted with a spurious "grep: write error:
+# Broken pipe" / exit 2 on an unrelated PR. Timing-dependent, so it passed
+# far more often than it failed. See
+# docs/solutions/workflow-issues/piping-into-head-fails-under-pipefail.md
 baked=""
 for f in badges/*.svg; do
   [ "${f##*/}" = "_placeholder.svg" ] && continue
