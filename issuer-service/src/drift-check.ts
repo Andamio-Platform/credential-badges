@@ -227,7 +227,7 @@ export async function runStartupDriftCheck(deps: DriftCheckDeps): Promise<{
   }
   if (statusBitAt(decodeStatusList(encodedList), ACTIVE_KEY_STATUS_INDEX) !== 0) {
     throw new DriftError(
-      `active key version ${ACTIVE_KEY_VERSION} is SUSPENDED (status bit ${ACTIVE_KEY_STATUS_INDEX} = 1 in ${STATUS_LIST_URL}) — refusing to serve signing endpoints (see docs/runbooks/key-compromise.md)`,
+      `active key version ${ACTIVE_KEY_VERSION} is SUSPENDED (status bit ${ACTIVE_KEY_STATUS_INDEX} = 1 in ${STATUS_LIST_URL}) — refusing to serve signing endpoints (see andamio-ops/runbooks/credential-badges/key-compromise.md)`,
     );
   }
 

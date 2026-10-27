@@ -29,7 +29,7 @@
 //   exact document the hardened re-sign will produce and sign); the flip
 //   report + next steps on STDERR.
 //
-// Operational context: docs/runbooks/key-compromise.md is the runbook this
+// Operational context: andamio-ops/runbooks/credential-badges/key-compromise.md is the runbook this
 // tool serves. Bit semantics are Decision 3's: one bit per signing key
 // version, bit 0 = key-2026-07; flipping bit 0 suspends every credential
 // signed under key-2026-07 — including the flagship badge — at once.
@@ -228,7 +228,7 @@ FLIP PREPARED — NOTHING IS SIGNED AND NOTHING IS LIVE YET.
   derived from   status/${result.keyEpoch}.json (sha256 ${result.committedSha256})
 
 The payload on stdout is the review artifact: the exact unsigned document the
-hardened re-sign will rebuild and sign. Next steps (docs/runbooks/key-compromise.md
+hardened re-sign will rebuild and sign. Next steps (andamio-ops/runbooks/credential-badges/key-compromise.md
 is the full runbook — cache windows, cross-verifier reads, DID-doc response):
 
   1. Record the flip in code — the builder and CI read suspension state from

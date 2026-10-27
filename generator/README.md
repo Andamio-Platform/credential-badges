@@ -62,11 +62,11 @@ resolves the lookup for `build.py`, `og.py` and the render service;
 `python3 art.py --check` validates the directory on its own. `build.py` takes
 `--only <badge_id>` (repeatable) to scratch-build just those stems, and
 `--art-dir <dir>` for tests and `make verify`. Giving a live badge art is an
-operator procedure: [`../docs/runbooks/badge-art.md`](../docs/runbooks/badge-art.md).
+operator procedure: `andamio-ops/runbooks/credential-badges/badge-art.md`.
 
 > **`make badges` strips every baked signature** (credential-badges#128). To
 > refresh signed badges, scratch-build only those stems and re-bake them — the
-> single-badge procedure in [`../docs/runbooks/badge-art.md`](../docs/runbooks/badge-art.md).
+> single-badge procedure in `andamio-ops/runbooks/credential-badges/badge-art.md`.
 
 **Adding one badge.** Never `make badges`, and never commit a blind `make fetch`:
 a full refresh can drop published badge ids, and published ids are permanent
@@ -80,7 +80,7 @@ a full refresh can drop published badge ids, and published ids are permanent
 4. `git diff --stat main -- badges/` lists only the new stem's files and
    `_registry.json`. The new badge ships unsigned (`"signed": false`).
 5. After it deploys, sign and bake it with the `--badge` form of
-   [`../docs/runbooks/class-artifact-signing.md`](../docs/runbooks/class-artifact-signing.md).
+   `andamio-ops/runbooks/credential-badges/class-artifact-signing.md`.
    It cannot be signed earlier, because the anchor gate fetches the live badge URL.
 
 **Rasterization lives in `../imaging/`** (a separate Node package, `@resvg/resvg-js`)

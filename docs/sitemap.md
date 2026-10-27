@@ -27,7 +27,7 @@ verification for every badge already issued.
 | `/.well-known/did.json` | `.well-known/did.json` | yes — on key rotation | The `did:web:credentials.andamio.io` document. Publishes the issuer signing key (`#key-2026-07`) |
 | `/did.json` | same file | yes | Bare-domain alias. Some resolvers fetch here instead of `/.well-known/`; the 1EdTech validator is one |
 | `/issuer` | `issuer/profile.jsonld` | yes | Hosted OB 3.0 issuer Profile, typed `["Profile","AttestationHost"]`. Extensionless, served as `application/ld+json` |
-| `/status/key-epoch-2026-07.json` | `status/` | yes — **this is the kill switch** | Signed `BitstringStatusList`. One bit per signing-key version. Flipping a bit suspends every credential signed under that key — see [`runbooks/key-compromise.md`](runbooks/key-compromise.md) |
+| `/status/key-epoch-2026-07.json` | `status/` | yes — **this is the kill switch** | Signed `BitstringStatusList`. One bit per signing-key version. Flipping a bit suspends every credential signed under that key — see `andamio-ops/runbooks/credential-badges/key-compromise.md` |
 
 ## Credential pages — 58 of each
 
