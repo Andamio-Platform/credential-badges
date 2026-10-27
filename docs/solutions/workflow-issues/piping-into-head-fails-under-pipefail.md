@@ -23,7 +23,7 @@ tags: [ci, shell, pipefail, sigpipe, flaky-tests, bash]
 
 ## Context
 
-`docker-build` failed on a two-line documentation PR (#120) that touched nothing the job exercises. The step was `scripts/ci/test-nginx-fallback.sh`, and the error was:
+`docker-build` failed on a two-line documentation PR (credential-badges#120) that touched nothing the job exercises. The step was `scripts/ci/test-nginx-fallback.sh`, and the error was:
 
 ```
 grep: write error: Broken pipe
@@ -38,7 +38,7 @@ baked="$(ls badges/*.svg | grep -v _placeholder | head -1 | xargs -n1 basename)"
 
 `head -1` exits as soon as it has one line. If `grep` is still writing when that happens, it receives SIGPIPE and exits 141. Every script under `scripts/ci/` sets `set -euo pipefail`, so `pipefail` promotes that 141 to the whole pipeline's exit status and `-e` aborts the script.
 
-It is a race, so it usually wins. #110, #111 and #119 all passed the same job against the same base within the hour.
+It is a race, so it usually wins. credential-badges#110, credential-badges#111 and credential-badges#119 all passed the same job against the same base within the hour.
 
 ## Guidance
 
@@ -86,4 +86,4 @@ exit code 2                        <- head exited first; pipefail propagated it
 ## Related
 
 - `docs/solutions/workflow-issues/unwired-test-suites-silently-rot.md` — the other way this repo's CI has lied: a suite that runs nowhere, versus a suite that fails for a reason unrelated to the code.
-- PR #121 — the fix, and the sweep that found no other instances.
+- credential-badges#121 — the fix, and the sweep that found no other instances.
