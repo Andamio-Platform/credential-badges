@@ -13,7 +13,7 @@
  * Usage:
  *   node dist/verify.js [path/to/credential.jsonld]
  *
- * Defaults to the sustain-and-maintain James sample if no path is given.
+ * Defaults to the sustain-and-maintain real-recipient sample if no path is given.
  *
  * Env:
  *   BLOCKFROST_MAINNET_PROJECT_ID  required for mainnet credentials

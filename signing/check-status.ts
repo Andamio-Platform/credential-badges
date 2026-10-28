@@ -2,8 +2,8 @@
 //
 // @digitalbazaar/vc refuses to verify a credential that carries
 // `credentialStatus` unless a `checkStatus` function is supplied — so the
-// subject credential (which now emits its BitstringStatusListEntry per
-// Decision 3) needs this hook in every loopback verify.
+// subject credential (which now emits its key-epoch BitstringStatusListEntry)
+// needs this hook in every loopback verify.
 //
 // STATUS-LIST SOURCE — the documented pre-deploy override:
 //   - "committed" (default until the deploy ships): the status list URL

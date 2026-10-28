@@ -1,6 +1,6 @@
 // sign-class.ts — signs CLASS artifacts (what a badge means), one per badge.
 //
-// Separate from sign.ts by design (plan KTD-7). `checkAnchor` takes NO
+// Separate from sign.ts by design. `checkAnchor` takes NO
 // parameters — sealed by issue #54 finding 4 so the checked subject and the
 // mapped subject cannot diverge — and a class credential has no subject and no
 // on-chain claim, so that gate is *inapplicable*, not merely inconvenient.
@@ -16,11 +16,10 @@
 // vc.issue fallback, post-sign loopback verification, the exactly-once signer
 // assertion, and atomic artifact writes.
 //
-// TRANSCRIPTS ARE NOT OPTIONAL. andamio-ops/runbooks/credential-badges/key-compromise.md treats "a KMS
-// asymmetric-sign entry not attributable to a known, transcribed run" as a
-// compromise trigger. A batch of 58 signs that leaves no record would either
-// trip that trigger or, worse, quietly erode it. Every kms run writes a
-// transcript before it exits.
+// TRANSCRIPTS ARE NOT OPTIONAL. Every KMS signing run must be attributable to
+// a transcribed run (see the key-compromise runbook, private `andamio-ops` repo).
+// A batch of 58 signs that leaves no record would quietly erode that. Every
+// kms run writes a transcript before it exits.
 //
 // Usage:
 //   # dry run — ephemeral key, no KMS, no production artifact
@@ -67,7 +66,7 @@ const transcriptDir = (mode: Mode) => (mode === "kms" ? KMS_TRANSCRIPT_DIR : DRY
 const NETWORK = "mainnet";
 
 /** A class artifact has no claim-tx block_time to date the proof to, and a
- *  wall-clock value would break byte-stability (R3). The badge's own identity
+ *  wall-clock value would break byte-stability. The badge's own identity
  *  is content-derived and immutable, so the proof is dated to the signing-key
  *  epoch — stable across re-signs under the same key, and naturally distinct
  *  after a rotation. */

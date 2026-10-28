@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# U5 integration test — nginx static-first serving with on-demand render
-# fallback (#33, KTD-4). Proves the four U5 contract points:
+# Integration test — nginx static-first serving with on-demand render
+# fallback (#33). Proves the four contract points:
 #
 #   1. A baked badge is served straight from disk (NO proxy hop).
 #   2. A /badges/ cache-miss proxies to @render and returns the upstream SVG
@@ -133,9 +133,9 @@ check "unknown .jsonld -> plain 404" "$([ "$ctxmiss_code" = 404 ] && echo ok)"
 
 echo
 if [ "$fails" -eq 0 ]; then
-  echo "U5 nginx fallback: ALL CHECKS PASSED"
+  echo "nginx fallback: ALL CHECKS PASSED"
 else
-  echo "U5 nginx fallback: $fails CHECK(S) FAILED"
+  echo "nginx fallback: $fails CHECK(S) FAILED"
   docker logs "$APP" || true
   exit 1
 fi

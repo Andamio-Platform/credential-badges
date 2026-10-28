@@ -1,12 +1,12 @@
-# Badge cache: staleness, TTL, and invalidation (#33, U6 · KTD-7)
+# Badge cache: staleness, TTL, and invalidation (#33)
 
-The on-demand render path (KTD-1) serves a badge from a **GCS cache bucket** on a
+The on-demand render path serves a badge from a **GCS cache bucket** on a
 hit and renders-then-caches on a miss. This doc covers the cache's one liability —
 **staleness** — and the tooling that bounds it: `scripts/cache-admin.py`.
 
 This is the **cache** surface only. The checked-in `badges/*.svg` set (served
-statically by nginx) is a separate surface; its self-pruning remains the
-[orphan-shield plan][orphan]'s deferred concern, not this one.
+statically by nginx) is a separate surface, covered by the orphan guard (#31),
+not this one.
 
 ## What can go stale
 
@@ -23,9 +23,8 @@ removes them. Two mechanisms bound that window.
   re-validate at least daily; cached art is never `immutable`.
 - **Bucket lifecycle** — a GCS **lifecycle rule** (delete objects older than N
   days) is the hard backstop, so even an un-invalidated object eventually expires
-  and re-renders fresh. The lifecycle rule lives in **private-ops Terraform**
-  alongside the bucket itself (out of this repo) — see [DEPLOY.md][deploy] /
-  the deployment plan. Because a badge is always re-derivable, expiry is
+  and re-renders fresh. The lifecycle rule is configured alongside the bucket
+  itself, outside this repo. Because a badge is always re-derivable, expiry is
   non-destructive: the next request re-renders it.
 
 ### 2. Explicit invalidation (`scripts/cache-admin.py`)
@@ -51,8 +50,8 @@ python3 scripts/cache-admin.py reconcile --delete   # remove them
 
 ## `reconcile` — subsuming the orphan guard for the cache
 
-The orphan-shield plan deferred a "no-matching-record / self-pruning" guard. For
-the **cache** surface, `reconcile` is that guard: it lists cache objects and
+For the **cache** surface, `reconcile` is the "no-matching-record /
+self-pruning" guard: it lists cache objects and
 flags any whose `course_id` no longer resolves at the gateway. It resolves each
 unique `course_id` **once** per run (kinder to the API rate limit).
 
@@ -70,7 +69,7 @@ unique `course_id` **once** per run (kinder to the API rate limit).
   so `reconcile` **aborts with a non-zero exit** instead of guessing. We count on
   the gateway client; if it breaks we stop — because mis-flagging a live course
   would delete a real badge. (A `401 auth` on one network is *not* read as
-  "missing": per the U1 finding keys are network-scoped, so a 401 means the key
+  "missing": keys are network-scoped, so a 401 means the key
   for that network is wrong — an ops problem, not an absent course.)
 
 ## Tests
@@ -83,5 +82,3 @@ python3 scripts/tests/test_cache_admin.py  # invalidate/reconcile + fail-loud lo
 Both run offline (GCS bucket and gateway are dependency-injected); no live key
 or bucket is needed to exercise the logic.
 
-[orphan]: plans/2026-06-25-001-fix-orphan-shield-badge-cleanup-plan.md
-[deploy]: ../DEPLOY.md

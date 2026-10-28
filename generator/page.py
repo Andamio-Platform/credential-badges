@@ -62,7 +62,7 @@ PAGE_FONT_FACE = (open(_PAGE_FONTCSS, encoding="utf-8").read()
 # Committed here at 239x44 (2x for the 22px nav) quantized to a 32-colour
 # palette: 2.4 KB, ~3.3 KB as base64. The no-external-assets invariant is about
 # where bytes come FROM, not what format they are — a data: URI ships inside the
-# page, makes no request, and beacons to nobody. The plan's U2 step 1 said
+# page, makes no request, and beacons to nobody. The original rule said
 # "inline SVG, never an <img src>"; this is an <img> whose src is a data: URI,
 # which honours the invariant's purpose while its letter assumed a vector that
 # does not exist.
@@ -72,7 +72,7 @@ LOGO_DATA_URI = (
     base64.b64encode(open(_LOGO_PNG, "rb").read()).decode()
     if os.path.exists(_LOGO_PNG) else "")
 
-# Holder action order (#101 KTD4/Q1). With no promoted primary, whichever action
+# Holder action order (#101). With no promoted primary, whichever action
 # leads IS the page's primary call to action, so the order is stated here rather
 # than inherited from the accretion order of #71. Download SVG leads: it is
 # present regardless of JS (the copy/share controls ship hidden until their API
@@ -131,7 +131,7 @@ def _ctx(rec):
 
 def _embed_snippet(stem):
     """The iframe embed snippet a third party pastes into their own page. Points
-    at the minimal embed variant (U2), served at the extensionless
+    at the minimal embed variant, served at the extensionless
     /badges/{stem}.embed by the #70 routing."""
     src = f"{HOST}/badges/{stem}.embed"
     return (f'<iframe src="{src}" width="{EMBED_W}" height="{EMBED_H}" '
@@ -214,7 +214,8 @@ def _svg_note(baked):
     Keep it free of verification claims — no verifier class, no "rolling out".
     The unbaked branch's "anchored on-chain" stays: that is a property of the
     data being downloaded, not a claim about who can check it (and it is the
-    positive anchor test_verifiability_copy_is_baked_aware reads for R7)."""
+    positive anchor test_verifiability_copy_is_baked_aware reads to keep the
+    baked and unbaked wording distinct)."""
     if baked:
         return ("The <strong>SVG</strong> is the signed credential itself — "
                 "download it to keep or share. The PNG is for display.")
@@ -301,7 +302,8 @@ def _page_html(rec):
     baked, page_url = ctx["baked"], ctx["page_url"]
     desc = _description(course_title, module_title, baked)
 
-    # The per-course palette no longer feeds this page's chrome (#101 KTD2). It
+    # The per-course palette no longer feeds this page's chrome (#101): the
+    # page ground is canon paper for every credential. It
     # still feeds the badge artwork, the embed variant and the OG card, so
     # colors.palette_for stays imported and ctx["pal"] stays populated —
     # _embed_html reads it.
@@ -343,7 +345,7 @@ html,body{{margin:0;}}
 body{{background:var(--paper);color:var(--ink);font-family:{canon.SANS};font-size:15px;line-height:1.55;min-height:100vh;}}
 .nav{{display:flex;align-items:center;gap:10px;padding:0 24px;height:{canon.NAV_CLEARANCE};border-bottom:1px solid var(--rule);}}
 /* Cross-host navigation off the static trust surface, same tab, deliberate
-   (#101 KTD10). The mark is inline SVG, never an <img src>: a logo pulled from
+   (#101). The mark is inline SVG, never an <img src>: a logo pulled from
    another origin would breach the no-external-assets invariant and make every
    credential view beacon to a host this page's integrity does not cover. */
 .brand{{display:inline-flex;align-items:center;text-decoration:none;}}
@@ -394,7 +396,7 @@ h1{{font-size:clamp(24px,3.2vw,34px);font-weight:600;line-height:1.15;letter-spa
 .explainers{{display:flex;flex-wrap:wrap;gap:18px;margin:18px 0 0;}}
 .explainer{{font-size:13px;color:var(--blue);text-decoration:none;border-bottom:1px solid transparent;display:inline-flex;align-items:center;gap:8px;}}
 .explainer:hover{{border-bottom-color:var(--blue);}}
-/* The page's ONE orange accent (#101 KTD9), on the verification route — the
+/* The page's ONE orange accent (#101), on the verification route — the
    stranger's whole reason for being here. It marks the PATH, never the
    conclusion: nothing here may read as "a signature was checked". Carried by a
    non-text tile, never text colour — brand orange on paper is ~2.8:1 and fails
@@ -407,7 +409,8 @@ a{{color:var(--blue);}}
   .specimen{{padding-right:0;}}
   .detail{{padding-left:0;border-left:0;border-top:1px solid var(--cell);margin-top:22px;padding-top:22px;}}
   /* Cap the specimen so the first holder action stays above the fold on a
-     phone — the holder's most likely visit, and the one viewport R3 omits. */
+     phone — the holder's most likely visit, and one the desktop fold sizes
+     do not cover. */
   .badge{{max-width:200px;}}
   .plate{{padding:16px;}}
   .btn{{min-height:44px;}}

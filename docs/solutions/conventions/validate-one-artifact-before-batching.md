@@ -39,7 +39,7 @@ Twelve of thirteen probes passed. Issuer resolution, `did:web`, the Data Integri
 
 **Hold the bar at 0 errors *and* 0 warnings.** "No errors" is a weaker gate that lets shape drift accumulate.
 
-The procedure lives in `andamio-ops/runbooks/credential-badges/class-artifact-signing.md` (Phase 3). Evidence for both passes, including the full validator responses, is committed at [`signing/validation/README.md`](../../../signing/validation/README.md).
+The procedure lives in the class-artifact-signing runbook in the private `andamio-ops` repo (Phase 3). Evidence for both passes, including the full validator responses, is committed at [`signing/validation/README.md`](../../../signing/validation/README.md).
 
 ## Why This Matters
 
@@ -72,4 +72,4 @@ Omitting the id would have meant, in the spec's own framing, *"an earner we cann
 
 The invariant is now a regression guard rather than a memory — `signing/class-credential.test.ts` asserts the subject id exists and names the probe that requires it, so a future "simplify" cannot quietly restore the rejected shape.
 
-**Related:** issue #89 (the holder/class split that produced this artifact), and KTD-1 in [`docs/plans/2026-07-28-004-feat-fully-baked-badges-plan.md`](../../plans/2026-07-28-004-feat-fully-baked-badges-plan.md), which records the decision, its refutation, and the re-validation.
+**Related:** issue #89 (the holder/class split that produced this artifact).

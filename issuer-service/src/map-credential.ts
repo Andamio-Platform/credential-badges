@@ -1,14 +1,15 @@
 // Mapper: on-chain anchor -> unsigned OB3 AchievementCredential.
 // Ported from spike/signer-spike/map-credential.ts (Rung 8.3 — the FINAL
-// production shape that passed spruce + 1EdTech + loopback): the deployment
-// plan's Decision-2 flat evidence anchor dialect (network / policyId / asset /
-// claimTxHash), top-level courseOwner attribution, and the Decision-3
+// production shape that passed spruce + 1EdTech + loopback): the flat
+// evidence anchor dialect (network / policyId / asset / claimTxHash),
+// top-level courseOwner attribution, and the key-epoch
 // credentialStatus BitstringStatusListEntry pointing at the served key-epoch
 // status list. Every term is defined by the three referenced contexts, so
 // eddsa-rdfc-2022 canonicalizes with no dropped terms.
 //
-// `assessor` (Decision-2 implication 4) is OMITTED: the on-chain claim event
-// carries alias/course/credentials only — the plan's omit-never-blank rule.
+// `assessor` is OMITTED: the on-chain claim event carries
+// alias/course/credentials only, and an absent party is omitted, never
+// blank-filled.
 
 import type { Anchor } from "./anchor.ts";
 import { statusListEntry } from "./status-list.ts";
@@ -74,7 +75,7 @@ export function mapCredential(anchor: Anchor): any {
         },
       },
     },
-    // Decision-2 implication 3: the course-owner reference, sibling of
+    // The course-owner reference, sibling of
     // credentialSubject (attestation context is never jammed inside it).
     courseOwner: `urn:andamio:${network}:course-owner:${courseOwnerStateAsset}`,
     evidence: [
@@ -88,7 +89,7 @@ export function mapCredential(anchor: Anchor): any {
         claimTxHash,
       },
     ],
-    // Decision 3: key-epoch suspension signal. The chain stays authoritative
+    // Key-epoch suspension signal. The chain stays authoritative
     // for per-credential state; this bit says only "signing key version
     // fresh / not fresh".
     credentialStatus: statusListEntry(),

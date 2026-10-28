@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U3 tests for api_client — offline, via an injected fake transport (no network).
+"""Tests for api_client — offline, via an injected fake transport (no network).
 
 Runnable directly (no test framework in this repo):
     python3 generator/tests/test_api_client.py

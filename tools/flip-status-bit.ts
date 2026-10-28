@@ -1,5 +1,5 @@
-// Rung 8.6 · Key-compromise kill-switch — the flip tool (deployment plan
-// Decision 3: "flip-status-bit.ts is trivial: one bit per key compromise").
+// Rung 8.6 · Key-compromise kill-switch — the flip tool. Deliberately trivial:
+// one bit per key compromise.
 //
 // PREPARES the flipped key-epoch status list; it NEVER signs. Separation of
 // duties, deliberately: this tool derives the updated UNSIGNED payload
@@ -29,8 +29,9 @@
 //   exact document the hardened re-sign will produce and sign); the flip
 //   report + next steps on STDERR.
 //
-// Operational context: andamio-ops/runbooks/credential-badges/key-compromise.md is the runbook this
-// tool serves. Bit semantics are Decision 3's: one bit per signing key
+// Operational context: the key-compromise runbook (private `andamio-ops` repo,
+// `runbooks/credential-badges/`) is the procedure this tool serves. Bit
+// semantics: one bit per signing key
 // version, bit 0 = key-2026-07; flipping bit 0 suspends every credential
 // signed under key-2026-07 — including the flagship badge — at once.
 //
@@ -56,7 +57,7 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const STATUS_HOST = "https://credentials.andamio.io";
 
-/** Positions 0..63 are the key-version region (Decision 3); 64+ is reserved
+/** Positions 0..63 are the key-version region; 64+ is reserved
  *  zero forever. The kill-switch only ever operates inside the region. */
 export const KEY_VERSION_REGION_END = 64;
 
@@ -131,7 +132,7 @@ export function prepareFlip(
 ): FlipResult {
   if (!(FLIP_PURPOSES as readonly string[]).includes(purpose)) {
     throw new Error(
-      `unknown purpose "${purpose}" — expected one of: ${FLIP_PURPOSES.join(", ")} (Decision 3 limits the flip purpose to compromised-key events; restore is the false-alarm stand-down)`,
+      `unknown purpose "${purpose}" — expected one of: ${FLIP_PURPOSES.join(", ")} (the flip purpose is limited to compromised-key events; restore is the false-alarm stand-down)`,
     );
   }
   if (!/^key-epoch-\d{4}-\d{2}$/.test(keyEpoch)) {

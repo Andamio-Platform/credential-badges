@@ -27,7 +27,7 @@ Welcome. The fast path in:
 | Regenerate the badges locally (offline, Python 3 only) | `make badges` |
 | Set up and contribute | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | See where this is going | [`ROADMAP.md`](ROADMAP.md) |
-| Understand the deploy model | [`DEPLOY.md`](DEPLOY.md) |
+| Find the deploy workflows | [`DEPLOY.md`](DEPLOY.md) |
 
 **The one rule to know first:** badges are **build output, not hand-authored files**. *"If it can be generated, it must be generated."* Each SVG is rendered deterministically from on-chain data by the generator in [`generator/`](generator/README.md). Never hand-edit a file in `badges/`. Change the generator (or the source data) and regenerate.
 
@@ -49,7 +49,7 @@ Four things live at `https://credentials.andamio.io`:
 Static-first, with an on-demand render fallback, so nothing has to be pre-generated:
 
 1. **Static hit.** If the SVG is in the pre-generated set baked into the static host, nginx serves it from disk.
-2. **Miss → render.** A `/badges/` miss returns nginx `404 → @render`, which proxies to a second Cloud Run service (`credential-badges-render`).
+2. **Miss → render.** A `/badges/` miss returns nginx `404 → @render`, which proxies to a second Cloud Run service, the render service.
 3. **Render + cache.** The render service reads the course and module titles from the Andamio API gateway, renders the SVG, and caches it in GCS. Repeat requests serve from cache.
 
 Titles are the only thing fetched. The badge geometry is the proof-ring encoding of the on-chain credential, so the art is reproducible offline (`make badges`).
@@ -127,7 +127,7 @@ Credential badges are free and open source, and contributions are welcome. Start
 
 ## Background
 
-These extension terms came out of the Andamio Open Badges 3.0 spike (April–May 2026). That prototype is committed at [`archive/`](archive/README.md) as history; the production signing path it became lives at [`signing/`](signing/README.md). The full deployment plan that promotes it lives at [`docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`](docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md).
+These extension terms came out of the Andamio Open Badges 3.0 spike (April–May 2026). That prototype is committed at [`archive/`](archive/README.md) as history; the production signing path it became lives at [`signing/`](signing/README.md).
 
 ## License
 

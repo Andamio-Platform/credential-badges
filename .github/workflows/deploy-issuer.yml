@@ -1,52 +1,15 @@
 name: deploy-issuer
 
-# ============================================================================
-# LIVE since service-v0.1.0 (ops gate landed; LB routes /credentials/* here).
-# The historical ops-gate notes below are kept for provenance.
-# ============================================================================
-# OB3 issuer service (Rung 8.4, deployment plan Decision 5) — the THIRD Cloud
-# Run service. Distinct from deploy.yml (static host, `v[0-9]*.*.*`) and
-# deploy-render.yml (render service, `vrender-*`).
+# OB3 issuer service — the THIRD Cloud Run service. Distinct from deploy.yml
+# (static host, `v[0-9]*.*.*`) and deploy-render.yml (render service,
+# `vrender-*`). Triggers ONLY on `service-v*` tags.
 #
-# Triggers ONLY on `service-v*` tags, per the plan's Decision 5: the issuer's
-# WIF provider MUST constrain `attribute.ref` to `refs/tags/service-v*`, and
-# the two existing WIFs' ref-constraints must be NON-OVERLAPPING with it, so
-# no tag prefix can mint another lane's token. Until the private-ops Terraform
-# provisions that WIF provider + SA, a `service-v*` tag cannot mint a deploy
-# token — this workflow is structurally inert, not merely unused.
-#
-# THE OPS GATE (all required before the first `service-v0.1.0` tag):
-#   1. REGION — the service runs in europe-west4 (ISSUER_GCP_REGION); the KMS
-#      key stays in us-central1 and is signed against across regions, so a
-#      service region move never touches did.json (andamio-ops#521).
-#   2. SIGN-SA ATTACH — the Cloud Run service runs AS the sign-only SA
-#      (the service signs via the metadata-server identity; no impersonation).
-#      The deploy (CI/CD) identity and the sign identity stay distinct: a CI
-#      compromise must not be able to sign.
-#   3. SIGN-ONLY WIF — new WIF provider ref-constrained to refs/tags/service-v*,
-#      bound to a deploy SA that can push images + deploy THIS service only.
-#   4. LB DELTA — external HTTPS LB URL map: path matcher /credentials/* ->
-#      serverless NEG for credential-badges-issuer; default -> static host.
-#      (Cloud Run domain mappings cannot path-route.)
-#   5. IAM SCOPE-DOWN (issue #54 finding 4 / "8b") — the sign SA holds
-#      cloudkms.signerVerifier + cloudkms.publicKeyViewer on the ONE key
-#      version, nothing else; KMS Cloud Audit Logs enabled and retained.
-#   6. Repo variables set (Settings -> Actions -> Variables), which this
-#      workflow reads — values live in the private ops Terraform, NOT here:
-#        ISSUER_GCP_REGION       e.g. the region from (1)
-#        ISSUER_AR_IMAGE         Artifact Registry image path for the issuer
-#        ISSUER_WIF_PROVIDER     the sign-lane WIF provider resource name (3)
-#        ISSUER_CICD_SA          the issuer-lane deploy SA email (3)
-#        ISSUER_KMS_KEY_VERSION  full CryptoKeyVersion resource name (1)/(5)
-#
-# SECOND-ORDER TRAP — ISSUER_KMS_KEY_VERSION GATES BUT DOES NOT CONFIGURE:
-# the ops-gate step below refuses to run while the variable is unset, but the
-# deploy step is deliberately IMAGE-ONLY — the service's runtime env (incl.
-# KMS_KEY_VERSION_NAME), its SA, and scaling are owned by the private-ops
-# Terraform. Changing this repo variable does NOT change which key the
-# running service signs with; only the Terraform delta does. Keep the two in
-# sync manually or the gate will pass while the runtime signs under the old
-# key version (the boot drift check is the backstop that catches the skew).
+# Reads these repo variables (Settings -> Actions -> Variables):
+#   ISSUER_GCP_REGION       deploy region
+#   ISSUER_AR_IMAGE         Artifact Registry image path for the issuer
+#   ISSUER_WIF_PROVIDER     WIF provider resource name for this lane
+#   ISSUER_CICD_SA          deploy service-account email for this lane
+#   ISSUER_KMS_KEY_VERSION  full CryptoKeyVersion resource name
 
 on:
   push:
@@ -60,10 +23,7 @@ permissions:
 env:
   GCP_PROJECT: andamio-credentials
   GCP_SERVICE: credential-badges-issuer
-  # TODO(ops-gate): all five values below are provided as repo variables by
-  # the private-ops Terraform delta. They are deliberately NOT hardcoded —
-  # the region decision is pending and inventing values here would let a tag
-  # deploy against a guessed topology.
+  # Provided as repo variables (see the header).
   GCP_REGION: ${{ vars.ISSUER_GCP_REGION }}
   AR_IMAGE: ${{ vars.ISSUER_AR_IMAGE }}
   WIF_PROVIDER: ${{ vars.ISSUER_WIF_PROVIDER }}
@@ -74,17 +34,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Ops gate — refuse to run until the required repo variables exist
+      - name: Refuse to run until the required repo variables exist
         run: |
           missing=0
           for v in GCP_REGION AR_IMAGE WIF_PROVIDER CICD_SA KMS_KEY_VERSION_NAME; do
             if [ -z "${!v}" ]; then
-              echo "::error::ops gate not satisfied: repo variable for $v is unset (see the header of this workflow)"
+              echo "::error::repo variable for $v is unset (see the header of this workflow)"
               missing=1
             fi
           done
           if [ "$missing" = "1" ]; then
-            echo "This workflow is an INERT SKELETON until the private-ops Terraform delta lands (region, sign-SA attach, sign-only WIF service-v*, LB /credentials/* route, KMS IAM scope-down)."
+            echo "Set the required repository variables before running this workflow."
             exit 1
           fi
 
@@ -118,7 +78,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        # Registry host from the image path: the registry (ops registry_region)
+        # Registry host from the image path: the registry region
         # and the deploy region (ISSUER_GCP_REGION) move independently.
         run: gcloud auth configure-docker "${AR_IMAGE%%/*}" --quiet
 
@@ -134,9 +94,8 @@ jobs:
           docker push "${AR_IMAGE}:${GITHUB_SHA}"
           docker push "${AR_IMAGE}:${GITHUB_REF_NAME}"
 
-      # The service's runtime SA (the SIGN SA), KMS env wiring, and scaling
-      # limits are managed by the private-ops Terraform. Keep this step
-      # image-only so it never clobbers the TF-managed surface.
+      # The service's runtime configuration is managed outside this workflow.
+      # Keep this step image-only so it never clobbers it.
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy "${GCP_SERVICE}" \
@@ -156,18 +115,13 @@ jobs:
       # proves KMS key == live did.json pin, live context == committed
       # context, and key version fresh in the live status list. The
       # credential probe below is the real end-to-end verification (anchor
-      # gate → KMS sign → serve) and works from anywhere, including through
-      # the LB after the cutover routes /credentials/*.
+      # gate → KMS sign → serve).
       - name: Verify a live signed credential
         run: |
           # The probe goes through the PUBLIC hostname, not the run.app URL:
-          # since the LB cutover (ops PR B), the issuer's ingress is
-          # internal-and-cloud-load-balancing, so run.app is sealed to
-          # external callers — including this runner. The LB routes
-          # /credentials/* to the issuer, so the public route is both the
-          # only externally reachable path and the one users actually hit.
+          # the public route is the one users actually hit.
           URL="https://credentials.andamio.io"
-          echo "probing via public host: ${URL} (run.app is ingress-sealed)"
+          echo "probing via public host: ${URL}"
           CRED="/credentials/mainnet/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df/e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db/james"
           # GET (the service is GET-only; HEAD is 405 by design).
           code=$(curl -s -o /tmp/cred.json -w '%{http_code}' "${URL}${CRED}")

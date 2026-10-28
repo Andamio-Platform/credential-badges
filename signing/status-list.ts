@@ -1,5 +1,5 @@
-// Rung 8.3 · BitstringStatusList builder (deployment plan Decision 3, refined
-// per P1-01 + P1-07 + the W3C minimum-size auto-fix).
+// Rung 8.3 · BitstringStatusList builder: key-epoch suspension list, sized to
+// the W3C BitstringStatusList minimum.
 //
 // Builds the UNSIGNED key-epoch status list credential served at
 // https://credentials.andamio.io/status/key-epoch-2026-07.json. Semantics:
@@ -39,8 +39,8 @@ export const STATUS_LIST_BIT_LENGTH = 131_072;
 export const STATUS_LIST_URL =
   "https://credentials.andamio.io/status/key-epoch-2026-07.json";
 
-// Key-version registry (deployment plan Decision 3: "a build-time constant
-// (config or enum), not a runtime computation"). The bit position of the key
+// Key-version registry: a build-time constant (config or enum), never a
+// runtime computation. The bit position of the key
 // version that signs a credential is that credential's statusListIndex.
 export const KEY_VERSION_POSITIONS: Readonly<Record<string, number>> = {
   "key-2026-07": 0,
@@ -51,10 +51,10 @@ export const ACTIVE_KEY_STATUS_INDEX = KEY_VERSION_POSITIONS[ACTIVE_KEY_VERSION]
 
 // Rung 8.6 · The committed source of truth for which key-version bits are
 // currently SET (suspended). Empty = every key version fresh. Changed ONLY
-// through the key-compromise kill-switch (tools/flip-status-bit.ts +
-// andamio-ops/runbooks/credential-badges/key-compromise.md): the flip PR moves this constant, the
-// re-signed status/ artifact, and the sha pin in status-list.test.ts
-// together, and CI enforces their coherence — the served list can never
+// through the key-compromise kill-switch (tools/flip-status-bit.ts + the
+// key-compromise runbook in the private `andamio-ops` repo): the flip PR moves
+// this constant, the re-signed status/ artifact, and the sha pin in
+// status-list.test.ts together, and CI enforces their coherence — the served list can never
 // silently disagree with the declared suspension state.
 export const SUSPENDED_KEY_VERSION_POSITIONS: readonly number[] = [];
 
@@ -133,7 +133,7 @@ export function buildStatusListCredential(issuerDid: string, opts: StatusListOpt
   };
 }
 
-/** The credentialStatus entry a subject credential carries (Decision 3):
+/** The credentialStatus entry a subject credential carries:
  *  statusListIndex = the active signing key version's registry position. */
 export function statusListEntry() {
   return {

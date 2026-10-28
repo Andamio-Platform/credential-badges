@@ -43,7 +43,7 @@ Three design choices in that guard are worth carrying to any similar check:
 
 ## Why This Matters
 
-CODEOWNERS is the only control standing between an unreviewed change and a trust-critical path. In this repo those paths publish the issuer signing key, freeze published JSON-LD contexts, and flip the key-compromise kill switch. A gate that has silently stopped applying is worse than no gate, because the file still reads as protected and nobody re-checks it.
+CODEOWNERS is how a change to a trust-critical path gets a deliberate review. In this repo those paths publish the issuer signing key, freeze published JSON-LD contexts, and flip the key-compromise kill switch. A gate that has silently stopped applying is worse than no gate, because the file still reads as protected and nobody re-checks it.
 
 The cost of the failure is also delayed and invisible: the gate does not break at the moment of the move, it breaks at the next PR that touches the newly-ungated file — which may be months later, by someone who never knew the gate existed.
 

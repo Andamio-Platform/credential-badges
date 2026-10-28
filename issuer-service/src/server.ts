@@ -1,5 +1,5 @@
 // HTTP surface: GET /credentials/{network}/{policyId}/{sltHash}/{recipient}
-// (deployment plan Unit 4 route, verbatim) + /healthz for Cloud Run.
+// + /healthz for Cloud Run.
 //
 // Request flow (every step fail-closed):
 //   validate params (400, zero upstream calls)
@@ -26,7 +26,7 @@
 //                              loopback verify — never a partial artifact)
 //   503 upstream-unavailable  (Andamioscan / badge host unreachable)
 //
-// The service registers NO other public route (plan Unit 4: everything
+// The service registers NO other public route (everything
 // non-/credentials belongs to the static host). /healthz is the Cloud Run
 // liveness endpoint only — the LB routes /credentials/* here and nothing else.
 
@@ -135,7 +135,7 @@ export function createRequestHandler(deps: AppDeps) {
     }
     const [, network, policyId, sltHash, recipient] = m;
 
-    // Strict path-param validation BEFORE any chain call (plan Unit 4).
+    // Strict path-param validation BEFORE any chain call.
     if (!NETWORK_RE.test(network) || !POLICY_ID_RE.test(policyId) || !SLT_HASH_RE.test(sltHash) || !ALIAS_RE.test(recipient)) {
       sendJson(res, 400, {
         error: "invalid-params",

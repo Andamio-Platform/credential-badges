@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U3 tests for render-core — offline, with injected titles (no network).
+"""Tests for render-core — offline, with injected titles (no network).
 
 Runnable directly:
     python3 generator/tests/test_render.py
@@ -93,7 +93,7 @@ def test_gateway_error_propagates():
         raise GatewayError(502, "unresolvable", "Failed to fetch course")
     try:
         render_badge(CID, SLT, "mainnet", fetch_titles=boom)
-        assert False, "expected GatewayError to propagate (KTD-3b: never a blank badge)"
+        assert False, "expected GatewayError to propagate (never a blank badge)"
     except GatewayError as e:
         assert e.kind == "unresolvable"
     print("  ✅ title-read GatewayError propagates (no blank-badge fabrication)")

@@ -226,7 +226,7 @@ test("next-steps output names the hardened re-sign, the constant, and the sha-pi
   assert.match(steps, /NOTHING IS SIGNED/);
 });
 
-test("purposes are exactly the Decision-3 flip purpose plus the false-alarm stand-down", () => {
+test("purposes are exactly the compromised-key flip purpose plus the false-alarm stand-down", () => {
   assert.deepEqual([...FLIP_PURPOSES], ["compromised-key", "restore"]);
 });
 

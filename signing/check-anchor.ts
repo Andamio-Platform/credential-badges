@@ -6,8 +6,8 @@
 // on-chain anchor is real and matches the pinned subject identity BEFORE any
 // signing is allowed. `sign.ts` imports `checkAnchor()` and calls it in-process:
 // if any check below fails, `checkAnchor` throws and the signer exits with ZERO
-// KMS operations. This is the deployment plan's "signing is HARD-gated on a
-// positive on-chain anchor check" decision, scoped to the spike's one subject.
+// KMS operations: signing is HARD-gated on a positive on-chain anchor check,
+// scoped to the spike's one subject, so the signer is never an open oracle.
 //
 // SEALED (finding 4, code half): `checkAnchor` takes NO parameters. The pinned
 // SUBJECT is the only subject it can check, and the `Anchor` it returns is the
@@ -50,7 +50,7 @@ import { computeSltHash } from "./slt-hash.ts";
 const SCAN = "https://andamioscan.io";
 const BADGE_HOST = "https://credentials.andamio.io";
 
-// Pinned subject — James's Andamio Issuer credential on MAINNET.
+// Pinned subject — the `james` alias's Andamio Issuer credential on MAINNET.
 // Full identifiers, re-derived live from Andamioscan on 2026-07-21 and
 // re-verified against the same source on every run of this gate.
 export const SUBJECT = {

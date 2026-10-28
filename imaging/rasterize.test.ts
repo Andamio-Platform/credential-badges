@@ -1,4 +1,4 @@
-// rasterize.test.ts — U2 tests for the SVG→PNG rasterizer (#69).
+// rasterize.test.ts — tests for the SVG→PNG rasterizer (#69).
 //
 // Dependency-light node:test suite. Runs against the real committed badges and
 // generator/fonts.css, so it also guards the two failure modes the spot-check

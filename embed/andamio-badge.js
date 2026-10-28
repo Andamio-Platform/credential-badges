@@ -46,7 +46,7 @@ export function readAttrs(el) {
     courseTitle: get("course-title"),
     // Boolean attribute: present => signed, EXCEPT the explicit `signed="false"`
     // footgun — a good-faith embedder writing that must not get "Signed &
-    // verifiable" (the KTD-4 no-overclaim rule). Absent => not signed.
+    // verifiable" (the no-overclaim rule). Absent => not signed.
     signed: el.hasAttribute
       ? el.hasAttribute("signed") && el.getAttribute("signed") !== "false"
       : !!el.signed && el.signed !== "false",
@@ -70,7 +70,7 @@ export function badgeModel({ stem, moduleTitle, courseTitle, signed, host } = {}
     moduleTitle: moduleTitle || "Credential",
     courseTitle: courseTitle || "Andamio",
     signed: !!signed,
-    // Baked-aware, never overclaiming (KTD-4). Signed badges name the verifier
+    // Baked-aware, never overclaiming. Signed badges name the verifier
     // class the host page also names; presentation-only badges say only what's
     // true — the credential is anchored on-chain.
     stateLabel: signed ? "Signed & verifiable" : "Anchored on-chain",

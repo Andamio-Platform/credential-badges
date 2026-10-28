@@ -3,7 +3,7 @@
 // Rasterizes each committed badge SVG to a native-ratio 1024x1024 PNG using
 // resvg (deterministic, offline, no Chromium/system-font dependency).
 //
-// Font handling (KTD-8): the badge SVGs bake their fonts as base64 woff2
+// Font handling: the badge SVGs bake their fonts as base64 woff2
 // @font-face rules (generator/fonts.css, inlined by gen.py). resvg does NOT
 // parse base64 @font-face from CSS — it matches font-family names against fonts
 // it is given. So we decode the woff2 blobs out of fonts.css and hand them to

@@ -2,7 +2,7 @@
 """Alias safety gate — the single decision point for whether an on-chain alias
 may be baked into an artifact or routed at a URL.
 
-Why this exists (plan KTD-5): baking writes aliases into SVG, a format browsers
+Why this exists: baking writes aliases into SVG, a format browsers
 execute, and aliases are untrusted chain data. The live holder set observed on
 2026-07-28 contains an alias that is literally an XSS payload
 (``'"name123'' onload='alert()'``) and another containing a space
@@ -106,7 +106,7 @@ def holder_cache_key(stem, alias, key_version):
     """Cache key for one holder artifact: ``{stem}.{alias}.{keyVersion}.svg``.
 
     The gate runs here, before any concatenation, so an unsafe alias can never
-    reach a key, a filename, or a URL (plan KTD-8). The key version participates
+    reach a key, a filename, or a URL. The key version participates
     so a signing-key rotation naturally invalidates rather than serving
     artifacts signed under a retired key.
     """

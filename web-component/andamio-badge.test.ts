@@ -62,7 +62,7 @@ test("badgeModel invalidates a malformed stem (inert, never a broken card)", () 
   }
 });
 
-test("state label is baked-aware and never overclaims (KTD-4)", () => {
+test("state label is baked-aware and never overclaims", () => {
   const signed = badgeModel({ stem: STEM, signed: true });
   assert.equal(signed.stateLabel, "Signed & verifiable");
   const unsigned = badgeModel({ stem: STEM, signed: false });

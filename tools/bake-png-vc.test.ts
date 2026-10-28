@@ -1,4 +1,4 @@
-// bake-png-vc.test.ts — U4 tests for PNG iTXt credential baking (#69, OB3 5.3.1).
+// bake-png-vc.test.ts — tests for PNG iTXt credential baking (#69, OB3 5.3.1).
 //
 // Mirrors tools/bake-signed-vc.test.ts: round-trip byte-identity, refuse-
 // unsigned, single-chunk, and image-pixel preservation. Uses the real signed VC

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U5 tests for the Python bake splice — stdlib only.
+"""Tests for the Python bake splice — stdlib only.
 
 The splice is byte-exact: the signed credential is inserted verbatim, never
 parsed and reserialized, because any mutation breaks the eddsa-rdfc-2022

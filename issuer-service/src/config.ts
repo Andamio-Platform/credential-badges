@@ -4,9 +4,8 @@
 // registered badge.
 //
 // Everything trust-affecting is a build-time constant or a fail-closed env
-// read — never derived from request input (deployment plan: "The issuer DID
-// is a fixed server-side constant; it is never derived from request input
-// and has no fallback key/DID path").
+// read — never derived from request input. The issuer DID is a fixed
+// server-side constant with no fallback key/DID path.
 
 export const ISSUER_DID = "did:web:credentials.andamio.io";
 export const STATIC_HOST = "https://credentials.andamio.io";
@@ -15,7 +14,7 @@ export const ANDAMIO_CONTEXT_URL = `${STATIC_HOST}/context/v1.jsonld`;
 export const SCAN_URL = "https://andamioscan.io";
 
 // The one network this deployment serves. The route's {network} segment is a
-// closed trust-affecting enum (plan Unit 4); a request for the OTHER valid
+// closed trust-affecting enum; a request for the OTHER valid
 // network returns 404 wrong-network, anything else is 400. Andamioscan (the
 // gate's read path) indexes mainnet; a preprod deployment would point
 // SCAN_URL at a preprod indexer AND need a preprod slot->time formula, so
@@ -30,12 +29,9 @@ export interface Config {
   signerMode: SignerMode;
   /**
    * Full KMS CryptoKeyVersion resource name, e.g.
-   * projects/<p>/locations/<region>/keyRings/credential-badges-issuer/cryptoKeys/vc-sign-ed25519/cryptoKeyVersions/1
+   * projects/<p>/locations/<region>/keyRings/<keyring>/cryptoKeys/<key>/cryptoKeyVersions/<n>
    *
-   * REQUIRED in kms mode, deliberately with NO default: the region is an ops
-   * decision (the pre-deploy ops gate; europe-west4 vs us-central1 is
-   * undecided at build time). The spike's key lives at
-   * us-central1/credential-badges-issuer/vc-sign-ed25519 version 1.
+   * REQUIRED in kms mode, deliberately with NO default.
    */
   kmsKeyVersionName: string | null;
 }
@@ -48,7 +44,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const kmsKeyVersionName = env.KMS_KEY_VERSION_NAME ?? null;
   if (signerMode === "kms" && !kmsKeyVersionName) {
     throw new Error(
-      "KMS_KEY_VERSION_NAME is required in kms mode (full CryptoKeyVersion resource name; provided by the ops gate — no default is baked in because the region decision is pending)",
+      "KMS_KEY_VERSION_NAME is required in kms mode (full CryptoKeyVersion resource name; no default is baked in)",
     );
   }
   return {

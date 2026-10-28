@@ -3,7 +3,7 @@
 
 The on-demand render service reads course + per-module titles at request time
 (what fetch.py does offline via the interactive CLI, done here with a service
-key). Two read-only endpoints (KTD-3):
+key). Two read-only endpoints:
 
   GET /api/v2/course/user/course/get/{course_id}  -> data.content.title
   GET /api/v2/course/user/modules/{course_id}     -> data[].content.title,
@@ -11,14 +11,14 @@ key). Two read-only endpoints (KTD-3):
                                                      data[].on_chain_slts,
                                                      data[].source
 
-Keys are NETWORK-SCOPED (U1 gate finding): a mainnet key returns 401 on the
+Keys are NETWORK-SCOPED: a mainnet key returns 401 on the
 preprod gateway. The key is resolved from the environment
 (ANDAMIO_{NETWORK}_API_KEY), falling back to .env.local for local dev. HTTP goes
 through curl — matching fetch.py — to avoid the macOS stdlib-SSL cert gap and
-stay dependency-free. (The render container must therefore ship curl; see U4.)
+stay dependency-free. (The render container must therefore ship curl.)
 
 Any non-200 raises GatewayError so a failed read never silently produces a blank
-badge (KTD-3b); the caller decides placeholder-vs-error and must not cache it.
+badge; the caller decides placeholder-vs-error and must not cache it.
 """
 import json
 import os
@@ -36,7 +36,7 @@ REPO = os.path.dirname(HERE)
 
 class GatewayError(Exception):
     """A non-200 (or transport failure) from andamio-api. `kind` classifies it so
-    callers can apply KTD-3b: 'unresolvable' (502/503/504 — wrong network or
+    callers never cache a failure: 'unresolvable' (502/503/504 — wrong network or
     upstream down), 'auth' (401/403 — wrong-network or invalid key), 'not_found'
     (404), 'timeout', 'transport', or 'config'."""
     def __init__(self, status, kind, message=""):

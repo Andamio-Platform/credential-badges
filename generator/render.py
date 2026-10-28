@@ -2,12 +2,12 @@
 """Render-core: course_id + slt_hash -> on-demand badge SVG.
 
 Collapses the offline fetch/build split into one request-time call: read the
-titles (api_client, network-scoped key), apply the KTD-6 fallback chain and
+titles (api_client, network-scoped key), apply the title fallback chain and
 font-subset sanitization, pick the per-course palette, and render via
-gen.render_svg (U2). Deterministic given the title inputs.
+gen.render_svg. Deterministic given the title inputs.
 
-A failed title read raises GatewayError (KTD-3b) — render_badge never invents a
-blank badge; the service layer (U4) decides placeholder-vs-error and must not
+A failed title read raises GatewayError — render_badge never invents a
+blank badge; the service layer decides placeholder-vs-error and must not
 cache the failure.
 """
 import re
@@ -47,7 +47,8 @@ def sanitize_title(s):
 
 
 def _module_title(rec):
-    """KTD-6 fallback chain for a module title:
+    """Fallback chain for a module title (a newly issued credential may have
+    no DB title yet):
     DB content.title -> first on_chain_slt (hex-decoded if needed) -> generic.
     `rec` is a module dict from api_client.get_titles, or None when the slt_hash
     isn't in the course's module set."""
@@ -64,7 +65,7 @@ def _module_title(rec):
 # lookup is a read of an immutable map, safe under gunicorn's threads. This load
 # raises on bad art and is never caught: service/Dockerfile runs `art.py --check`
 # at image build, so a built image cannot carry bad art, and falling back to "no
-# art" would silently hide the failure (plan KTD6).
+# art" would silently hide the failure.
 BADGE_ART = art.load()
 
 

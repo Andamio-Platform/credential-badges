@@ -128,7 +128,7 @@ test("embedded VC: anchor identifiers are the CLASS coordinate, not a claim", ()
     embedded.credentialSubject.achievement.id,
     `urn:andamio:course:${COURSE_ID}:${SLT_HASH}`,
   );
-  // Decision-2 FLAT evidence dialect — network/policyId/asset/claimTxHash at
+  // FLAT evidence dialect — network/policyId/asset/claimTxHash at
   // the entry top level; the Rung-6 nested onChainAnchor/onChainAttestation
   // blocks are superseded and must be gone.
   // The class artifact anchors to the COURSE, not to a claim transaction:
@@ -146,12 +146,12 @@ test("embedded VC: anchor identifiers are the CLASS coordinate, not a claim", ()
   // same reason it is on holder credentials — the chain names none, and the
   // omit-never-blank-fill rule holds. `courseOwner` is omitted because it is
   // only available from a live chain read, and the class builder is offline and
-  // deterministic by design (R3); the holder credential still carries it.
+  // deterministic by design; the holder credential still carries it.
   assert.ok(!("courseOwner" in embedded), "class artifacts are built offline — no chain read");
   assert.ok(!("assessor" in embedded));
 });
 
-test("embedded VC: credentialStatus is the key-epoch BitstringStatusListEntry (Decision 3)", () => {
+test("embedded VC: credentialStatus is the key-epoch BitstringStatusListEntry", () => {
   const embedded = JSON.parse(extractVc(badgeSvg));
   assert.deepEqual(embedded.credentialStatus, {
     id: "https://credentials.andamio.io/status/key-epoch-2026-07.json#0",

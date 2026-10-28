@@ -6,7 +6,7 @@
 // holder-state ∩ registry view model, the certUrl builder, the arrival verdict,
 // and — most importantly — the two HONESTY contracts:
 //
-//   FAIL-LOUD (R6): a holder-state load failure must never yield badges shown
+//   FAIL-LOUD: a holder-state load failure must never yield badges shown
 //   as verified, and a soft dependency must only ever downgrade or omit.
 //
 //   NO-OVERCLAIM (Phase 3): no code path may produce a "signature valid" state
@@ -219,7 +219,7 @@ test("loadHolderView happy path returns verified badges", async () => {
   assert.equal(view.badges.length, 2);
 });
 
-test("loadHolderView FAILS LOUD when holder state is unreachable (R6)", async () => {
+test("loadHolderView FAILS LOUD when holder state is unreachable", async () => {
   const s502 = await loadHolderView({ stem: STEM, alias: "james", fetchImpl: stubFetch({ state: () => res(null, { ok: false, status: 502 }) }) });
   assert.equal(s502.ok, false, "502 -> not ok");
   assert.ok(!("badges" in s502) || !s502.badges, "no badges shown on failure");
@@ -260,7 +260,7 @@ test("loadHolderView FAILS LOUD on a 200-with-garbage-body (json throws)", async
 
 test("loadHolderView FAILS LOUD on a malformed-but-200 holder state (non-iterable)", async () => {
   // completed_courses is a number: buildViewModel/holderStems throw — must be
-  // caught and surfaced as fail-loud, never an unhandled rejection (R6).
+  // caught and surfaced as fail-loud, never an unhandled rejection.
   const bad = () => res({ alias: "james", completed_courses: 42 });
   const view = await loadHolderView({ stem: STEM, alias: "james", fetchImpl: stubFetch({ state: bad }) });
   assert.equal(view.ok, false, "malformed shape -> not ok");
@@ -278,7 +278,7 @@ test("buildViewModel dedupes a repeated stem", () => {
   assert.equal(badges.length, 2, "duplicate claimed stem collapses to one badge");
 });
 
-test("buildViewModel treats a non-boolean suspension as 'indeterminate', never a pass (R6)", () => {
+test("buildViewModel treats a non-boolean suspension as 'indeterminate', never a pass", () => {
   // A future refactor passing undefined instead of null must NOT fabricate a
   // signature-present-and-unsuspended reading.
   const badges = buildViewModel({ holderState: holderState([STEM]), registry: REGISTRY, keyEpochSuspended: undefined, arrivedStem: null });
@@ -317,7 +317,7 @@ test("arrivalVerdict: NOT-FOUND is the whole point — the holder does not hold 
   assert.equal(empty.state, VERDICTS.NOT_FOUND, "a holder with no badges is still a not-found answer");
 });
 
-test("arrivalVerdict is derived from on-chain state, NOT the registry (KTD-1)", () => {
+test("arrivalVerdict is derived from on-chain state, NOT the registry", () => {
   // A stem absent from _registry.json means "we have no badge art", not "the
   // holder does not hold it". Reporting not-found on that basis would be a wrong
   // answer about a real credential.
@@ -345,7 +345,7 @@ test("arrivalVerdict: a failed read is INDETERMINATE, never not-found", () => {
   assert.equal(garbage.state, VERDICTS.INDETERMINATE, "unparseable state -> indeterminate");
 });
 
-test("arrivalVerdict NEVER returns revoked-signal, for any input (plan KTD-2)", () => {
+test("arrivalVerdict NEVER returns revoked-signal, for any input", () => {
   const holderStates = [
     holderState([]), holderState([STEM]), holderState([OTHER]),
     null, undefined, {}, { completed_courses: 42 },
@@ -414,7 +414,7 @@ test("buildViewModel folds in the course owner and omits it when unknown", () =>
   assert.equal(without[0].courseOwner, null, "omitted, never blank-filled or guessed");
 });
 
-test("the course-owner read is SOFT — its failure never downgrades the view (R7)", async () => {
+test("the course-owner read is SOFT — its failure never downgrades the view", async () => {
   for (const broken of [
     () => res(null, { ok: false, status: 503 }),
     () => { throw new Error("network"); },

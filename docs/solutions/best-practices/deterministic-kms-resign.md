@@ -19,7 +19,7 @@ tags: [kms, re-sign, eddsa-rdfc-2022, determinism, proofvalue, expansion-pin, si
 
 The context v0→v1 remediation (#64/#65) required re-signing the flagship badge against a new context URL whose bytes were identical to the old one. Because `eddsa-rdfc-2022` signs the RDF canonicalization — and context URLs emit no canonical triples when the resolved bytes are unchanged — the correct outcome was fully predictable in advance: the new signature had to be byte-identical to the old one. That prediction became the acceptance gate, and it held.
 
-This is distinct from the key-compromise runbook (`andamio-ops/runbooks/credential-badges/key-compromise.md`), which re-issues under a NEW key after a compromise. This doc is the **same-key** re-sign: nothing about the trust anchors changes; only a referenced URL (or other canonically-invisible detail) does.
+This is distinct from the key-compromise runbook (in the private `andamio-ops` repo), which re-issues under a NEW key after a compromise. This doc is the **same-key** re-sign: nothing about the trust anchors changes; only a referenced URL (or other canonically-invisible detail) does.
 
 ## Guidance
 
@@ -45,7 +45,7 @@ Treating determinism as a *hope* ("proofValue will probably be unchanged") licen
 - Context version bumps where the new version is a byte-copy (cache-migration bumps)
 - Any re-sign where inputs to canonicalization are meant to be unchanged
 - As a periodic drift check: `signing/resign-check.ts` re-signs the committed content and byte-compares, proving pipeline determinism with one KMS call
-- NOT for key rotation or compromise — that is `andamio-ops/runbooks/credential-badges/key-compromise.md` (new key, new `verificationMethod`, status-list flip)
+- NOT for key rotation or compromise — that is the key-compromise runbook (new key, new `verificationMethod`, status-list flip)
 
 ## Examples
 
@@ -62,6 +62,5 @@ KMS calls:      1 ✓
 ## Related
 
 - `docs/solutions/conventions/never-mutate-published-jsonld-context.md` — the incident class that motivates cache-migration re-signs
-- `andamio-ops/runbooks/credential-badges/key-compromise.md` Phase 4 — the NEW-key counterpart; its re-sign mechanics should stay aligned with this doc rather than duplicating them
-- `docs/plans/2026-07-23-001-fix-context-v1-bump-and-resign-plan.md` (R4 — the gates as plan requirements)
+- The key-compromise runbook (private `andamio-ops` repo), Phase 4 — the NEW-key counterpart; its re-sign mechanics should stay aligned with this doc rather than duplicating them
 - PRs #59 (re-sign + re-bake precedent), #64, #65 (the verified execution)

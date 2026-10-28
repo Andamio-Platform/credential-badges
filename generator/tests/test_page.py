@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U1 tests for the badge display / share page generator (generator/page.py, #70).
+"""Tests for the badge display / share page generator (generator/page.py, #70).
 
 Guards the page's shape and the server-delivered Open Graph contract: a
 well-formed HTML doc, the full OG/Twitter tag set with an ABSOLUTE og:image on
@@ -86,9 +86,9 @@ def test_badge_and_titles_rendered():
 
 
 def test_theme_color_is_canon_paper_not_per_course():
-    """Supersedes test_theme_color_matches_palette (#101 U1 step 7). The page
+    """Supersedes test_theme_color_matches_palette (#101). The page
     ground is canon paper for every credential now — the per-course palette
-    stopped feeding page chrome (KTD2) — so theme-color is a constant, and two
+    stopped feeding page chrome — so theme-color is a constant, and two
     credentials with different course_ids must agree on it."""
     html = page._page_html(REC)
     assert f'name="theme-color" content="{canon.PAPER}"' in html
@@ -100,7 +100,7 @@ def test_theme_color_is_canon_paper_not_per_course():
 
 
 def test_page_chrome_is_course_independent():
-    """KTD2's actual contract: nothing in the page's own chrome varies by course.
+    """The actual contract: nothing in the page's own chrome varies by course.
     The badge ARTWORK still does (it is a different artifact), and the embed
     variant still reads the palette — so ctx must keep carrying it."""
     a = page._page_html(REC)
@@ -168,7 +168,7 @@ def test_alt_text_present_and_escaped():
 
 
 def test_explainer_links_present():
-    """Covers R3 (#72). The badge page links both explainers from the (now
+    """#72. The badge page links both explainers from the (now
     populated) explainers slot."""
     html = page._page_html(REC)
     assert 'href="/badges/how-to-share"' in html, "share explainer link missing"
@@ -218,7 +218,7 @@ SIGNED_CLAIM = "the SVG you can download is signed"
 BAKED_SVG_CLAIM = "is the signed credential itself"
 
 # A signature claim in ANY phrasing, not just the two the copy happens to use.
-# Anchoring the R7 guard on literal sentences let an unbaked badge claim a
+# Anchoring the baked-aware guard on literal sentences let an unbaked badge claim a
 # signature in different words with the whole suite green — both an unbaked
 # .verify reading "its SVG is signed" and an unbaked .actions-note reading "is
 # the signed credential itself" slipped through. Matches "is signed", "is a
@@ -260,7 +260,7 @@ def test_verifiability_copy_is_baked_aware():
 
 
 def test_unbaked_copy_never_claims_a_signature_in_any_phrasing():
-    """The R7 guard above anchors on the exact sentences today's copy uses, so
+    """The baked-aware guard above anchors on the exact sentences today's copy uses, so
     it only catches a regression that keeps that phrasing. This one catches the
     claim itself however it is worded — the failure mode that matters, since a
     copy edit is exactly how an unbaked badge would start implying a signature.
@@ -422,7 +422,7 @@ def _slot(html, cls):
 
 
 def test_caveat_appears_once_in_plain_language():
-    """Covers R3/R4 (#82). The verification caveat used to render twice ~100px
+    """#82. The verification caveat used to render twice ~100px
     apart — once under the download buttons, once in the footer — in the same
     colour and measure. It now lives only in .verify; .actions-note is a pure
     download affordance."""
@@ -444,7 +444,7 @@ def test_caveat_appears_once_in_plain_language():
 
 
 def test_caveat_keeps_its_compatibility_bound():
-    """Covers R6 (#82's hard constraint). Plainer must not mean more generous.
+    """#82's hard constraint: plainer must not mean more generous.
     Dropping the verifier qualifier entirely would not narrow the claim — it
     removes the ceiling and lets the reader assume any tool works. The explainer
     itself warns JWS-only verifiers can't read this proof format."""
@@ -456,7 +456,7 @@ def test_caveat_keeps_its_compatibility_bound():
 
 
 def test_baked_download_note_makes_no_check_claim():
-    """Covers R3 on the Flagship. The baked page is the one badge that earns the
+    """The Flagship too: the baked page is the one badge that earns the
     strong claim, so it is the easiest place to accidentally state it twice."""
     baked = page._page_html(FLAGSHIP_REC)
     note = _slot(baked, "actions-note")
@@ -469,7 +469,7 @@ def test_baked_download_note_makes_no_check_claim():
 
 
 def test_inline_caveat_link_differs_from_explainer_label():
-    """Covers R5. The caveat links its own elaboration inline, but must not
+    """The caveat links its own elaboration inline, but must not
     reuse the .explainers slot's label — that slot sits a few lines above the
     divider, so an identical label + href reads as accidental duplication and
     announces twice to a screen reader."""
@@ -486,7 +486,7 @@ def test_inline_caveat_link_differs_from_explainer_label():
 
 
 def test_verify_note_differs_by_baked_state():
-    """Covers R7. A bare `baked != unbaked` inequality passes trivially — it
+    """A bare `baked != unbaked` inequality passes trivially — it
     held before #82 too, so it never signalled anything. Assert the specific
     claims that must NOT cross between the two states instead."""
     baked_v, unbaked_v = page._verify_note(True), page._verify_note(False)
@@ -502,7 +502,7 @@ def test_verify_note_differs_by_baked_state():
 
 
 def test_embed_badge_image_is_horizontally_centred():
-    """Covers R1/R2 (#81). The embed's flex `align-items:center` centres the
+    """#81. The embed's flex `align-items:center` centres the
     ANCHORS, but the image's percentage width can't resolve during intrinsic
     sizing, so the wrapping anchor takes the badge's intrinsic width and clamps
     to the iframe width — leaving the block image hard left, with the offset
@@ -529,7 +529,7 @@ def test_no_legacy_type_stack_or_dark_chrome():
 
 
 def test_canon_fonts_embedded_within_ceiling():
-    """KTD7: the page subset-embeds the canon variable faces, under an 80 KB
+    """The page subset-embeds the canon variable faces, under an 80 KB
     per-page ceiling, from its OWN artifact — never gen.FONT_FACE, which feeds
     the signed badge SVGs."""
     assert page.PAGE_FONT_FACE, "page_fonts.css missing — run embed_fonts.py"
@@ -547,7 +547,7 @@ def test_canon_fonts_embedded_within_ceiling():
 
 
 def test_shared_fonts_css_untouched_by_page_path():
-    """The KTD7 isolation guard. generator/fonts.css is inlined by the badge
+    """The font isolation guard. generator/fonts.css is inlined by the badge
     SVGs (signed artifacts), the OG cards, the explainers and the holder viewer.
     Nothing on the page path may write it."""
     ef = open(os.path.join(GEN, "embed_fonts.py"), encoding="utf-8").read()
@@ -595,7 +595,7 @@ def test_embed_disclosure_collapses_when_controls_hidden():
 
 
 def test_holder_action_order_is_the_stated_order():
-    """#101 Q1. With no promoted primary, whichever action leads IS the primary
+    """#101. With no promoted primary, whichever action leads IS the primary
     call to action, so the order is a stated decision, not accretion order."""
     html = page._page_html(REC)
     order = ["Download SVG", "Download PNG", "Copy link", "Share&hellip;",
@@ -608,7 +608,8 @@ def test_holder_action_order_is_the_stated_order():
 
 
 def test_single_css_orange_accent_on_verification_route_as_non_text_mark():
-    """KTD9, restated honestly now that the real brand mark is in the nav.
+    """The single orange accent marks the verification route, restated honestly
+    now that the real brand mark is in the nav.
 
     The mark carries brand orange, and the canon's accent whitelist permits
     exactly that role ("Brand mark, the single primary CTA, the live pulse dot,
@@ -649,7 +650,7 @@ def test_nav_band_carries_the_brand_mark_inlined():
     """The mark is the real Andamio logo, inlined as a data: URI.
 
     No vector form of it exists — every "*.svg" logo in the landing repo is a
-    base64 PNG wrapped in <svg> — so the plan's "inline SVG, never an <img src>"
+    base64 PNG wrapped in <svg> — so the original "inline SVG, never an <img src>"
     assumed an asset that isn't there. What that clause was actually protecting
     is the no-external-assets invariant, and a data: URI satisfies it: the bytes
     ship inside the page, make no request, and beacon to nobody. The assertion
@@ -678,7 +679,7 @@ def test_two_column_layout_with_single_column_collapse():
 
 
 def test_course_id_shown_in_full_and_slt_hash_is_not():
-    """KTD8. One identifier, labelled with the job it does, wrapping, never
+    """One identifier, labelled with the job it does, wrapping, never
     truncated — and rendered as a SIBLING of .verify, never inside it (_slot
     splits to the first </p>)."""
     html = page._page_html(REC)
@@ -698,7 +699,7 @@ def test_course_id_shown_in_full_and_slt_hash_is_not():
 
 
 def test_no_holder_identity_rendered():
-    """KTD5 — this page is keyed (course_id, slt_hash) and resolves no holder."""
+    """This page is keyed (course_id, slt_hash) and resolves no holder."""
     html = page._page_html(REC)
     for forbidden in ("HOLDER", "alias", "Held by"):
         assert forbidden not in html, f"holder identity leaked: {forbidden}"
@@ -706,7 +707,7 @@ def test_no_holder_identity_rendered():
 
 
 def test_issuer_line_unchanged():
-    """Guard that the restyle did not quietly absorb product-circle#181."""
+    """Guard that the restyle did not quietly absorb the issuer-attribution change."""
     assert f"Issued by {page.ISSUER}" in page._page_html(REC)
     print("  ✅ issuer line still reads 'Issued by Andamio'")
 
@@ -719,8 +720,8 @@ def test_focus_visible_present_and_never_suppressed():
 
 
 def test_embed_variant_untouched_by_the_restyle():
-    """KTD6. The embed renders inside third-party pages; this plan does not
-    restyle it, and it must still read the per-course palette."""
+    """The embed renders inside third-party pages; the canon restyle does not
+    touch it, and it must still read the per-course palette."""
     e = page._embed_html(REC)
     pal = colors.palette_for(REC["course_id"])
     assert pal["ink"] in e and "Archivo" in e, "embed variant must be unchanged"

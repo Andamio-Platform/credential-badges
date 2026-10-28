@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Admin the on-demand badge GCS cache (#33, U6 — KTD-7).
+"""Admin the on-demand badge GCS cache (#33).
 
-On-demand+cache (KTD-1) dissolves the old orphan class — a credential dropped
+On-demand+cache dissolves the old orphan class — a credential dropped
 on-chain simply stops resolving and is never re-cached — but introduces a new
 staleness surface: a cached SVG whose on-chain title later changes. This tool is
 the explicit invalidation path for that surface.

@@ -13,10 +13,10 @@
 // Append the new file's pin to PINNED_CONTEXTS in the SAME PR that publishes it.
 //
 // Deliberately NOT pinned: status/key-epoch-*.json. The status list is mutable
-// by design — the key-compromise kill-switch (tools/flip-status-bit.ts,
-// andamio-ops/runbooks/credential-badges/key-compromise.md) flips suspension bits in an emergency, and a
-// byte pin here would make that runbook a CI-red event at the worst possible
-// time. Do not "pin everything" this file into covering /status/.
+// by design — the key-compromise kill-switch (tools/flip-status-bit.ts, run
+// from a runbook in the private `andamio-ops` repo) flips suspension bits in an
+// emergency, and a byte pin here would make that runbook a CI-red event at the
+// worst possible time. Do not "pin everything" this file into covering /status/.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

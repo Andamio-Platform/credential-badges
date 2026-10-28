@@ -68,8 +68,8 @@ Every third-party display target expects an email-derived identifier:
 | HR systems (Workday, BambooHR) | Email hash — already noted at `archive/open-questions.md:20` |
 | LinkedIn | No identifier at all — see §2; the URL carries the proof |
 
-**The important reframing:** this is already logged as an open question in two places
-(`docs/mapping.md:115`, `docs/plans/2026-05-16-001-…:182`). This research did not discover it. It found
+**The important reframing:** this is already logged as an open question
+(`docs/mapping.md:115`). This research did not discover it. It found
 the *forcing function* for it — and established that it gates the whole external-display surface
 rather than any one integration.
 
@@ -113,11 +113,9 @@ Two builders emit the link:
 - `generator/page.py:172-175` — class page; `certUrl` = the class page URL
 - `badges/_holder.js:264-273` (`certUrlFor`) — holder page; `certUrl` = `/badges/{stem}/{alias}`
 
-The holder-page path is correct and was reasoned out deliberately — KTD-7 in
-`docs/plans/2026-07-24-005-feat-holder-viewer-plan.md:84` names the holder page as the real
-"this person holds this, verified" target, and
-`docs/plans/2026-07-28-003-feat-phase3-verification-states-plan.md:33` treats the `not-found`
-verdict as load-bearing precisely because an employer arrives via `certUrl`. The no-autofill reality
+The holder-page path is correct and was reasoned out deliberately — the holder page is the real
+"this person holds this, verified" target, and the `not-found` verdict is load-bearing precisely
+because an employer arrives via `certUrl`. The no-autofill reality
 is already handled honestly; the copy promises nothing.
 
 Four gaps, ordered by impact on an employer:
@@ -129,8 +127,7 @@ Four gaps, ordered by impact on an employer:
    a non-proof.
 2. **Every badge writes the same issuing organization.** `ORG_NAME = "Andamio Teams"` is hardcoded
    at `generator/page.py:88`, and `generator/credentials.json` carries no issuer field at all —
-   only `course_id`, `slt_hash`, `course_title`, `module_title`. Already named as
-   "the wrong issuing organisation" at `docs/plans/2026-07-31-001-…:81`.
+   only `course_id`, `slt_hash`, `course_title`, `module_title`.
 3. **`ORG_ID = None`** (`generator/page.py:89`) — the org is free text LinkedIn will not link to a
    Page. Known; needs a Page admin to read the numeric ID.
 4. **`certId = stem`** on both builders — the *class* coordinate. Two holders of the same badge get
@@ -231,8 +228,7 @@ the Python side. Persistence is:
 | Layer | What it is |
 |---|---|
 | Git-committed files | `credentials.json`, the 58 badge SVG/PNG/HTML sets, `_registry.json` — byte-frozen, PR-reviewed |
-| GCS bucket | render **cache** only, lifecycle TTL, disposable (`DEPLOY.md:31`) |
-| Secret Manager | signing key, gateway API keys |
+| Object storage | render **cache** only, disposable |
 | Chain | the actual source of truth |
 
 `issuer-service` is stateless — it signs on demand, gated on a live anchor check. That statelessness
@@ -287,8 +283,7 @@ the alternative is a LinkedIn-shaped field every future platform works around.
 - **Nothing signed changes.** Zero of the 58 baked SVGs contain a LinkedIn reference; all 58 hits are
   in the HTML pages. Display-layer only: no re-sign, no Version Freeze exposure, no Expansion Pin
   movement, no re-bake.
-- **The 1:1 invariant is already locked** — `docs/plans/2026-05-16-001-…:256` fixes
-  `course_id ↔ courseOwner` as course-level, never per-credential. Exactly the shape an org name needs.
+- **The 1:1 invariant is already locked** — `course_id ↔ courseOwner` is fixed as course-level, never per-credential. Exactly the shape an org name needs.
 
 Five touch points: `fetch.py` (populate), `credentials.json` (additive field), `page.py:172`
 (per-record lookup, constant as fallback), `holder.py:59` `build_registry()` (carry it),
@@ -331,7 +326,7 @@ question is re-opened on its own terms.
 ## 8. Open decisions — none of these are made
 
 1. **Recipient identifier shape** — pseudonymous only, or additive hashed email on an export variant?
-   Gates §3, §4, and HR import. *(Already logged: `docs/mapping.md:115`, plan §182.)*
+   Gates §3, §4, and HR import. *(Already logged: `docs/mapping.md:115`.)*
 2. **Pre-baked vs on-demand Holder Artifacts** — settles §7, and with it whether any datastore is
    needed at all.
 3. **Where issuer-organization data lives** — dbapi, committed JSON, or a new store (§6). Downstream

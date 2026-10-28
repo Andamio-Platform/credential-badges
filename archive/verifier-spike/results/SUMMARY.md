@@ -1,7 +1,5 @@
 # Phase 0 pre-flight verifier spike — viability summary
 
-**Plan reference:** `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`
-→ "Pre-Phase-0 spike (~1-2 hours)" under Phase 0 + P1bis-10.
 
 **Goal of the spike:** confirm the target verifier set actually handles the
 production feature combination on the existing spike sample before Phase 0

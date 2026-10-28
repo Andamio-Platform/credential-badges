@@ -49,10 +49,9 @@ were all production. The prototype it grew from is retained as history at
 [`archive/`](../archive/README.md).
 
 Transcripts under [`transcripts/`](./transcripts/) record commands run against
-the old `spike/signer-spike/` path and are **never rewritten** — the
-key-compromise runbook treats a KMS `asymmetric-sign` not attributable to a
-recorded run as a compromise trigger, so falsifying a capture to tidy a path
-would break the attribution chain. A future auditor reconciling an audit entry
+the old `spike/signer-spike/` path and are **never rewritten** — every KMS
+signing run must be attributable to a recorded transcript, so falsifying a
+capture to tidy a path would break the attribution chain. A future auditor reconciling an audit entry
 against a transcript should expect the pre-rename path there.
 
 ---
@@ -65,7 +64,7 @@ hard-gated on a **live on-chain anchor check**, and verified by independent
 verifiers. The first time a real Andamio credential got a real signature.
 
 The committed artifact is [`signed-credential.json`](./signed-credential.json) —
-since Rung 8.3 in its FINAL production shape: the deployment plan's flat
+since Rung 8.3 in its FINAL production shape: the flat
 `evidence` anchor dialect (`network`/`policyId`/`asset`/`claimTxHash`),
 top-level `courseOwner` attribution (assessor omitted — the on-chain record
 names none), and a `credentialStatus` BitstringStatusListEntry pointing at the
@@ -89,8 +88,8 @@ version, bit 0 = `#key-2026-07` = 0).
 | badge | <https://credentials.andamio.io/badges/ae192632aabe00ed2042eaef596bc15f3887fa32e75e8f9b8fa516df.e9b5343186f83ed804a9fd87293a7378e3b237743b76d56da73b111d855631db.svg> |
 
 `validFrom` and `proof.created` are both pinned to the claim-tx `block_time`,
-derived deterministically from the slot (mainnet Shelley formula), per the
-deployment plan's determinism decision.
+derived deterministically from the slot (mainnet Shelley formula), so neither
+field varies with when the credential happens to be signed.
 
 ## The anchor-gate contract (`check-anchor.ts`)
 
@@ -138,9 +137,8 @@ Ed25519 only:
 - **`--signer kms`**: exactly **one** `gcloud kms asymmetric-sign` call
   (Cloud KMS Ed25519 is PureEdDSA over the raw `data` bytes, never a digest;
   64-byte raw signature asserted, then base58btc-multibase encoded into
-  `proofValue` by the suite). Before signing, the KMS public key (version 1 of
-  `projects/andamio-credentials/locations/us-central1/keyRings/credential-badges-issuer/cryptoKeys/vc-sign-ed25519`)
-  is re-pinned against the **live**
+  `proofValue` by the suite). Before signing, the KMS public key (the key
+  version named in `sign.ts`) is re-pinned against the **live**
   `https://credentials.andamio.io/.well-known/did.json` — mismatch refuses to
   sign.
 
@@ -207,11 +205,8 @@ curl -X POST "https://verifybadge.org/api/validate?validatorId=OB30Inspector&oth
   -F "file=@signed-credential.json;type=application/json"
 ```
 
-KMS access: `gcloud` authenticated as a principal with
-`cloudkms.publicKeyViewer` + `cloudkms.signerVerifier` on the key (this run
-used James's own account directly; impersonation of
-`credential-badges-sign-sa@andamio-credentials.iam.gserviceaccount.com` is not
-granted to it — see PR body).
+KMS access: `gcloud` authenticated as a principal permitted to read the
+public key and sign with the key version.
 
 ## Verification results
 
@@ -242,31 +237,26 @@ Rung 6/8.2 (the previous artifact, for the record):
    `BitstringStatusListEntry` (`statusListIndex: "0"` = the signing key
    version's registry position; see `status-list.ts`).
 2. ~~**No top-level `courseOwner` / `assessor` fields.**~~ **SUPERSEDED at
-   Rung 8.3.** The P1bis-04 context update registers `courseOwner` and
+   Rung 8.3.** The context update registers `courseOwner` and
    `assessor` in `context/v0.jsonld` (additive; existing terms byte-untouched),
    and the mapper emits `courseOwner`
    (`urn:andamio:mainnet:course-owner:gjames`). `assessor` stays omitted for
-   THIS credential because the on-chain record names no assessor — that is the
-   plan's omit-never-blank rule, not a deviation.
+   THIS credential because the on-chain record names no assessor — an absent
+   party is omitted, never blank-filled, so this is not a deviation.
 3. ~~**The anchor rides inside `evidence` as nested blocks.**~~ **SUPERSEDED
    at Rung 8.3.** The context update registers the flat anchor terms
    (`network`, `policyId`, `asset`, `claimTxHash`) top-level, and the evidence
-   entry now carries the plan's Decision-2 flat dialect ("no other field name
-   is correct"). `policyId` **is** the course id; `asset` is the recipient's
+   entry now carries the flat dialect, the one anchor field set the mapper
+   emits. `policyId` **is** the course id; `asset` is the recipient's
    Access Token global-state asset (`gjames`) — Course V2 mints no
    per-credential native asset (the claim burns the course-state token and
    updates the recipient's global state), so the student-state asset is the
-   honest fill for the plan's anchor field set. The nested
+   honest fill for the `asset` anchor field. The nested
    `onChainAnchor`/`onChainAttestation` scoped terms remain defined in the
    context (it evolves additively only) but are no longer emitted.
 4. **`proof` committed in array form** (1EdTech OB3 Plain-JSON schema
    requirement, rung-1 finding #2).
-5. **Direct KMS access instead of SA impersonation.** Impersonating
-   `credential-badges-sign-sa@andamio-credentials.iam.gserviceaccount.com` is
-   denied for `james@andamio.io` (no `iam.serviceAccountTokenCreator`); direct
-   `get-public-key` / `asymmetric-sign` succeed. Signing behavior is identical
-   (same key version, same PureEdDSA semantics).
-6. **Rung 8.3 pre-deploy transitional state (context ahead of live).** The
+5. **Rung 8.3 pre-deploy transitional state (context ahead of live).** The
    committed `context/v0.jsonld` is an additive superset of the live one until
    the next deploy ships it. Signing/verifying locally therefore ran with
    `CONTEXT_AHEAD_OF_LIVE_OK=1`, which the document loader honors ONLY when

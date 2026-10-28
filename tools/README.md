@@ -13,7 +13,7 @@ No `npm install`, no `node_modules`, no lockfile, no supply-chain surface.
 ## `gen-did-json.ts` — regenerate `.well-known/did.json`
 
 The DID document served at `did:web:credentials.andamio.io` is a **deterministic
-projection of the KMS signing key** (`vc-sign-ed25519` version 1). This tool is
+projection of the KMS signing key**. This tool is
 the source-of-truth generator; the committed `.well-known/did.json` is its
 output. **Never hand-edit the key in the committed file — regenerate it here.**
 
@@ -23,12 +23,12 @@ timestamps): the same key in produces byte-identical JSON out.
 
 ```sh
 # Regenerate from the live KMS key (needs an authed gcloud):
-gcloud kms keys versions get-public-key 1 \
-  --location us-central1 --keyring credential-badges-issuer \
-  --key vc-sign-ed25519 --project andamio-credentials \
+gcloud kms keys versions get-public-key <version> \
+  --location <location> --keyring <keyring> \
+  --key <key> --project <project> \
   | node --experimental-strip-types tools/gen-did-json.ts > .well-known/did.json
 
-# ...or let the tool shell out to that exact gcloud command:
+# ...or let the tool shell out to gcloud for the key it pins:
 node --experimental-strip-types tools/gen-did-json.ts --from-kms > .well-known/did.json
 
 # ...or offline, from a PEM file:
@@ -95,8 +95,8 @@ cd tools && npm test        # == node --experimental-strip-types --test *.test.t
   verification break at caching verifiers. Includes a guard-bites self-test.
   Deliberately excludes `/status/*` (kill-switch mutability). Hermetic.
 - **`did-pin.test.ts`** — the **key-pin invariant**: the committed
-  `.well-known/did.json` must decode to the raw bytes of KMS `vc-sign-ed25519`
-  version 1. A wrong or rotated committed key is a **red test**, not a silent
+  `.well-known/did.json` must decode to the raw bytes of the KMS signing
+  key. A wrong or rotated committed key is a **red test**, not a silent
   verification break. Decode-only by default; set `KMS_LIVE_PIN=1` (with an
   authed gcloud) to additionally re-fetch and compare against live KMS.
 - **`bake-signed-vc.test.ts`** — the **baked-badge invariant**: the committed

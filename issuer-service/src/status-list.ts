@@ -1,12 +1,12 @@
-// Key-version registry + BitstringStatusListEntry emission (deployment plan
-// Decision 3, refined per P1-01 + P1-07). Ported from
+// Key-version registry + BitstringStatusListEntry emission (key-epoch
+// suspension: one bit per signing key version). Ported from
 // spike/signer-spike/status-list.ts (Rung 8.3); the service needs only the
 // ENTRY side (emission + bit reading for the post-sign status check) — the
 // list BUILDER stays in the spike/tools, since the served list is produced by
 // the CODEOWNERS-gated signing path, never by this service at runtime.
 //
-// The registry is a BUILD-TIME CONSTANT ("config or enum, not a runtime
-// computation"): the bit position of the key version that signs a credential
+// The registry is a BUILD-TIME CONSTANT (config or enum, not a runtime
+// computation): the bit position of the key version that signs a credential
 // is that credential's statusListIndex. No per-credential state exists.
 
 import { gunzipSync } from "node:zlib";
@@ -42,7 +42,7 @@ export function statusBitAt(bits: Uint8Array, index: number): 0 | 1 {
   return ((bits[index >>> 3] >>> (7 - (index & 0b111))) & 1) as 0 | 1;
 }
 
-/** The credentialStatus entry a subject credential carries (Decision 3):
+/** The credentialStatus entry a subject credential carries:
  *  statusListIndex = the active signing key version's registry position. */
 export function statusListEntry() {
   return {

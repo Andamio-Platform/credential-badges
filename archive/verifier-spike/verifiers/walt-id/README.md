@@ -81,5 +81,4 @@ through walt-id later.
 
 ## References
 
-- Issue #16 · repo plan `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md` (P1bis-10, L439–446)
-- Rung-1 harness plan `docs/plans/2026-07-09-001-feat-rung1-verifier-harness-plan.md` (U2)
+- Issue #16

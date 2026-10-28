@@ -109,8 +109,7 @@ CI fully green, on a host whose whole proposition is that its artifacts can be
 trusted. The same shape already exists in this repo's live wording gates —
 `test_check_page_does_not_overclaim_signature` asserts `"on signed" in
 html.lower()`, which has **never matched**, because the page reads *"on a signed
-badge"*. That gate has been riding on a different paragraph the whole time (see
-[`docs/residual-review-findings/feat-explainers-holder-canon.md`](../../residual-review-findings/feat-explainers-holder-canon.md)).
+badge"*. That gate has been riding on a different paragraph the whole time.
 
 This repo already pins cross-boundary values against reality rather than against
 description — `tools/context-freeze.test.ts` sha256-pins published contexts and

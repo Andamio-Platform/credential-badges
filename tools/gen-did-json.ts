@@ -1,6 +1,6 @@
 // Deterministic regenerator for `.well-known/did.json`.
 //
-// SOURCE OF TRUTH: the KMS Ed25519 public key (`vc-sign-ed25519` version 1).
+// SOURCE OF TRUTH: the KMS Ed25519 signing key's public key.
 // The committed `.well-known/did.json` is this tool's OUTPUT — regenerate it
 // here, never hand-edit the key. `tools/did-pin.test.ts` fails CI if the
 // committed file ever drifts from KMS version 1.
@@ -15,9 +15,9 @@
 // purpose — this is a trust-critical, CODEOWNERS-gated path).
 //
 // Usage (regenerate the committed file):
-//   gcloud kms keys versions get-public-key 1 \
-//     --location us-central1 --keyring credential-badges-issuer \
-//     --key vc-sign-ed25519 --project andamio-credentials \
+//   gcloud kms keys versions get-public-key <version> \
+//     --location <location> --keyring <keyring> \
+//     --key <key> --project <project> \
 //     | npm run --prefix tools gen > .well-known/did.json
 //   # offline:   cat key.pem | node tools/gen-did-json.ts
 //   # convenience: node tools/gen-did-json.ts --from-kms   (shells out to gcloud)

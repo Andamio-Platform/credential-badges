@@ -4,15 +4,15 @@
   /badges/{policy_id}.{slt_hash}/{alias}   ->  the committed shell _holder.html
 
 A single static, branded shell served for any holder path by the #73 nginx
-route (KTD-7 of the #70 plan reserved this subpath). Its client JS
+route (the share page, #70, reserved this subpath). Its client JS
 (``badges/_holder.js``) reads {stem}+{alias} from ``location.pathname``, resolves
 the holder's LIVE on-chain state (same-origin via the ``/holder-api/`` proxy,
 because andamioscan.io sends no CORS headers) and the suspension status list
 (same-origin ``/status/``), then renders an explicit VERDICT for the badge named
 in the URL plus every badge the holder holds. This viewer OWNS the human-facing
-suspension-rendering UX (v1.1 tradeoff P1bis-02).
+suspension-rendering UX: no third-party verifier is relied on to render it.
 
-Phase 3 (docs/plans/2026-07-28-003-feat-phase3-verification-states-plan.md) gave
+Phase 3 gave
 the shell the verdict region and the named-state legend. The states it can
 honestly produce are anchored / anchored-signature-not-checked / suspended /
 not-found / indeterminate. It never produces "signature valid" (nothing here

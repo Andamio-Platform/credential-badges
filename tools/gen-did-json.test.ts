@@ -17,7 +17,7 @@ import {
   serializeDidDocument,
 } from "./gen-did-json.ts";
 
-// Ground truth (verified live 2026-07-10) — KMS vc-sign-ed25519 version 1.
+// Ground truth (verified live 2026-07-10) — the KMS signing key's public key.
 const KMS_V1_PEM = `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAMY1U557RY5Z/GJ5kmrvNIkHcZL9sv+mNfDsaYP7VUBQ=
 -----END PUBLIC KEY-----`;

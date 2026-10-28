@@ -4,17 +4,16 @@
 // spike's, with the spike's single pinned SUBJECT generalized to a
 // server-side-resolved subject.
 //
-// Issue #54 finding 4 (the plan half): the gate lives INSIDE this service —
-// the only code path that will ever hold sign permission (the service runs AS
-// the sign SA). And there is NO caller-supplied subject override: the caller
+// Issue #54 finding 4: the gate lives INSIDE this service — the only code
+// path that will ever hold sign permission. And there is NO caller-supplied subject override: the caller
 // names a (network, policyId, sltHash, recipient) coordinate, and every field
 // that reaches the signer is re-derived from LIVE Andamioscan reads and
 // byte-verified against the chain's own commitments. Nothing signable comes
 // from request input.
 //
 // Checks (all must pass; signing is unreachable otherwise):
-//   1. GLOBAL-STATE GATE (the deployment plan's core gate, verbatim): the
-//      recipient's current global-state credential map contains the course
+//   1. GLOBAL-STATE GATE: the recipient's current global-state credential
+//      map contains the course
 //      (policyId) AND the on-chain claimed-credential hash for it byte-equals
 //      the requested sltHash, AND the state record's alias byte-equals the
 //      resolved recipient. (/api/v2/users/{alias}/state)

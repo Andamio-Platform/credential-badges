@@ -1,7 +1,6 @@
-# credential-badges-issuer (Rung 8.4) — the OB3 issuer service (deployment
-# plan Decision 5; the LB routes /credentials/* here). NOT the static host,
-# NOT the render service — the third Cloud Run service in this repo (the plan
-# predates the render service, so it says "two").
+# The OB3 issuer service (Rung 8.4; /credentials/* routes here). NOT the
+# static host, NOT the render service — the third Cloud Run service in this
+# repo.
 #
 # Build context MUST be the repo root, so the image bakes the trust-critical
 # repo artifacts the service pins at runtime:
@@ -13,7 +12,7 @@
 #                                artifact; live did.json is authoritative)
 #   status/                    — the served key-epoch status list (post-sign
 #                                status check reads these bytes)
-#   generator/credentials.json — the badge registry (R5): titles + the set of
+#   generator/credentials.json — the badge registry: titles + the set of
 #                                badges this service will ever sign for
 #   tools/gen-did-json.ts      — the canonical dependency-free multibase/SPKI
 #                                encoder (imported by src/signer.ts)

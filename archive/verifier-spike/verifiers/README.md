@@ -16,8 +16,6 @@ is JWS/SD-JWT-only and cannot ingest a W3C Data Integrity JSON-LD credential
 walt-id is revisited (optional third-independent hardening / suspension-UX
 rendering). Rationale + the two-vs-three tradeoff: `../results/SUMMARY.md`.
 
-Locked verifier set: repo plan `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md` (P1bis-10).
-Slice plan: `docs/plans/2026-07-09-001-feat-rung1-verifier-harness-plan.md` (Rung 1).
 
 ## The sample under test
 

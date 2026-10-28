@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The canon-pin invariant (generator/canon.py, #101 KTD3/U1).
+"""The canon-pin invariant (generator/canon.py, #101).
 
 The canon colour literals are hand-transcribed from another repo
 (`landing-page-and-blog`, `src/styles/globals.css`) because there is no shared
@@ -49,7 +49,7 @@ def test_source_commit_recorded_and_pinned():
 
 
 def test_light_only_no_dark_theme_values():
-    """#101 KTD3 — the domain is light-first and canon.py carries no dark theme.
+    """#101 — the domain is light-first and canon.py carries no dark theme.
     Adding one is a deliberate amendment reviewed on its own merits, never a
     transcription made in passing while restyling another surface."""
     dark = ("#0f1419", "#ededed", "#ff7a52", "#5b8bff", "rgb(255 122 82")

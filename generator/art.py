@@ -14,7 +14,8 @@ copies it whole) and is never served by the static host (root Dockerfile
 allowlist). Never put art under badges/.
 
 Art is drawn only. It never enters the credential JSON or any signature, so
-changing it means rebuild + re-bake, never re-sign (andamio-ops/runbooks/credential-badges/badge-art.md).
+changing it means rebuild + re-bake, never re-sign (the badge-art runbook, in
+the private andamio-ops repo).
 
 Validation is a stdlib JPEG marker walk (no Pillow — the generator is
 stdlib-only). Every file must be a clean baseline/progressive 8-bit JPEG,

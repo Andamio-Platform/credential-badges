@@ -2,8 +2,7 @@
 
 Phase 0 pre-flight verifier spike. Confirms the target verifier set actually
 handles the production feature combination on a constructed credential before
-Phase 0 locks the set. Plan reference: P1bis-10 + the "Pre-Phase-0 spike" item
-under Phase 0 in `docs/plans/2026-05-16-001-feat-andamio-ob3-issuer-deployment-plan.md`.
+Phase 0 locks the set.
 
 ## What this tests
 
@@ -99,6 +98,6 @@ cargo run --bin resolve -- did:web:credentials.andamio.io
 When the spike closes:
 
 1. Delete the throwaway GitHub repo.
-2. Move the verifier-set decision into `docs/plans/.../P1bis-10` follow-up.
+2. Record the verifier-set decision.
 3. `spike/verifier-spike/` stays committed as evidence (the plan treats `spike/`
    as the historical source of truth, gitignored from production deploys).

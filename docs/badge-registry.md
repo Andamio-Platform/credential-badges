@@ -1,6 +1,6 @@
 # The badge registry — `badge_id` convention and invariants
 
-**Status:** normative for the shipped system. Closes [#11](https://github.com/Andamio-Platform/credential-badges/issues/11) (deployment plan R5, Unit 6).
+**Status:** normative for the shipped system. Closes [#11](https://github.com/Andamio-Platform/credential-badges/issues/11).
 
 Every badge this project serves is named by a **`badge_id`**. A `badge_id` is not
 a slug Andamio assigns; it is derived from the Cardano chain. This document
@@ -30,8 +30,8 @@ Concretely:
 The pair is the identity of exactly one Andamio credential, which maps 1:1 to
 one OB 3.0 `Achievement`. Both halves are on-chain-derived, so **no naming
 authority exists and none is needed** — Andamio does not decide, allocate, or
-arbitrate badge names. This is the same property Decision 2 relies on
-elsewhere: the substantive authority is the course owner behind the
+arbitrate badge names. This is the same property attestation-host framing
+relies on elsewhere: the substantive authority is the course owner behind the
 `course_id`, not Andamio.
 
 ### Relationship to the credential's `achievement.id`
@@ -162,7 +162,7 @@ silent update (empirically demonstrated 2026-05-12, [`mapping.md`](mapping.md)).
 
 ### I6 — One `badge_id` → one credential, stored as a length-1 list
 
-Deployment plan R5: the data model stores a credential **list**, but v1 only
+The data model stores a credential **list**, but v1 only
 ever emits length-1 lists. The list shape is forward-compatibility for a
 future multi-credential badge ("this badge covers modules A, B, and C"). **No
 multi-credential logic or UX exists**, and none should be inferred from the
@@ -250,10 +250,10 @@ existing one (I3).
 
 | Alternative | Why rejected |
 |---|---|
-| Human-readable slugs (`gimbalabs-plutus-pbl-01`) | Creates a namespace Andamio must arbitrate — uniqueness, renames, squatting, disputes. Reintroduces exactly the "Andamio is the authority" posture Decision 2 removed. Discarded before first commit (2026-05-25); no rename was ever needed. |
+| Human-readable slugs (`gimbalabs-plutus-pbl-01`) | Creates a namespace Andamio must arbitrate — uniqueness, renames, squatting, disputes. Reintroduces exactly the "Andamio is the authority" posture attestation-host framing removed. Discarded before first commit (2026-05-25); no rename was ever needed. |
 | A version segment (`{course_id}.{slt_hash}.v2.svg`) | Redundant: a revision already changes `slt_hash` (I5). A separate version counter would be a second, weaker source of truth. |
 | Recipient in the path | Would multiply identical images per holder and break caching. The recipient lives in the credential and in the holder viewer subpath (`/badges/{badge_id}/{alias}`), not in the badge identity. |
-| Content-addressed image names (IPFS CID as the id) | The id would then change whenever the *art* changed, violating I3/I4 — the name must be frozen while the picture stays mutable. IPFS remains open as a *storage* option for badge art (`docs/brainstorms/2026-06-27-issuer-badge-customization-requirements.md`), which is a different question. |
+| Content-addressed image names (IPFS CID as the id) | The id would then change whenever the *art* changed, violating I3/I4 — the name must be frozen while the picture stays mutable. IPFS remains open as a *storage* option for badge art, which is a different question. |
 
 ---
 
@@ -262,8 +262,7 @@ existing one (I3).
 Issue #11's remaining open decision is whether issuer-org-owned badges live in
 this repo under Andamio's host, or in per-issuer paths / per-issuer repos.
 That decision is **coupled to the per-org issuer DID design** and is answered
-there, not here:
-[`docs/plans/2026-07-28-001-design-per-org-issuer-dids.md`](plans/2026-07-28-001-design-per-org-issuer-dids.md) §7.
+there, not here.
 
 The short version, and the part that binds this document: **whatever is decided
 about per-org hosting must not change an existing badge URL.** I3 is
