@@ -45,7 +45,7 @@ The second Cloud Run service. A `/badges/` miss on the static host falls back he
 | `service/Dockerfile` | **Root build context** — ships `generator/` (render-core + `fonts.css`) + `service/`. Runtime env: `BADGE_NETWORKS`, `BADGE_CACHE_BUCKET`, `ANDAMIO_*_API_KEY`. |
 | `service/requirements.txt` | gunicorn + google-cloud-storage. |
 | `scripts/cache-admin.py` | `invalidate` (delete cache objects — non-destructive re-render) + `reconcile [--delete]` (flag/remove orphaned objects). Mirrors `serve_badge` network logic; fails loud on inconclusive gateway errors. |
-| `.github/workflows/deploy-render.yml` | Tag-triggered deploy (`vrender-*`). Builds `service/Dockerfile`, image-only `gcloud run deploy` (preserves the service's runtime config), verifies `/healthz` + a live-rendered badge. |
+| `.github/workflows/deploy-render.yml` | Tag-triggered deploy (`vrender-*`). Builds `service/Dockerfile`, image-only `gcloud run deploy` (preserves the service's runtime config), verifies render through the public host (a non-existent badge must 404 with the placeholder SVG). |
 | `docs/cache.md` | TTL story (max-age + GCS lifecycle), orphan-guard, cache-admin usage. |
 
 ## Badge generator
