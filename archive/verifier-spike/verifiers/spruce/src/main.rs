@@ -48,6 +48,9 @@ const SPIKE_CONTEXT_JSON: &str = include_str!("../../../publish/context/v0.jsonl
 // the signer spike's document loader enforces that equality before signing).
 const PROD_CONTEXT_URL: &str = "https://credentials.andamio.io/context/v0.jsonld";
 const PROD_CONTEXT_JSON: &str = include_str!("../../../../../context/v0.jsonld");
+// The frozen v1 production context (#64), which current artifacts reference.
+const PROD_V1_CONTEXT_URL: &str = "https://credentials.andamio.io/context/v1.jsonld";
+const PROD_V1_CONTEXT_JSON: &str = include_str!("../../../../../context/v1.jsonld");
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -78,11 +81,12 @@ async fn main() -> ExitCode {
         }
     };
 
-    // Preload the two contexts ssi's StaticLoader does not bundle.
+    // Preload the contexts ssi's StaticLoader does not bundle.
     let mut ctx_map = HashMap::new();
     ctx_map.insert(OB3_CONTEXT_URL.to_string(), OB3_CONTEXT_JSON.to_string());
     ctx_map.insert(SPIKE_CONTEXT_URL.to_string(), SPIKE_CONTEXT_JSON.to_string());
     ctx_map.insert(PROD_CONTEXT_URL.to_string(), PROD_CONTEXT_JSON.to_string());
+    ctx_map.insert(PROD_V1_CONTEXT_URL.to_string(), PROD_V1_CONTEXT_JSON.to_string());
     let loader = match ContextLoader::default().with_context_map_from(ctx_map) {
         Ok(l) => l,
         Err(e) => {
