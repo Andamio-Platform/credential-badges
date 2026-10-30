@@ -22,6 +22,11 @@ server {
     root   /usr/share/nginx/html;
     autoindex off;
 
+    # No access log. Cloud Run's request log already records every request;
+    # the image's default access log would write the client's IP (from
+    # X-Forwarded-For) and user agent to stdout a second time.
+    access_log off;
+
     # Relative Location headers on redirects. nginx sits behind Cloud Run's
     # HTTPS proxy on internal port 8080; an absolute redirect would leak
     # http:// + :8080 into Location (broken for the public host). Relative
