@@ -148,6 +148,19 @@ def test_module_art_loaded_from_repo():
     print("  ✅ render.BADGE_ART is the validated generator/art/ map")
 
 
+def test_missing_fonts_css_fails_instead_of_falling_back():
+    """No fonts.css → importing gen fails loudly; it never falls back to Google Fonts."""
+    with tempfile.TemporaryDirectory() as d:
+        with open(os.path.join(GEN, "gen.py")) as src, open(os.path.join(d, "gen.py"), "w") as dst:
+            dst.write(src.read())
+        r = subprocess.run([sys.executable, os.path.join(d, "gen.py")],
+                           capture_output=True, text=True)
+    assert r.returncode != 0, "gen imported without fonts.css"
+    assert "fonts.css is missing" in r.stderr, r.stderr
+    assert "googleapis" not in r.stdout + r.stderr
+    print("  ✅ missing fonts.css raises a clear error, no external fallback")
+
+
 def _main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

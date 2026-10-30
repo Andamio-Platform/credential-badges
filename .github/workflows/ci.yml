@@ -107,6 +107,8 @@ jobs:
           python3 generator/art.py --check
           python3 scripts/tests/test_alias_gate.py
           python3 scripts/tests/test_cache_admin.py
+      - name: "Designer preview faces are byte-identical to the badge faces — `make designer-fonts` regenerates public/styles/badge_fonts.css; a drift means the /design/ preview no longer shows the fonts badges render with. cmp pins them equal."
+        run: cmp generator/fonts.css public/styles/badge_fonts.css
 
   imaging:
     runs-on: ubuntu-latest

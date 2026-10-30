@@ -86,7 +86,7 @@ act from is just a snapshot.
 | `/badges/{stem}/{alias}` holder viewer | ✅ canon — **tokens only**; `#89` will re-lay-out this page, so layout work here would be discarded | `#89` |
 | `/badges/{stem}.og.png` | ❌ still the per-course dark field. Canon **paper** is settled; whether it stays **per-course** is not | **#108** |
 | `/badges/{stem}.embed` | ❌ deliberately excluded — it renders inside *someone else's* page, where matching our brand is a different question with probably a different answer | — |
-| `/design/` | ❌ deferred by decision. It is the **only** surface loading external stylesheets (two Google Fonts families), breaching the no-external-assets invariant every other page holds — a correctness fix worth doing on its own timetable, independent of any restyle | — |
+| `/design/` | ❌ restyle deferred by decision. Its fonts are served first-party (Outfit + the badge faces), so it holds the no-external-assets invariant every other page holds | — |
 
 ---
 

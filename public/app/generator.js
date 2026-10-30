@@ -155,13 +155,14 @@ function renderSvg({ courseTitle, moduleTitle, courseId, sltHash, palId, isLight
 
   const varStyle = ALLTOKENS.map(k => `--${k}:${P[k]};`).join('');
 
-  const FONT_FACE = "@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap');";
-
+  // No @font-face here: the preview is inlined into the page, so it resolves
+  // Archivo / Spline Sans Mono from styles/badge_fonts.css — a byte copy of
+  // generator/fonts.css, the faces every rendered badge embeds.
   const p = [];
   p.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" style="${varStyle}" aria-label="Andamio credential — ${escapeHtml(moduleTitle)} (${escapeHtml(courseTitle)})">`);
   
   p.push(`<defs>
-    <style>${FONT_FACE} .sans{font-family:"Archivo",sans-serif;}.mono{font-family:"Spline Sans Mono",monospace;}</style>
+    <style>.sans{font-family:"Archivo",sans-serif;}.mono{font-family:"Spline Sans Mono",monospace;}</style>
     <radialGradient id="field" cx="50%" cy="44%" r="62%"><stop offset="0%" stop-color="${c("raised")}"/><stop offset="70%" stop-color="${c("ink")}"/><stop offset="100%" stop-color="${c("deep")}"/></radialGradient>
     <linearGradient id="core" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c("core1")}"/><stop offset="100%" stop-color="${c("core2")}"/></linearGradient>
     <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>

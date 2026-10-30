@@ -1,0 +1,9 @@
+{
+  "families": {
+    "Outfit": {
+      "sha256": "92684e4acde79ef07758cd09380b7e01e9824d8b061eddeda046f78c166d7b12",
+      "source": "https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2",
+      "subset_bytes": 20576
+    }
+  }
+}
