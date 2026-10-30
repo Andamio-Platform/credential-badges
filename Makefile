@@ -10,7 +10,7 @@ export PYTHONDONTWRITEBYTECODE := 1
 
 WC := web-component
 
-.PHONY: help badges verify fetch fonts reconcile pngs og-cards pages explainers holder web-component
+.PHONY: help badges verify fetch fonts designer-fonts reconcile pngs og-cards pages explainers holder web-component
 
 help:
 	@echo "Credential badge generator:"
@@ -25,6 +25,7 @@ help:
 	@echo "  make verify    - round-trip a committed badge's rings, and a fresh placeholder-art badge's, back to their on-chain hashes"
 	@echo "  make fetch     - refresh $(GEN)/credentials.json from chain (needs network + authed 'andamio' CLI)"
 	@echo "  make fonts     - rebuild $(GEN)/fonts.css from Google Fonts (needs network + fonttools)"
+	@echo "  make designer-fonts - copy $(GEN)/fonts.css -> public/styles/badge_fonts.css (designer preview faces; byte-identical, CI-pinned)"
 
 badges:
 	$(PY) $(GEN)/build.py
@@ -75,3 +76,10 @@ fetch:
 
 fonts:
 	$(PY) $(GEN)/embed_fonts.py
+
+# The /design/ preview renders with the badge faces. It is a static app under
+# public/, so it gets a byte copy of fonts.css rather than a second build; CI
+# pins them equal (`cmp`). Outfit, its UI face, is the `designer` target of
+# embed_fonts.py.
+designer-fonts:
+	cp $(GEN)/fonts.css public/styles/badge_fonts.css

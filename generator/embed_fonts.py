@@ -46,11 +46,17 @@ CSS_URL = ("https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;80
            "&family=Spline+Sans+Mono:wght@400;500;600&display=swap")
 PAGE_CSS_URL = ("https://fonts.googleapis.com/css2?family=Inter:wght@400;600"
                 "&family=JetBrains+Mono:wght@400&display=swap")
+# The /design/ app's UI face. Its preview and mono UI text use the badge faces,
+# which reach it as a byte copy of fonts.css (`make designer-fonts`), not from here.
+DESIGNER_CSS_URL = ("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600"
+                    "&display=swap")
 
 TARGETS = {
-    # name: (css_url, output css, integrity manifest)
+    # name: (css_url, output css, integrity manifest) — paths relative to HERE
     "page": (PAGE_CSS_URL, "page_fonts.css", "page_fonts.lock.json"),
     "badges": (CSS_URL, "fonts.css", "fonts.lock.json"),
+    "designer": (DESIGNER_CSS_URL, os.path.join("..", "public", "styles", "fonts.css"),
+                 "designer_fonts.lock.json"),
 }
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120 Safari/537.36"

@@ -16,12 +16,17 @@ baked in. Transparent disc.
 """
 import math, json, os
 
-# Fonts: if fonts.css (base64 @font-face, built by embed_fonts.py) exists next to
-# this file, inline it so every SVG is self-contained (renders identically with no
-# network). Otherwise fall back to the Google Fonts @import (needs network).
+# Fonts: fonts.css (base64 @font-face, built by embed_fonts.py) is inlined so every
+# SVG is self-contained (renders identically with no network). There is
+# deliberately no network fallback: a missing file must fail here, not silently
+# ship badges that fetch their faces from a third party.
 _FONTCSS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts.css")
-FONT_FACE = (open(_FONTCSS).read() if os.path.exists(_FONTCSS)
-             else "@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap');")
+if not os.path.exists(_FONTCSS):
+    raise FileNotFoundError(
+        f"{_FONTCSS} is missing. It is committed (restore it with "
+        f"`git checkout -- generator/fonts.css`); badges inline it and there is no "
+        f"external font fallback.")
+FONT_FACE = open(_FONTCSS).read()
 
 # The CANON page faces (Inter + JetBrains Mono), a SEPARATE artifact from
 # fonts.css above. Keep them apart: FONT_FACE is inlined into every badge SVG —
