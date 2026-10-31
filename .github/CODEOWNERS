@@ -7,7 +7,7 @@
 
 # Default owner for every path. GitHub applies the last matching pattern, so
 # the trust-critical entries below still win for their paths.
-*                              @workshop-maybe
+*                              @workshop-maybe @Andamio-Platform/dev-circle
 
 # The did:web DID document and its deterministic regenerator — this publishes
 # the issuer signing key. A wrong or drifted key here silently breaks OB 3.0
