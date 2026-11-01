@@ -9,22 +9,22 @@ jobs:
   allowlist:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Enforce served-file allowlist
         run: bash scripts/ci/check-allowlist.sh
 
   orphan-guard:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: "Orphan guard (#31) — every served badges/ artifact (svg/png/og.png) must map to a credentials.json record. The allowlist check allowlists badges/ wholesale and is structurally blind to files inside it, so a dropped credential's art could otherwise linger on the forever-public host. Stdlib-only, no install."
         run: bash scripts/ci/check-orphans.sh
 
   did-pin:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: did.json regenerator + key-pin invariant (self-consistency guard)
@@ -37,8 +37,8 @@ jobs:
   signing-hardening:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: "Signing-package hardening tests (issue #54) — hermetic: fetch is mocked, no KMS, no npm install (the tested modules are dependency-free)"
@@ -47,8 +47,8 @@ jobs:
   expansion-pin:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: "Signed-artifact expansion pin — canonicalizes the committed signed artifacts (signed-credential.json, status/key-epoch-2026-07.json) under the COMMITTED context/v1.jsonld and pins the RDF dataset hash, so no context PR can silently change what the committed proofs were computed over. Needs the signing package's jsonld dep (npm ci — not in the hermetic job); network touches only the version-pinned immutable W3C/OB3 contexts."
@@ -61,8 +61,8 @@ jobs:
   issuer-service:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: "Issuer-service test suite (Rung 8.4) — hermetic: Andamioscan responses are recorded fixtures, contexts are vendored + integrity-pinned, signing runs through the ephemeral Ed25519 seam (no KMS, no network). Covers the full request path: gate -> map -> sign -> loopback verify, cache single-sign invariant, tampered-subject refusals, startup drift-check fail-closed paths."
@@ -90,7 +90,7 @@ jobs:
   generator-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: "Generator tests — hermetic, stdlib-only (no pip install): render parity (build output byte-identical to committed badges/; baked badges compared modulo the signed credential block, which tools/bake-signed-vc.test.ts owns), render title/palette rules, and the offline api_client suite. These previously ran nowhere in CI, which let a real parity break land green (docs/solutions/workflow-issues/unwired-test-suites-silently-rot.md)."
         run: |
           python3 generator/tests/test_render_parity.py
@@ -113,8 +113,8 @@ jobs:
   imaging:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: "Imaging suite (#69) — rasterize badge SVGs to PNG + compose 1200x630 OG cards with resvg (@resvg/resvg-js pinned). Covers the CSS-custom-property inlining and embedded-font handling the spot-check required. Isolated npm package so the stdlib-only generator-tests job stays hermetic."
@@ -129,8 +129,8 @@ jobs:
   web-component:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: "andamio-badge web component (#74) — pure-render tests (attributes, URLs, baked-aware state gate, escaping). Dependency-free vanilla ESM, no install."
@@ -145,7 +145,7 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build image (no push) — proves the Dockerfile + allowlist build
         run: docker build -t credential-badges:ci .
       - name: Smoke test — served paths resolve with correct content types
