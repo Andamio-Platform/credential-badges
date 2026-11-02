@@ -166,7 +166,7 @@ function fmtTable(rows: CheckResult[]): string {
     rows
       .map(
         (r) =>
-          `| ${r.name} | ${r.status} | ${r.detail.replace(/\|/g, "\\|").slice(0, 200)} |`
+          `| ${r.name} | ${r.status} | ${r.detail.replace(/\\/g, "\\\\").replace(/\|/g, "\\|").slice(0, 200)} |`
       )
       .join("\n")
   );

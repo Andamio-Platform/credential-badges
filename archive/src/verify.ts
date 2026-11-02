@@ -236,7 +236,7 @@ async function verify(credentialPath: string): Promise<CheckResult[]> {
 
 function fmtTable(rows: CheckResult[]): string {
   return "| Check | Status | Detail |\n|---|---|---|\n" +
-    rows.map(r => `| ${r.name} | ${r.status} | ${r.detail.replace(/\|/g, "\\|").slice(0, 300)} |`).join("\n");
+    rows.map(r => `| ${r.name} | ${r.status} | ${r.detail.replace(/\\/g, "\\\\").replace(/\|/g, "\\|").slice(0, 300)} |`).join("\n");
 }
 
 async function main() {
