@@ -89,6 +89,18 @@ Operational runbooks live in the private `andamio-ops` repo, `runbooks/credentia
 | `docs/mapping.md` | Field-by-field Andamio → OB 3.0 mapping, the URN convention, and `slt_hash` semantics. Cited by `docs/badge-registry.md` as current authority. Written during the OB 3.0 prototype; moved out of `archive/` by #117. |
 | `docs/credential-imagery.md` | The v1 design decision for the `badges/` directory: imagery is presentation, never identity. Moved out of `archive/` by #117. |
 
+## Evidence adapters — `adapters/`
+
+**Additive, not wired in yet.** The first extraction step toward a reusable credential layer: the evidence-adapter contract, a source-neutral core assembler, the Cardano/Andamio adapter (which wraps the existing anchor gate unchanged), and a second, non-ledger reference adapter. Dependency-free, and runs in the `evidence-adapters` CI job. **Not** baked into the served image.
+
+| Path | Role |
+|---|---|
+| `adapters/README.md` | What each piece is, the equivalence guarantee, and what the second adapter does and does not demonstrate. |
+| `adapters/core/` | `EvidenceAdapter` / `TrustAssertion` types and `assembleCredential()`. |
+| `adapters/cardano-andamio/` | Reference adapter plus Andamio's deployment `IssuerProfile`. |
+| `adapters/reference-signed-attestation/` | Ed25519-signed attestation from a registered non-ledger source, using OB 3.0 terms only. |
+| `adapters/test/cardano-andamio.test.ts` | **The extraction guard:** core + adapter output must equal `mapCredential()` and the committed signed credential. |
+
 ## Signing package — `signing/`
 
 **Production.** The operator-run signing CLI: maps a registered badge to OB 3.0, signs it through KMS behind a live on-chain anchor gate, builds and signs the key-epoch status list, and bakes signed credentials into `badges/*.svg`. Holds the 58 signed class artifacts, the flagship holder credential, and the KMS run transcripts. Two CI jobs run out of it. **Not** baked into the served image.
