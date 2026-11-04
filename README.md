@@ -28,6 +28,9 @@ Welcome. The fast path in:
 | Set up and contribute | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | See where this is going | [`ROADMAP.md`](ROADMAP.md) |
 | Find the deploy workflows | [`DEPLOY.md`](DEPLOY.md) |
+| Learn how the project is governed | [`GOVERNANCE.md`](GOVERNANCE.md) · [`MAINTAINERS.md`](MAINTAINERS.md) |
+| Report a vulnerability (privately) | [`SECURITY.md`](SECURITY.md) |
+| See who uses it | [`ADOPTERS.md`](ADOPTERS.md) |
 
 **The one rule to know first:** badges are **build output, not hand-authored files**. *"If it can be generated, it must be generated."* Each SVG is rendered deterministically from on-chain data by the generator in [`generator/`](generator/README.md). Never hand-edit a file in `badges/`. Change the generator (or the source data) and regenerate.
 

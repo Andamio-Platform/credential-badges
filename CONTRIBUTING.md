@@ -68,6 +68,20 @@ docs(readme): clarify the two version axes
 
 Issues labeled [`good first issue`](https://github.com/Andamio-Platform/credential-badges/labels/good%20first%20issue) and [`documentation`](https://github.com/Andamio-Platform/credential-badges/labels/documentation) are the best place to start. [`help wanted`](https://github.com/Andamio-Platform/credential-badges/labels/help%20wanted) marks work that's ready for an outside hand. When in doubt, open an issue describing what you'd like to do before writing code — for anything touching the schema, the served set, or the deploy path, a short design note saves a round trip.
 
+## Developer Certificate of Origin (DCO)
+
+Every commit must be signed off under the [Developer Certificate of Origin](https://developercertificate.org/). The sign-off certifies that you wrote the change, or otherwise have the right to submit it under the project's license. Add it with `-s`:
+
+```bash
+git commit -s -m "docs(readme): clarify the two version axes"
+```
+
+This appends a `Signed-off-by: Your Name <you@example.com>` line that matches your git identity. Commits made before this requirement are not rewritten.
+
+## Governance, maintainers, and security
+
+How decisions are made and who makes them is described in [`GOVERNANCE.md`](GOVERNANCE.md) and [`MAINTAINERS.md`](MAINTAINERS.md). Significant decisions are recorded in [`docs/decisions/`](docs/decisions/README.md). **Never report a vulnerability in a public issue**; follow [`SECURITY.md`](SECURITY.md). If you use this project, add yourself to [`ADOPTERS.md`](ADOPTERS.md).
+
 ## Code of conduct
 
 By participating you agree to uphold our [Code of Conduct](CODE_OF_CONDUCT.md).

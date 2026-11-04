@@ -84,6 +84,15 @@
 /scripts/alias_gate.py            @workshop-maybe @adrian1-dot
 /scripts/tests/test_alias_gate.py @workshop-maybe @adrian1-dot
 
+# Project governance. Who can merge, how votes are counted, and where
+# vulnerabilities are reported decide who controls every gate above, so
+# changes to these files get the same two-reviewer treatment. GOVERNANCE.md
+# also requires a recorded maintainer vote for changes to itself and to
+# MAINTAINERS.md.
+/GOVERNANCE.md                 @workshop-maybe @adrian1-dot
+/MAINTAINERS.md                @workshop-maybe @adrian1-dot
+/SECURITY.md                   @workshop-maybe @adrian1-dot
+
 # The liveness guard for this file. GitHub never warns about a pattern that
 # matches nothing, so a path move can silently retire any gate above — the
 # retire-spike move (2026-08) relocated the two status-list entries and only
