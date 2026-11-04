@@ -156,6 +156,54 @@ signature. Evidence: [`signing/validation/README.md`](signing/validation/README.
 
 Procedure: the class-artifact-signing runbook, in the private `andamio-ops` repo.
 
+---
+
+# Open governance readiness (LF Decentralized Trust)
+
+The goal is to upstream the **reusable infrastructure** under the Andamio
+product into neutral governance. It is not a donation of the product. The
+intended path is a proposal to LF Decentralized Trust for incubation as a
+ledger-neutral credential interoperability layer, with Andamio/Cardano as the
+first reference implementation and production adopter.
+
+The technology is ready for that conversation. The project structure is not
+yet ready. The work is to extract the reusable layer, not to rebuild it.
+Architecture map: [`docs/architecture/`](docs/architecture/README.md).
+
+## Extract — a neutral project scope
+
+- [ ] Layer map that separates core, adapter, presentation, and deployment ([`docs/architecture/README.md`](docs/architecture/README.md))
+- [ ] Evidence-adapter contract ([`docs/architecture/evidence-adapter.md`](docs/architecture/evidence-adapter.md))
+- [ ] Source-neutral credential core beside the existing mapper, with a CI equivalence test (`core(adapter(anchor))` = `mapCredential(anchor)`)
+- [ ] Cardano/Andamio repackaged as the first adapter, wrapping the existing anchor gate unchanged
+- [ ] Issuer service switched to the core and adapter path. **Signed bytes and expansion pins must not move.**
+- [ ] Deployment configuration (issuer DID, URLs, registry) passed in instead of imported constants
+- [ ] Neutral project and package names (the web component keeps an `andamio-badge` alias)
+
+## Govern — independent project governance
+
+- [ ] `GOVERNANCE.md`, `MAINTAINERS.md`, `SECURITY.md`, `ADOPTERS.md`, and decision records
+- [ ] DCO sign-off required, and a DCO check enabled on the repository
+- [ ] GitHub private vulnerability reporting enabled, and a security alias that reaches every maintainer
+- [ ] **Maintainers from at least one organization other than Andamio** (the TAC has rejected single-maintainer proposals)
+- [ ] At least two sponsors from different organizations
+- [ ] Public technical discussion channel and a regular public call
+
+## Demonstrate — prove the model beyond Andamio/Cardano
+
+- [ ] A second, deliberately simple reference adapter for a non-ledger source, issuing through the same core
+- [ ] A second adapter for another ledger or protocol, ideally built by an outside contributor
+- [ ] Andamio listed as the first production adopter
+- [ ] Incubation proposal drafted against the LFDT template and socialized with the TAC and adjacent projects (Identus, CREDEBL, AnonCreds, ToIP, Cacti)
+
+## Gaps we are keeping visible
+
+Multi-mapper dispatch was never built, and the service serves one adapter.
+Issuer identity is single-tenant (per-organization DIDs are designed, not built:
+#4, #6). The signature-bearing verifier states and per-holder baked artifacts
+(Phase 3 above) are open. The extension vocabulary lives in an Andamio namespace,
+and a neutral namespace would be a new context version, never an edit to `v1`.
+
 ## Where to dig deeper
 
 - **Repo map for new contributors:** [`MOC.md`](MOC.md)
