@@ -80,6 +80,16 @@ Local verification (hermetic, in CI) and live verification (network, run by a hu
 
 Operational runbooks live in the private `andamio-ops` repo, `runbooks/credential-badges/`.
 
+## Governance
+
+| File | Role |
+|---|---|
+| `GOVERNANCE.md` | Roles, how decisions are made, which ones need a recorded vote, the project-versus-deployment boundary, and Andamio's role after contribution. CODEOWNERS-gated. |
+| `MAINTAINERS.md` | Who can merge, release, and vote, with affiliations. CODEOWNERS-gated. |
+| `SECURITY.md` | Private vulnerability reporting, response targets, scope, and the key-compromise path. CODEOWNERS-gated. |
+| `ADOPTERS.md` | Who uses the project, and how. |
+| `docs/decisions/` | Numbered decision records (architecture, vocabulary, adapter contract, governance). Distinct from `docs/solutions/`, which holds lessons. |
+
 ## Planning
 
 | File | Role |
