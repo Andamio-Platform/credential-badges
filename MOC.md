@@ -84,6 +84,7 @@ Operational runbooks live in the private `andamio-ops` repo, `runbooks/credentia
 
 | File | Role |
 |---|---|
+| `docs/lfdt/incubation-proposal.md` | **Working draft, not submitted.** The LF Decentralized Trust incubation proposal, following LFDT's proposal template, with TODOs for sponsors, maintainers, and naming. |
 | `ROADMAP.md` | **Living public checklist** of what's next, by phase. Tick boxes as items close. Start here if you want the "where are we right now" view. |
 | `docs/badge-registry.md` | **Normative.** The `badge_id` = `<course_id>.<slt_hash>` convention, where the three registry artifacts live, and 11 invariants — chiefly *the name is frozen, the picture is not* (I3/I4) and *registry membership gates signing, not rendering* (I8). Closes #11. |
 | `docs/mapping.md` | Field-by-field Andamio → OB 3.0 mapping, the URN convention, and `slt_hash` semantics. Cited by `docs/badge-registry.md` as current authority. Written during the OB 3.0 prototype; moved out of `archive/` by #117. |
