@@ -64,6 +64,16 @@ resolves the lookup for `build.py`, `og.py` and the render service;
 `--art-dir <dir>` for tests and `make verify`. Giving a live badge art is an
 operator procedure: the badge-art runbook, in the private `andamio-ops` repo.
 
+**Course styles** (credential-badges#157) live in `styles/`, keyed by course id:
+`<course_id>.json` holds the palette (every base and interior token) and, optionally,
+a partner logo drawn above the `COURSE` label from `<course_id>.logo.svg`. `style.py`
+validates them and is the one lookup `build.py`, `render.py`, `og.py` and `page.py`
+read; a course without a style keeps `colors.palette_for`. A logo is shapes only
+(`<g>`, `<circle>`, `<path>`, never `<line>`, which `decode.py` reads as ring ticks),
+and its record must say where the partner's written approval lives.
+`python3 style.py --check` validates the directory on its own. Like art, a style is
+drawn only and never signed: changing one is rebuild + re-bake, never re-sign.
+
 > **`make badges` strips every baked signature** (credential-badges#128). To
 > refresh signed badges, scratch-build only those stems and re-bake them — the
 > single-badge procedure in the badge-art runbook (private `andamio-ops` repo).
@@ -95,6 +105,7 @@ and hands resvg the decoded font buffers. See `../imaging/`.
 - `gen.py` — the SVG generator (palette-driven, ring encoder, OB3 metadata, inlines `fonts.css`).
 - `colors.py` — the 10 palettes + the light-interior transform.
 - `art.py` — badge art lookup and validation (`art/`, JPEG only); `--check` validates the directory.
+- `style.py` — hand-set course styles (`styles/`: palette + optional partner logo); `--check` validates the directory.
 - `og.py` — composes the 1200x630 Open Graph card SVG per credential (reuses palette + fonts).
 - `page.py` — generates the static display/share page per credential (#70): server-delivered Open Graph tags in `<head>`, served at the extensionless `/badges/{stem}` URL, with the **share actions** (#71 — download SVG/PNG, copy link, X/LinkedIn intents, Web Share, copy-embed, LinkedIn add-to-profile) filled into the page and a small inline progressive-enhancement script. Also emits the **minimal embed variant** `badges/{stem}.embed.html`, served at `/badges/{stem}.embed` (the iframe target). Reserves `/badges/{stem}/{alias}` for the holder viewer (#73).
 - `explainers.py` — generates the two general explainers (#72): `how-to-share.html` (holder) and `how-to-check.html` (verifier, adapting `../docs/verifier-guidance.md`), linked from every badge page. Non-hex stems, so inert to the reconciler; guarded by `imaging/check-artifacts.ts`.
