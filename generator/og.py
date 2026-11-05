@@ -30,6 +30,7 @@ import sys
 import gen
 import colors
 import art
+import style
 from render import sanitize_title
 from build import SKIP_COURSES
 
@@ -45,17 +46,18 @@ COL_X = BADGE_X + BADGE_BOX + 64    # right text column start
 COL_W = W - COL_X - PAD             # right column width
 
 
-def _card_svg(rec, badge_art=art.NO_ART):
+def _card_svg(rec, badge_art=art.NO_ART, badge_style=None):
     course_title = sanitize_title(rec["course_title"]) or "Andamio"
     module_title = sanitize_title(rec["module_title"]) or "Credential"
     course_id, slt_hash = rec["course_id"], rec["slt_hash"]
 
-    pal = colors.palette_for(course_id)                 # base (dark field) palette
+    styles = badge_style or style.committed()
+    pal = styles.base_palette(course_id)                # base (dark field) palette
     badge = gen.render_svg(
         course_title=course_title, module_title=module_title,
         course_id=course_id, slt_hash=slt_hash, network="mainnet",
-        pal=colors.light_interior(pal),
-        image=badge_art.image_for(course_id, slt_hash))
+        image=badge_art.image_for(course_id, slt_hash),
+        **styles.render_kwargs(course_id))
 
     deep, ink, raised = pal["deep"], pal["ink"], pal["raised"]
     prim, bone, slate, hair = pal["prim"], pal["bone"], pal["slate"], pal["hair"]

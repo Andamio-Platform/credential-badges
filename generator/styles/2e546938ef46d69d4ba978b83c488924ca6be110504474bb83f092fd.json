@@ -1,0 +1,29 @@
+{
+  "name": "Cardano Academy",
+  "approval": "Cardano Foundation approved the Cardano Academy logo on this badge in writing: Heidi, 2026-10-16. The record is held by Andamio (James).",
+  "base": {
+    "deep": "#004280",
+    "ink": "#004280",
+    "raised": "#004280",
+    "prim": "#0084FF",
+    "prim_lt": "#0084FF",
+    "sec": "#FFFFFF",
+    "sec_lt": "#FFFFFF",
+    "bone": "#FFFFFF",
+    "slate": "#6F6F6F",
+    "hair": "#0058AA"
+  },
+  "interior": {
+    "core1": "#FFFFFF",
+    "core2": "#FFFFFF",
+    "itext": "#292929",
+    "imuted": "#6F6F6F",
+    "iline": "#E5E5E5",
+    "extlabel": "#6F6F6F",
+    "slt_label": "#0084FF",
+    "ev_label": "#0084FF",
+    "ctitle": "#5B5B5B",
+    "mtitle": "#292929"
+  },
+  "logo": {"height": 62, "dx": -12, "gap": 44}
+}

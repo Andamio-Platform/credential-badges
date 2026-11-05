@@ -167,13 +167,19 @@ def _plate_art(image, c):
             'preserveAspectRatio="xMidYMid slice" clip-path="url(#plate-art)"/>'
             f'<circle cx="{CX}" cy="{CY}" r="411" fill="{c("core1")}" fill-opacity="{PLATE_SCRIM_OPACITY}"/>')
 
-def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=PAL_ANDAMIO, image=None):
+def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=PAL_ANDAMIO, image=None, logo=None):
     """Render a badge SVG from explicit inputs — no module globals are read or
     mutated, so concurrent calls with different inputs are safe (per-request use).
     `build_svg(pal)` is the legacy globals-driven wrapper around this.
 
     `image` is an optional data:image/jpeg URI (resolved by art.py) drawn inside
-    the core plate. None emits nothing extra, so no-image output is unchanged."""
+    the core plate. None emits nothing extra, so no-image output is unchanged.
+
+    `logo` is an optional partner logo from style.py (#157): a dict with the
+    validated inner markup, its viewBox size (vw, vh), and height, dx and gap.
+    It sits above the COURSE label, and the block is re-balanced so the space
+    above the logo equals the space between the last hash and ANDAMIO. None
+    keeps the original layout byte for byte."""
     COURSE_TITLE=course_title; MODULE_TITLE=module_title
     COURSE_ID=course_id; SLT_HASH=slt_hash; NETWORK=network
     P=fill_defaults(pal)
@@ -241,6 +247,15 @@ def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=
     mlines,msz = lay_title(MODULE_TITLE,60,520,0.58,40)
     EG=18  # gap from an eyebrow label's baseline to the title's cap-top (scales with title size)
 
+    if logo:
+        # The logo's top is the block's rel 0; COURSE's baseline sits `gap` below
+        # its bottom plus the label's cap height. Placed by visual weight: `dx`
+        # shifts a mark-plus-wordmark lockup off its bounding-box centre.
+        LH=float(logo["height"]); LW=LH*logo["vw"]/logo["vh"]
+        def _logo(y,LH=LH,LW=LW):
+            p.append(f'<svg x="{CX-LW/2+logo["dx"]:.1f}" y="{y:.1f}" width="{LW:.1f}" height="{LH:.1f}" '
+                     f'viewBox="0 0 {logo["vw"]:g} {logo["vh"]:g}" aria-hidden="true">{logo["markup"]}</svg>')
+        emit(_logo, int(LH+logo["gap"]+8))
     emit(text("COURSE",11,c("imuted"),"mono",None,4), int(EG+csz*0.72))
     for ln in clines: emit(text(esc(ln),csz,c("ctitle"),"sans",600,None), int(csz*1.12))
     cur[0]+=22
@@ -254,6 +269,9 @@ def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=
     emit(text(SLT_HASH,13,c("itext"),"mono",None,0), 0)           # slightly smaller
 
     start = 532 - cur[0]/2.0     # block shifted down (module title nearer circle center)
+    if logo:
+        # Equal gaps: (logo top - plate top) == (ANDAMIO baseline - last hash baseline).
+        start = ((CY-412) + 884 - cur[0]) / 2.0
     for rel,fn in items: fn(start+rel)
     dy=start+div_rel
     p.append(f'<line x1="{CX-150}" y1="{dy:.1f}" x2="{CX+150}" y2="{dy:.1f}" stroke="{c("iline")}" stroke-width="1.25"/>')

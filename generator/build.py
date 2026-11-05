@@ -30,6 +30,7 @@ import sys
 import gen
 import colors
 import art
+import style
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "credentials.json")
@@ -46,7 +47,7 @@ SKIP_COURSES = {"5977af642f25cf2872f3938030df03495031783edbaeec62d79ea6dc"}
 palette_for = colors.palette_for
 
 
-def render(rec, badge_art=art.NO_ART):
+def render(rec, badge_art=art.NO_ART, badge_style=None):
     # Concurrency-safe: pass inputs as parameters instead of mutating gen's
     # module globals, so the render path is reusable per-request (the on-demand
     # service reuses gen.render_svg + palette_for the same way).
@@ -56,8 +57,8 @@ def render(rec, badge_art=art.NO_ART):
         course_id=rec["course_id"],
         slt_hash=rec["slt_hash"],
         network="mainnet",
-        pal=colors.light_interior(palette_for(rec["course_id"])),
         image=badge_art.image_for(rec["course_id"], rec["slt_hash"]),
+        **(badge_style or style.committed()).render_kwargs(rec["course_id"]),
     )
 
 
@@ -74,6 +75,10 @@ def main():
         badge_art = art.load(args.art_dir, skip_courses=SKIP_COURSES)  # whole dir, before any write
     except art.ArtError as e:
         sys.exit(f"❌ {e}")
+    try:
+        badge_style = style.committed()                # whole dir, before any write
+    except style.StyleError as e:
+        sys.exit(f"❌ {e}")
     data = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
     if args.only:
         wanted = set(args.only)
@@ -83,7 +88,7 @@ def main():
             sys.exit(f"❌ --only: not a built credential in credentials.json: {sorted(missing)}")
     os.makedirs(out, exist_ok=True)
     for rec in data:
-        svg = render(rec, badge_art)
+        svg = render(rec, badge_art, badge_style)
         open(os.path.join(out, f"{rec['course_id']}.{rec['slt_hash']}.svg"), "w").write(svg)
     print(f"wrote {len(data)} badges -> {os.path.relpath(out, HERE)}/")
 

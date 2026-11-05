@@ -31,6 +31,7 @@ from urllib.parse import quote
 
 import canon
 import colors
+import style
 from gen import esc, HOST, ISSUER
 from render import sanitize_title
 from build import SKIP_COURSES
@@ -123,7 +124,7 @@ def _ctx(rec):
         "course_id": course_id, "slt_hash": slt_hash, "stem": stem,
         "course_title": sanitize_title(rec["course_title"]) or ISSUER,
         "module_title": sanitize_title(rec["module_title"]) or "Credential",
-        "pal": colors.palette_for(course_id),
+        "pal": style.committed().base_palette(course_id),
         "page_url": f"{HOST}/badges/{stem}",
         "baked": _is_baked(stem),
     }

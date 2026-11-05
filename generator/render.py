@@ -17,6 +17,7 @@ import gen
 import colors
 import api_client
 import art
+import style
 from fetch import clean_title   # hex(ascii) chain-title decode — reused, not reinvented
 
 # The exact glyph set embed_fonts.py subsets into fonts.css. A title character
@@ -68,8 +69,13 @@ def _module_title(rec):
 # art" would silently hide the failure.
 BADGE_ART = art.load()
 
+# Hand-set course styles (#157), validated once at import for the same reason:
+# service/Dockerfile runs `style.py --check` at image build.
+BADGE_STYLES = style.load()
 
-def render_badge(course_id, slt_hash, network="mainnet", *, fetch_titles=None, badge_art=None):
+
+def render_badge(course_id, slt_hash, network="mainnet", *, fetch_titles=None, badge_art=None,
+                 badge_style=None):
     """Render the badge SVG for one credential. `fetch_titles` is an injection
     seam (defaults to api_client.get_titles) taking (course_id, network) and
     returning (course_title, modules). GatewayError from the read propagates.
@@ -79,11 +85,12 @@ def render_badge(course_id, slt_hash, network="mainnet", *, fetch_titles=None, b
 
     ct = sanitize_title(course_title) or "Andamio"
     mt = sanitize_title(_module_title(modules.get(slt_hash))) or "Credential"
-    pal = colors.light_interior(colors.palette_for(course_id))
+    styles = BADGE_STYLES if badge_style is None else badge_style
     image = (BADGE_ART if badge_art is None else badge_art).image_for(course_id, slt_hash)
     return gen.render_svg(course_title=ct, module_title=mt,
                           course_id=course_id, slt_hash=slt_hash,
-                          network=network, pal=pal, image=image)
+                          network=network, image=image,
+                          **styles.render_kwargs(course_id))
 
 
 if __name__ == "__main__":
