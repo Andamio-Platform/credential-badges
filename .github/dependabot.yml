@@ -1,12 +1,32 @@
-# Weekly grouped update PR for the pinned GitHub Actions. Dependabot bumps
-# the SHA and the version comment together.
+# =============================================================================
+# Dependabot: security updates only
+# =============================================================================
+# Version-update PRs are off (limit 0). The weekly dependency report issue
+# (.github/workflows/outdated-report.yml) lists every other npm and GitHub
+# Actions update, to be picked up by hand in one batch PR.
+#
+# Security updates are a repository setting and don't depend on this file:
+# GitHub opens them for every ecosystem it detects, and the limit doesn't apply
+# to them. The entries stay so the policy is written down where someone would
+# turn version updates back on. One npm entry per reported directory (DIRS in
+# outdated-report.yml); archive/ is not reported.
+# =============================================================================
 version: 2
 updates:
+  - package-ecosystem: npm
+    directories:
+      - /issuer-service
+      - /imaging
+      - /signing
+      - /tools
+      - /web-component
+      - /scripts/verify-live
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    groups:
-      actions:
-        patterns:
-          - "*"
+    open-pull-requests-limit: 0
