@@ -1,0 +1,65 @@
+# =============================================================================
+# Weekly dependency report
+# =============================================================================
+# Dependabot opens PRs for security updates only (dependabot.yml sets the
+# version-update PR limit to 0). Every other available npm and GitHub Actions
+# update is listed in one issue, edited in place each Monday (or opened fresh
+# when none is open), with each package directory under its own heading.
+# =============================================================================
+name: Weekly dependency report
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: outdated-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    name: Report
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TITLE: Weekly dependency report
+      # The active packages; archive/ is not reported. Keep in step with the
+      # npm entries in dependabot.yml.
+      DIRS: issuer-service imaging signing tools web-component scripts/verify-live
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      # npm outdated exits 1 whenever something is outdated. A directory with
+      # no lockfile has no dependencies, so there is nothing to install.
+      - name: List outdated packages per directory
+        run: |
+          args=""
+          for d in $DIRS; do
+            out="$RUNNER_TEMP/outdated-$(echo "$d" | tr / -).json"
+            if [ -f "$d/package-lock.json" ]; then
+              (cd "$d" && npm ci --ignore-scripts --no-audit --no-fund)
+            fi
+            (cd "$d" && npm outdated --json > "$out" || true)
+            args="$args $d=$out"
+          done
+          node scripts/ci/outdated-report.mjs $args > report.md
+      - name: Create or update the report issue
+        run: |
+          # The issue is found by its label, so the label has to exist.
+          gh label create dependencies --color 0366d6 \
+            --description "Dependency updates" 2>/dev/null || true
+          number=$(gh issue list --state open --label dependencies \
+            --search "\"$TITLE\" in:title" --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file report.md
+          else
+            gh issue create --title "$TITLE" --label dependencies --body-file report.md
+          fi
