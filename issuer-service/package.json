@@ -5,9 +5,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "node --experimental-strip-types src/main.ts",
-    "start:ephemeral": "SIGNER_MODE=ephemeral node --experimental-strip-types src/main.ts",
-    "test": "node --experimental-strip-types --test test/*.test.ts"
+    "start": "node src/main.ts",
+    "start:ephemeral": "SIGNER_MODE=ephemeral node src/main.ts",
+    "test": "node --test test/*.test.ts"
   },
   "dependencies": {
     "@digitalbazaar/data-integrity": "^2.5.0",
@@ -17,10 +17,10 @@
     "jsonld-signatures": "^11.3.0"
   },
   "devDependencies": {
-    "@types/node": "^20.16.10"
+    "@types/node": "^26.6.6"
   },
   "engines": {
-    "node": ">=22"
+    "node": "26.x"
   },
   "overrides": {
     "undici": "^6.27.0"

@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version-file: .nvmrc
       - name: "Issuer-service test suite (Rung 8.4) — hermetic: Andamioscan responses are recorded fixtures, contexts are vendored + integrity-pinned, signing runs through the ephemeral Ed25519 seam (no KMS, no network). Covers the full request path: gate -> map -> sign -> loopback verify, cache single-sign invariant, tampered-subject refusals, startup drift-check fail-closed paths."
         working-directory: issuer-service
         run: |
