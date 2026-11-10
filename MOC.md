@@ -80,6 +80,13 @@ Local verification (hermetic, in CI) and live verification (network, run by a hu
 
 Operational runbooks live in the private `andamio-ops` repo, `runbooks/credential-badges/`.
 
+## Architecture
+
+| File | Role |
+|---|---|
+| `docs/architecture/README.md` | The layer map: trust source → evidence adapter → credential core → presentation → verifier. Says which code is reusable core, which is Cardano/Andamio adapter, and which is deployment, plus the extraction plan and visible gaps. |
+| `docs/architecture/evidence-adapter.md` | **Normative.** The evidence-adapter contract (`EvidenceAdapter`, `TrustAssertion`), its fail-closed, determinism, privacy, and vocabulary rules, and how today's anchor gate fits it. |
+
 ## Planning
 
 | File | Role |

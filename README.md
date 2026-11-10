@@ -14,6 +14,23 @@ https://credentials.andamio.io/badges/<policy_id>.<slt_hash>.svg
 
 The badge is not just a picture. Its two rings encode the credential's on-chain identity (outer ring = the course policy id, inner ring = the SLT credential hash), so the geometry round-trips back to the chain. **The art *is* the proof.** Run `make verify` to decode a badge and check it against its on-chain hashes.
 
+### Beyond Andamio: a portable-credential layer
+
+Under the badge is credential infrastructure that is not specific to Andamio:
+Open Badges 3.0 / W3C Verifiable Credentials, `did:web` issuer identity, Data
+Integrity signing, key-epoch status lists, anchor-gated issuance, external
+verifier validation, and portable presentation. Andamio on Cardano is the
+**first evidence source and first adopter**, not the boundary of the design.
+
+The direction is a ledger-neutral **evidence-adapter** framework: an adapter
+verifies an assertion at its trust source (a ledger, protocol, workflow, or
+enterprise system), and the shared core turns it into a standards-compliant
+credential that people and applications can verify without learning the source
+system. See [`docs/architecture/`](docs/architecture/README.md) for the layer
+map and the [adapter contract](docs/architecture/evidence-adapter.md), and
+[`ROADMAP.md`](ROADMAP.md#open-governance-readiness-lf-decentralized-trust) for
+the readiness plan.
+
 ---
 
 ## For developers, start here
