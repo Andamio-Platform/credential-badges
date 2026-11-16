@@ -21,12 +21,12 @@
 # digest. The runtime has no shell or package manager and runs as nonroot; its
 # entrypoint is node, so CMD names only the script. Move both images together,
 # to digests carrying the Node patch in the repo's .nvmrc.
-FROM node:26-trixie-slim@sha256:5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072 AS deps
+FROM node:26-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS deps
 WORKDIR /app/issuer-service
 COPY issuer-service/package.json issuer-service/package-lock.json ./
 RUN npm ci --omit=dev
 
-FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:33c86a63859efc2ebd88ea0a355863582ec6f1220d048de62baffb2584e709b3
+FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:1d736cf8b5716c07a245301f92717143215d248fd55771ee1936ef4b3302e531
 
 WORKDIR /app
 
