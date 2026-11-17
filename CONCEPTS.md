@@ -16,6 +16,9 @@ Embedding a signed object byte-transparently into a badge SVG's credential block
 ### Badge Art
 The hand-set image drawn in a badge's plate, behind its titles. Andamio sets it per badge or per course; a badge with its own art ignores the course's. Drawn only: it sits outside every signature and never enters the credential, so it proves nothing, and changing it means rebuilding and re-baking the badge, never re-signing it.
 
+### Badge Design
+The layout of a badge's titles, set by Andamio on its registry row. The default shows a course title and a credential title labelled COURSE and MODULE; an Andamio Issuer credential labels its credential CREDENTIAL; a credential that stands alone shows one unlabelled title. Drawn only, like Badge Art. A row that carries a design was set by hand, and a registry refresh keeps its titles and design.
+
 ### Class Achievement
 The signed, holder-free object describing what a badge *means* — its achievement, issuer, and on-chain anchor — asserting that nobody in particular earned it. One per badge, immutable (a badge's identity commits to its content, so changed content is a different badge), and safe to publish at a shared address because it names no person.
 

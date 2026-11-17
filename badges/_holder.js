@@ -488,7 +488,9 @@ function renderBadges(root, view) {
     const link = el("a", null, b.moduleTitle);
     link.href = `/badges/${b.stem}`;
     mt.append(link);
-    meta.append(mt, el("p", "ct", b.courseTitle));
+    meta.append(mt);
+    // A title-only badge repeats its one title as the course title; show it once.
+    if (b.courseTitle && b.courseTitle !== b.moduleTitle) meta.append(el("p", "ct", b.courseTitle));
     meta.append(el("span", `state ${b.state}`, STATE_LABEL[b.state] || b.state));
 
     // Multi-party attribution: the course owner is the

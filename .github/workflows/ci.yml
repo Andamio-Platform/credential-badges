@@ -99,6 +99,7 @@ jobs:
           python3 generator/tests/test_render_parity.py
           python3 generator/tests/test_render.py
           python3 generator/tests/test_api_client.py
+          python3 generator/tests/test_fetch.py
           python3 generator/tests/test_reconcile.py
           python3 generator/tests/test_og.py
           python3 generator/tests/test_page.py

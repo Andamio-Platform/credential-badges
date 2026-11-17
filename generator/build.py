@@ -58,6 +58,7 @@ def render(rec, badge_art=art.NO_ART, badge_style=None):
         slt_hash=rec["slt_hash"],
         network="mainnet",
         image=badge_art.image_for(rec["course_id"], rec["slt_hash"]),
+        design=rec.get("design"),
         **(badge_style or style.committed()).render_kwargs(rec["course_id"]),
     )
 
@@ -80,6 +81,13 @@ def main():
     except style.StyleError as e:
         sys.exit(f"❌ {e}")
     data = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
+    for r in data:                                     # every record, before any write
+        try:
+            gen.check_design(r.get("design"))
+            if r.get("design") == gen.DESIGN_TITLE_ONLY and r["course_title"] != r["module_title"]:
+                raise ValueError("a title-only row repeats one title as course_title and module_title")
+        except ValueError as e:
+            sys.exit(f"❌ {r['course_id']}.{r['slt_hash']}: {e}")
     if args.only:
         wanted = set(args.only)
         data = [r for r in data if f"{r['course_id']}.{r['slt_hash']}" in wanted]

@@ -167,7 +167,25 @@ def _plate_art(image, c):
             'preserveAspectRatio="xMidYMid slice" clip-path="url(#plate-art)"/>'
             f'<circle cx="{CX}" cy="{CY}" r="411" fill="{c("core1")}" fill-opacity="{PLATE_SCRIM_OPACITY}"/>')
 
-def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=PAL_ANDAMIO, image=None, logo=None):
+# Badge designs Andamio can set on a credentials.json record (`design`). A record
+# without one keeps the original COURSE / MODULE face byte for byte.
+#   course-credential  the same two titles, with the credential labelled
+#                      CREDENTIAL instead of MODULE (Issuer credentials)
+#   title-only         one unlabelled title for a credential that stands alone;
+#                      the record repeats it as course_title and module_title
+DESIGN_COURSE_CREDENTIAL = "course-credential"
+DESIGN_TITLE_ONLY = "title-only"
+DESIGNS = (DESIGN_COURSE_CREDENTIAL, DESIGN_TITLE_ONLY)
+
+
+def check_design(design):
+    """Return `design` if it is None or a known design, else raise ValueError."""
+    if design is not None and design not in DESIGNS:
+        raise ValueError(f"unknown badge design {design!r}; expected one of {DESIGNS}")
+    return design
+
+
+def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=PAL_ANDAMIO, image=None, logo=None, design=None):
     """Render a badge SVG from explicit inputs — no module globals are read or
     mutated, so concurrent calls with different inputs are safe (per-request use).
     `build_svg(pal)` is the legacy globals-driven wrapper around this.
@@ -179,7 +197,12 @@ def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=
     validated inner markup, its viewBox size (vw, vh), and height, dx and gap.
     It sits above the COURSE label, and the block is re-balanced so the space
     above the logo equals the space between the last hash and ANDAMIO. None
-    keeps the original layout byte for byte."""
+    keeps the original layout byte for byte.
+
+    `design` is one of DESIGNS, or None for the original COURSE / MODULE face
+    (byte for byte). See DESIGNS above."""
+    check_design(design)
+    title_only = design == DESIGN_TITLE_ONLY
     COURSE_TITLE=course_title; MODULE_TITLE=module_title
     COURSE_ID=course_id; SLT_HASH=slt_hash; NETWORK=network
     P=fill_defaults(pal)
@@ -200,7 +223,8 @@ def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=
              'xmlns:openbadges="https://purl.imsglobal.org/ob/v3p0" '
              'viewBox="0 0 1024 1024" width="1024" height="1024" role="img" '
              f'style="{var_style}" '
-             f'aria-label="Andamio credential — {esc(MODULE_TITLE)} ({esc(COURSE_TITLE)})">')
+             + (f'aria-label="Andamio credential — {esc(MODULE_TITLE)}">' if title_only else
+                f'aria-label="Andamio credential — {esc(MODULE_TITLE)} ({esc(COURSE_TITLE)})">'))
     p.append('<metadata><![CDATA[\n'+cred+'\n]]></metadata>')
     p.append('<openbadges:credential verify=""><![CDATA[\n'+cred+'\n]]></openbadges:credential>')
     p.append('<defs>'
@@ -256,12 +280,25 @@ def render_svg(*, course_title, module_title, course_id, slt_hash, network, pal=
             p.append(f'<svg x="{CX-LW/2+logo["dx"]:.1f}" y="{y:.1f}" width="{LW:.1f}" height="{LH:.1f}" '
                      f'viewBox="0 0 {logo["vw"]:g} {logo["vh"]:g}" aria-hidden="true">{logo["markup"]}</svg>')
         emit(_logo, int(LH+logo["gap"]+8))
-    emit(text("COURSE",11,c("imuted"),"mono",None,4), int(EG+csz*0.72))
-    for ln in clines: emit(text(esc(ln),csz,c("ctitle"),"sans",600,None), int(csz*1.12))
-    cur[0]+=22
-    emit(text("MODULE",11,c("imuted"),"mono",None,4), int(EG+msz*0.72))
+    center=0
+    if not title_only:
+        emit(text("COURSE",11,c("imuted"),"mono",None,4), int(EG+csz*0.72))
+        for ln in clines: emit(text(esc(ln),csz,c("ctitle"),"sans",600,None), int(csz*1.12))
+        cur[0]+=22
+        label = "CREDENTIAL" if design == DESIGN_COURSE_CREDENTIAL else "MODULE"
+        emit(text(label,11,c("imuted"),"mono",None,4), int(EG+msz*0.72))
+    else:
+        # One unlabelled title, centered between the logo and the divider: equal
+        # space above (logo bottom to cap top) and below (last baseline to the
+        # divider), computed from the logo gap and the title size so a title of
+        # any length is centered. The shorter block is then balanced on the plate
+        # the same way as the two-title design.
+        above = (int(logo["gap"])+8) if logo else 0
+        below = int(msz*1.06)+40
+        center = max(0, (below-above)//2)
+        cur[0]+=int(msz*0.72)+center
     for ln in mlines: emit(text(esc(ln),msz,c("mtitle"),"sans",800,None), int(msz*1.06))
-    cur[0]+=40
+    cur[0]+=40-center
     div_rel=cur[0]; cur[0]+=54                                    # hashes pushed further down
     emit(text("COURSE_ID",11,c("ctitle"),"mono",None,3), 24)      # dark outer-ring (course) hue
     emit(text(COURSE_ID,15,c("itext"),"mono",None,0), 42)         # slightly larger

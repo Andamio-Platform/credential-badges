@@ -193,6 +193,24 @@ def test_main_writes_cards_with_injected_art():
     print("  ✅ og.py main() wires --art-dir into exactly the matching card")
 
 
+def test_title_only_card_shows_the_title_once():
+    rec = dict(REC, course_title="Stand Alone Credential",
+               module_title="Stand Alone Credential", design="title-only")
+    svg = og._card_svg(rec)
+    column = svg.split("</svg></g>", 1)[1]          # text after the nested badge
+    assert column.count(">Stand Alone Credential<") == 1, "column shows the title once"
+    assert 'aria-label="Andamio credential — Stand Alone Credential">' in svg
+    assert ">COURSE<" not in svg and ">MODULE<" not in svg, "nested badge is title-only"
+    print("  ✅ title-only card: one title in the column, title-only badge nested")
+
+
+def test_course_credential_card_nests_the_credential_label():
+    svg = og._card_svg(dict(REC, design="course-credential"))
+    badge = svg.split("</svg></g>", 1)[0]           # the nested badge
+    assert ">CREDENTIAL<" in badge and ">MODULE<" not in badge
+    print("  ✅ course-credential card nests the CREDENTIAL-labelled badge")
+
+
 def _main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

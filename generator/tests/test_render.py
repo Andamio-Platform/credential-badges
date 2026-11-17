@@ -161,6 +161,74 @@ def test_missing_fonts_css_fails_instead_of_falling_back():
     print("  ✅ missing fonts.css raises a clear error, no external fallback")
 
 
+# --- badge designs (credential-badges: title-only + CREDENTIAL label) -------
+
+import re  # noqa: E402
+import style  # noqa: E402
+
+STYLED_CID = "2e546938ef46d69d4ba978b83c488924ca6be110504474bb83f092fd"   # has a logo
+
+
+def _design_svg(design, course, module, cid=CID, **kw):
+    return gen.render_svg(course_title=course, module_title=module, course_id=cid,
+                          slt_hash=SLT, network="mainnet", design=design, **kw)
+
+
+def test_no_design_keeps_course_and_module_labels():
+    svg = _design_svg(None, "Some Course", "Some Module")
+    assert ">COURSE<" in svg and ">MODULE<" in svg and ">CREDENTIAL<" not in svg
+    print("  ✅ no design: COURSE / MODULE face")
+
+
+def test_course_credential_labels_the_credential():
+    plain = _design_svg(None, "Some Course", "Some Module")
+    svg = _design_svg(gen.DESIGN_COURSE_CREDENTIAL, "Some Course", "Some Module")
+    assert ">COURSE<" in svg and ">CREDENTIAL<" in svg and ">MODULE<" not in svg
+    assert svg.replace(">CREDENTIAL<", ">MODULE<") == plain, "only the label may change"
+    print("  ✅ course-credential: CREDENTIAL replaces MODULE and nothing else moves")
+
+
+def test_title_only_shows_one_unlabelled_title():
+    svg = _design_svg(gen.DESIGN_TITLE_ONLY, "Stand Alone", "Stand Alone")
+    assert ">COURSE<" not in svg and ">MODULE<" not in svg and ">CREDENTIAL<" not in svg
+    face = svg.split("</openbadges:credential>", 1)[1]
+    assert face.count(">Stand Alone<") == 1, "the title is drawn once"
+    assert 'aria-label="Andamio credential — Stand Alone"' in svg
+    assert CID in face and SLT in face, "hashes stay on the face"
+    print("  ✅ title-only: one title, no labels, hashes kept")
+
+
+def test_title_only_centres_between_logo_and_divider():
+    """Equal space above and below the title: logo bottom to the first line's cap
+    top, and the last line's baseline to the divider, within a pixel of rounding,
+    for a short, a mid and a wrapping title."""
+    kw = style.committed().render_kwargs(STYLED_CID)
+    for title in ("Short", "Agentic Coding on Cardano",
+                  "A Much Longer Stand Alone Credential Title That Wraps Twice Over"):
+        svg = _design_svg(gen.DESIGN_TITLE_ONLY, title, title, cid=STYLED_CID, **kw)
+        logo_y = float(re.search(r'<svg x="[^"]+" y="([0-9.]+)" width', svg).group(1))
+        size = int(re.search(r'font-size="(\d+)" fill="var\(--mtitle', svg).group(1))
+        ys = [float(y) for y in re.findall(
+            r'<text class="sans" x="512" y="([0-9.]+)" text-anchor="middle" '
+            r'font-size="%d" fill="var\(--mtitle' % size, svg)]
+        div = float(re.search(r'<line x1="362" y1="([0-9.]+)"', svg).group(1))
+        assert ys, title
+        above = (min(ys) - int(size * 0.72)) - (logo_y + kw["logo"]["height"])
+        below = div - max(ys)
+        assert abs(above - below) <= 1, f"{title!r}: above {above} vs below {below}"
+    print("  ✅ title-only: title centered between logo and divider")
+
+
+def test_unknown_design_is_refused():
+    try:
+        _design_svg("fancy", "A", "B")
+    except ValueError as e:
+        assert "fancy" in str(e)
+    else:
+        raise AssertionError("an unknown design must raise")
+    print("  ✅ unknown design raises")
+
+
 def _main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0
