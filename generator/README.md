@@ -86,7 +86,9 @@ titles once. A row with a `design` is hand-set: `make fetch` keeps its titles an
 design, because Issuer credentials have no titles on chain. A row without a
 `design` takes its titles from the chain on every refresh, so a hand-set title
 survives only on a row with a design. The default face has no design value, so it
-cannot keep a hand-set title. A design is drawn only, so changing one is
+cannot keep a hand-set title. The on-demand render service (`render.py`) reads titles
+from the gateway and ignores `design`. Badges with a design are committed, so they
+are served from the static files and never drawn by the render service. A design is drawn only, so changing one is
 rebuild + re-bake, never re-sign. Changing a title is a re-sign.
 
 > **`make badges` strips every baked signature** (credential-badges#128). To
