@@ -57,6 +57,7 @@ def _card_svg(rec, badge_art=art.NO_ART, badge_style=None):
         course_title=course_title, module_title=module_title,
         course_id=course_id, slt_hash=slt_hash, network="mainnet",
         image=badge_art.image_for(course_id, slt_hash),
+        design=rec.get("design"),
         **styles.render_kwargs(course_id))
 
     deep, ink, raised = pal["deep"], pal["ink"], pal["raised"]
@@ -66,13 +67,18 @@ def _card_svg(rec, badge_art=art.NO_ART, badge_style=None):
         return gen.esc(s)
 
     # Right column: eyebrow (course) -> hero (module title, wrapped) -> wordmark.
+    # A title-only badge repeats its one title in both fields; show it once.
+    title_only = rec.get("design") == gen.DESIGN_TITLE_ONLY
     clines, csz = gen.lay_title(course_title, 30, COL_W, 0.54, 22)
+    if title_only:
+        clines = []
     mlines, msz = gen.lay_title(module_title, 56, COL_W, 0.58, 34)
 
     p = []
     p.append(f'<svg xmlns="http://www.w3.org/2000/svg" '
              f'viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" '
-             f'aria-label="Andamio credential — {esc(module_title)} ({esc(course_title)})">')
+             + (f'aria-label="Andamio credential — {esc(module_title)}">' if title_only else
+                f'aria-label="Andamio credential — {esc(module_title)} ({esc(course_title)})">'))
     p.append('<defs>'
              '<style>' + gen.FONT_FACE +
              '.sans{font-family:"Archivo",sans-serif;}'
@@ -99,7 +105,8 @@ def _card_svg(rec, badge_art=art.NO_ART, badge_style=None):
     # counting all of clines, not just the first line.
     line_h_c = int(csz * 1.18)
     line_h_m = int(msz * 1.12)
-    block_h = 30 + len(clines) * line_h_c + 20 + len(mlines) * line_h_m
+    gap_c = 20 if clines else 0
+    block_h = 30 + len(clines) * line_h_c + gap_c + len(mlines) * line_h_m
     y = (H - block_h) // 2 + csz
 
     p.append(f'<text class="mono" x="{COL_X}" y="{y}" font-size="14" '
@@ -109,7 +116,7 @@ def _card_svg(rec, badge_art=art.NO_ART, badge_style=None):
         p.append(f'<text class="sans" x="{COL_X}" y="{y}" font-size="{csz}" '
                  f'font-weight="600" fill="{bone}">{esc(ln)}</text>')
         y += line_h_c
-    y += 20
+    y += gap_c
     for ln in mlines:
         p.append(f'<text class="sans" x="{COL_X}" y="{y}" font-size="{msz}" '
                  f'font-weight="800" fill="{prim}">{esc(ln)}</text>')

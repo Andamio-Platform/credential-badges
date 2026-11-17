@@ -105,7 +105,7 @@ export function renderMarkup(model) {
     <img src="${esc(m.imgUrl)}" alt="${esc(m.moduleTitle)} — Andamio credential badge" loading="lazy">
   </a>
   <p class="mt">${esc(m.moduleTitle)}</p>
-  <p class="ct">${esc(m.courseTitle)}</p>
+  ${m.courseTitle === m.moduleTitle ? "" : `<p class="ct">${esc(m.courseTitle)}</p>`}
   <span class="state ${m.signed ? "signed" : "unsigned"}">${esc(m.stateLabel)}</span>
   <p class="note">${esc(m.stateNote)}</p>
   <a class="view" href="${esc(m.pageUrl)}" target="_blank" rel="noopener">View credential &rarr;</a>

@@ -206,6 +206,7 @@ export function buildViewModel({ holderState, registry, keyEpochSuspended, arriv
       stem,
       courseId: stem.split(".")[0],
       courseTitle: meta.course_title || "",
+      titleOnly: meta.design === "title-only",
       moduleTitle: meta.module_title || stem,
       // The course owner is the party who vouches for what the credential MEANS
       // (docs/verifier-guidance.md). null when the soft read failed or the
@@ -488,7 +489,9 @@ function renderBadges(root, view) {
     const link = el("a", null, b.moduleTitle);
     link.href = `/badges/${b.stem}`;
     mt.append(link);
-    meta.append(mt, el("p", "ct", b.courseTitle));
+    meta.append(mt);
+    // A title-only badge repeats its one title as the course title; show it once.
+    if (b.courseTitle && !b.titleOnly) meta.append(el("p", "ct", b.courseTitle));
     meta.append(el("span", `state ${b.state}`, STATE_LABEL[b.state] || b.state));
 
     // Multi-party attribution: the course owner is the

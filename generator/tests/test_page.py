@@ -802,6 +802,30 @@ def test_wording_gate():
     print("  ✅ wording gate: no overclaim, and .verify links the precise explainer")
 
 
+def test_title_only_page_shows_the_title_once():
+    rec = dict(REC, course_title="Stand Alone Credential",
+               module_title="Stand Alone Credential", design="title-only")
+    html = page._page_html(rec)
+    assert "<title>Stand Alone Credential · " in html
+    assert 'class="course"' not in html and 'class="frame-cap"' not in html
+    assert "Stand Alone Credential — Stand Alone Credential" not in html
+    assert "a credential from" not in html, "no 'from <course>' clause"
+    print("  ✅ title-only page: one title, no course line, no duplicate texts")
+
+
+def test_equal_titles_without_a_design_keep_the_course_line():
+    html = page._page_html(dict(REC, course_title="Same Title", module_title="Same Title"))
+    assert '<p class="course">Same Title</p>' in html, "no design: the page does not guess title-only"
+    print("  ✅ equal titles without a design keep the course line on the page")
+
+
+def test_distinct_titles_keep_the_course_line():
+    html = page._page_html(REC)
+    assert f'<p class="course">{page.esc(REC["course_title"])}</p>' in html
+    assert 'class="frame-cap"' in html
+    print("  ✅ distinct titles keep the course line and frame caption")
+
+
 def _main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

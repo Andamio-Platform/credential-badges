@@ -157,7 +157,8 @@ def test_registry_shape_and_signed_flag():
     assert set(reg) == expected, f"registry keys != credentials.json records ({len(reg)} vs {len(expected)})"
     for stem, meta in reg.items():
         assert STEM_RE.match(stem), f"registry key not a valid stem: {stem}"
-        assert set(meta) == {"course_title", "module_title", "signed"}, f"bad entry: {stem}"
+        assert {"course_title", "module_title", "signed"} <= set(meta) <= {
+            "course_title", "module_title", "signed", "design"}, f"bad entry: {stem}"
         assert isinstance(meta["signed"], bool)
     assert reg[FLAGSHIP]["signed"] is True, "flagship must be signed"
     # Not every badge is signed: a newly registered badge ships unsigned, because
@@ -166,6 +167,14 @@ def test_registry_shape_and_signed_flag():
     # the synthetic fixture in test_page.py.
     signed = sum(1 for m in reg.values() if m["signed"])
     print(f"  ✅ registry: {len(reg)} badges ({signed} signed), valid stems, flagship signed")
+
+
+def test_registry_carries_design_only_when_set():
+    reg = holder.build_registry()
+    recs = {f"{r['course_id']}.{r['slt_hash']}": r for r in json.load(open(holder.DATA))}
+    for stem, meta in reg.items():
+        assert meta.get("design") == recs[stem].get("design"), f"design mismatch: {stem}"
+    print("  ✅ registry: design copied from the row when set, absent otherwise")
 
 
 def test_registry_excludes_skip_courses():

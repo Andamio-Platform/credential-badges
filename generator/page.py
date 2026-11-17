@@ -32,7 +32,7 @@ from urllib.parse import quote
 import canon
 import colors
 import style
-from gen import esc, HOST, ISSUER
+from gen import esc, HOST, ISSUER, DESIGN_TITLE_ONLY
 from render import sanitize_title
 from build import SKIP_COURSES
 
@@ -114,6 +114,14 @@ def _is_baked(stem):
         return False
 
 
+def _course_line(rec):
+    """The course title to show beside the credential title, or "" for a
+    title-only badge, whose one title is already the credential title."""
+    if rec.get("design") == DESIGN_TITLE_ONLY:
+        return ""
+    return sanitize_title(rec["course_title"]) or ISSUER
+
+
 def _ctx(rec):
     """Per-credential fields shared by the page and embed builders — one source
     for the stem, sanitized titles, palette, canonical page URL, and baked
@@ -124,6 +132,7 @@ def _ctx(rec):
         "course_id": course_id, "slt_hash": slt_hash, "stem": stem,
         "course_title": sanitize_title(rec["course_title"]) or ISSUER,
         "module_title": sanitize_title(rec["module_title"]) or "Credential",
+        "course_line": _course_line(rec),
         "pal": style.committed().base_palette(course_id),
         "page_url": f"{HOST}/badges/{stem}",
         "baked": _is_baked(stem),
@@ -289,18 +298,23 @@ def _verify_note(baked):
 def _description(course_title, module_title, baked):
     # Wording-gated: "DI-capable OB 3.0 / VC verifiers", never "any OB3 verifier".
     # Only a baked/signed badge is claimed checkable; the rest are anchored-only.
+    # An empty course_title (a title-only badge) drops the "from" clause.
+    src = f" from {course_title}" if course_title else ""
     if baked:
-        return (f"{module_title} — a signed credential from {course_title}, "
+        return (f"{module_title} — a signed credential{src}, "
                 f"anchored on Cardano and checkable by DI-capable OB 3.0 / VC "
                 f"verifiers.")
-    return (f"{module_title} — a credential from {course_title}, anchored on "
-            f"Cardano.")
+    return (f"{module_title} — a credential{src}, anchored on Cardano.")
 
 
 def _page_html(rec):
     ctx = _ctx(rec)
-    stem, course_title, module_title = ctx["stem"], ctx["course_title"], ctx["module_title"]
+    stem, course_title, module_title = ctx["stem"], ctx["course_line"], ctx["module_title"]
     baked, page_url = ctx["baked"], ctx["page_url"]
+    # Title-only badges have no course line: "X — course" texts become "X".
+    dash_course = f" — {esc(course_title)}" if course_title else ""
+    frame_cap = f'<div class="frame-cap">{esc(course_title)}</div>' if course_title else ""
+    course_p = f'<p class="course">{esc(course_title)}</p>' if course_title else ""
     desc = _description(course_title, module_title, baked)
 
     # The per-course palette no longer feeds this page's chrome (#101): the
@@ -317,7 +331,7 @@ def _page_html(rec):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{esc(module_title)} — {esc(course_title)} · {ISSUER}</title>
+<title>{esc(module_title)}{dash_course} · {ISSUER}</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="theme-color" content="{canon.PAPER}">
 <meta property="og:type" content="website">
@@ -328,7 +342,7 @@ def _page_html(rec):
 <meta property="og:image" content="{card_url}">
 <meta property="og:image:width" content="{OG_W}">
 <meta property="og:image:height" content="{OG_H}">
-<meta property="og:image:alt" content="{esc(module_title)} — {esc(course_title)} credential badge">
+<meta property="og:image:alt" content="{esc(module_title)}{dash_course} credential badge">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(module_title)}">
 <meta name="twitter:description" content="{esc(desc)}">
@@ -434,18 +448,18 @@ a{{color:var(--blue);}}
       <div class="frame-head">Credential</div>
       <div class="plate">
         <img class="badge" src="{svg_url}" width="360" height="360"
-             alt="{esc(module_title)} — {esc(course_title)} credential badge"
+             alt="{esc(module_title)}{dash_course} credential badge"
              loading="eager" decoding="async">
       </div>
-      <div class="frame-cap">{esc(course_title)}</div>
+      {frame_cap}
     </div>
   </section>
   <section class="detail">
     <h1>{esc(module_title)}</h1>
-    <p class="course">{esc(course_title)}</p>
+    {course_p}
     <p class="issuer">Issued by {ISSUER}</p>
 
-  {_share_controls(stem, module_title, course_title, page_url, baked)}
+  {_share_controls(stem, module_title, ctx["course_title"], page_url, baked)}
   <div class="explainers" data-slot="explainers">
     <a class="explainer" href="/badges/how-to-share">How do I share this?</a>
     <a class="explainer" href="/badges/how-to-check"><span class="tile"></span>How do I check this?</a>

@@ -74,6 +74,23 @@ and its record must say where the partner's written approval lives.
 `python3 style.py --check` validates the directory on its own. Like art, a style is
 drawn only and never signed: changing one is rebuild + re-bake, never re-sign.
 
+**Badge designs.** A `credentials.json` row may carry a `design`, set by Andamio
+(`gen.DESIGNS`). Without one, a badge shows the `COURSE` and `MODULE` labels.
+`course-credential` shows the same two titles, with the credential labelled
+`CREDENTIAL` (Andamio Issuer credentials). `title-only` shows one unlabelled title,
+centered between the logo and the divider, for a credential that stands alone; the
+row repeats that title as both `course_title` and `module_title`. The pages, OG
+card and holder viewer read the design (`_registry.json` carries it) and show the
+title once; the web component has only its two title attributes, so it shows equal
+titles once. A row with a `design` is hand-set: `make fetch` keeps its titles and
+design, because Issuer credentials have no titles on chain. A row without a
+`design` takes its titles from the chain on every refresh, so a hand-set title
+survives only on a row with a design. The default face has no design value, so it
+cannot keep a hand-set title. The on-demand render service (`render.py`) reads titles
+from the gateway and ignores `design`. Badges with a design are committed, so they
+are served from the static files and never drawn by the render service. A design is drawn only, so changing one is
+rebuild + re-bake, never re-sign. Changing a title is a re-sign.
+
 > **`make badges` strips every baked signature** (credential-badges#128). To
 > refresh signed badges, scratch-build only those stems and re-bake them — the
 > single-badge procedure in the badge-art runbook (private `andamio-ops` repo).

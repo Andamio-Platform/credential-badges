@@ -123,3 +123,14 @@ test("readAttrs reads element attributes incl. the boolean `signed`", () => {
   const el2 = { ...el, hasAttribute: (n: string) => n === "signed" || n in store };
   assert.equal(readAttrs(el2 as any).signed, true, "presence of signed -> signed");
 });
+
+test("renderMarkup shows a title-only badge's one title once (equal titles)", () => {
+  const html = renderMarkup(badgeModel({ stem: STEM, moduleTitle: "Stand Alone", courseTitle: "Stand Alone" }));
+  assert.match(html, /<p class="mt">Stand Alone<\/p>/);
+  assert.doesNotMatch(html, /class="ct"/);
+});
+
+test("renderMarkup keeps the course line when the titles differ", () => {
+  const html = renderMarkup(badgeModel({ stem: STEM, moduleTitle: "Find a bug", courseTitle: "Cardano XP" }));
+  assert.match(html, /<p class="ct">Cardano XP<\/p>/);
+});
