@@ -32,7 +32,7 @@ from urllib.parse import quote
 import canon
 import colors
 import style
-from gen import esc, HOST, ISSUER
+from gen import esc, HOST, ISSUER, DESIGN_TITLE_ONLY
 from render import sanitize_title
 from build import SKIP_COURSES
 
@@ -115,12 +115,11 @@ def _is_baked(stem):
 
 
 def _course_line(rec):
-    """The course title to show beside the credential title, or "" when there is
-    none to show. A title-only badge repeats its one title as both course_title
-    and module_title, so equal titles are shown once."""
-    course = sanitize_title(rec["course_title"]) or ISSUER
-    module = sanitize_title(rec["module_title"]) or "Credential"
-    return "" if course == module else course
+    """The course title to show beside the credential title, or "" for a
+    title-only badge, whose one title is already the credential title."""
+    if rec.get("design") == DESIGN_TITLE_ONLY:
+        return ""
+    return sanitize_title(rec["course_title"]) or ISSUER
 
 
 def _ctx(rec):

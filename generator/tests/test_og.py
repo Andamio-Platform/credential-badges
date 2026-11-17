@@ -204,6 +204,13 @@ def test_title_only_card_shows_the_title_once():
     print("  ✅ title-only card: one title in the column, title-only badge nested")
 
 
+def test_equal_titles_without_a_design_keep_both_lines():
+    rec = dict(REC, course_title="Same Title", module_title="Same Title")
+    column = og._card_svg(rec).split("</svg></g>", 1)[1]
+    assert column.count(">Same Title<") == 2, "no design: the card does not guess title-only"
+    print("  ✅ equal titles without a design keep the course line on the card")
+
+
 def test_course_credential_card_nests_the_credential_label():
     svg = og._card_svg(dict(REC, design="course-credential"))
     badge = svg.split("</svg></g>", 1)[0]           # the nested badge

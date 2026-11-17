@@ -21,8 +21,8 @@ lag are indistinguishable from the browser) — the legend says both out loud.
 
 Two artifacts, both ``_``-prefixed so the reconciler / orphan-guard skip them:
   - ``_holder.html``   the branded shell (byte-parity tested, like explainers)
-  - ``_registry.json`` a compact ``stem -> {course_title, module_title, signed}``
-                       map so the client can name/link a holder's badges and
+  - ``_registry.json`` a compact ``stem -> {course_title, module_title, signed,
+                       design?}`` map so the client can name/link a holder's badges and
                        know which carry a checkable signature (only the flagship
                        today) without N page fetches.
 
@@ -57,11 +57,13 @@ GUIDANCE_URL = f"{HOST}/badges/how-to-check"
 
 
 def build_registry():
-    """``stem -> {course_title, module_title, signed}`` for every built badge
+    """``stem -> {course_title, module_title, signed, design?}`` for every built badge
     (same SKIP_COURSES filter as page.py/build.py). ``signed`` is True only for a
     baked/signed SVG (CONCEPTS: Flagship Badge) — the client uses it to scope the
     suspension check (only signed badges are covered by the key-epoch status
-    list) and the signature-depth link. Keys sorted for deterministic output."""
+    list) and the signature-depth link. ``design`` is present only on a row that
+    sets one, so the viewer draws a title-only badge from the design, never from
+    two titles that happen to match. Keys sorted for deterministic output."""
     recs = [r for r in json.load(open(DATA)) if r["course_id"] not in SKIP_COURSES]
     reg = {}
     for r in recs:
@@ -71,6 +73,8 @@ def build_registry():
             "module_title": r["module_title"],
             "signed": _is_baked(stem),
         }
+        if r.get("design"):
+            reg[stem]["design"] = r["design"]
     return {k: reg[k] for k in sorted(reg)}
 
 

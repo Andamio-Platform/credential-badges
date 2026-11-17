@@ -163,6 +163,16 @@ test("buildViewModel intersects with registry and folds in state", () => {
   assert.equal(other.state, BADGE_STATES.ANCHORED, "unsigned -> anchored");
 });
 
+test("buildViewModel marks title-only from the design, never from matching titles", () => {
+  const registry = {
+    [STEM]: { course_title: "Same", module_title: "Same", signed: true, design: "title-only" },
+    [OTHER]: { course_title: "Same", module_title: "Same", signed: false },
+  };
+  const badges = buildViewModel({ holderState: holderState([STEM, OTHER]), registry, keyEpochSuspended: false, arrivedStem: null });
+  assert.equal(badges.find((b) => b.stem === STEM)!.titleOnly, true, "design title-only");
+  assert.equal(badges.find((b) => b.stem === OTHER)!.titleOnly, false, "no design: two titles kept");
+});
+
 test("buildViewModel marks signed badges suspended / indeterminate correctly", () => {
   const suspended = buildViewModel({ holderState: holderState([STEM]), registry: REGISTRY, keyEpochSuspended: true, arrivedStem: null });
   assert.equal(suspended[0].state, BADGE_STATES.SUSPENDED, "signed + key-epoch set -> suspended");

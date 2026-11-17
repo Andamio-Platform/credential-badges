@@ -68,7 +68,7 @@ def _card_svg(rec, badge_art=art.NO_ART, badge_style=None):
 
     # Right column: eyebrow (course) -> hero (module title, wrapped) -> wordmark.
     # A title-only badge repeats its one title in both fields; show it once.
-    title_only = course_title == module_title
+    title_only = rec.get("design") == gen.DESIGN_TITLE_ONLY
     clines, csz = gen.lay_title(course_title, 30, COL_W, 0.54, 22)
     if title_only:
         clines = []

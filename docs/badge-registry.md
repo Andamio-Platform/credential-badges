@@ -77,14 +77,15 @@ hand-touched.
 | Artifact | Role | Shape |
 |---|---|---|
 | `generator/credentials.json` | **Source of truth.** One row per credential, refreshed from chain data by `make fetch`. A row Andamio set by hand carries a `design` and keeps its titles and design across a refresh. | JSON array of `{course_id, slt_hash, course_title, module_title, design?}` |
-| `badges/_registry.json` | **Build output.** Emitted by `make badges` alongside the SVGs; consumed by the display pages, the holder viewer, and the embed. | JSON object keyed by `badge_id` → `{course_title, module_title, signed}` |
+| `badges/_registry.json` | **Build output.** Emitted by `make badges` alongside the SVGs; consumed by the display pages, the holder viewer, and the embed. | JSON object keyed by `badge_id` → `{course_title, module_title, signed, design?}` |
 | `issuer-service/src/badge-registry.ts` | **The signing gate.** Loads `generator/credentials.json` and refuses a `(course_id, slt_hash)` pair that is not in it — *before* any chain read. | in-memory `Map<badge_id, BadgeEntry>` |
 
 `badge_id` is the join key across all three. `badges/_registry.json` adds
 exactly one field the source does not carry, `signed`, which drives honest
 verified-state wording in the page, the holder viewer, and the
 `<andamio-badge>` web component. It is presentation state, never a trust claim
-in itself.
+in itself. It also copies a row's `design` when one is set, so the holder viewer
+draws a title-only badge from the design rather than from matching titles.
 
 ### Adding a badge
 

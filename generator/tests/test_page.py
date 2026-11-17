@@ -813,6 +813,12 @@ def test_title_only_page_shows_the_title_once():
     print("  ✅ title-only page: one title, no course line, no duplicate texts")
 
 
+def test_equal_titles_without_a_design_keep_the_course_line():
+    html = page._page_html(dict(REC, course_title="Same Title", module_title="Same Title"))
+    assert '<p class="course">Same Title</p>' in html, "no design: the page does not guess title-only"
+    print("  ✅ equal titles without a design keep the course line on the page")
+
+
 def test_distinct_titles_keep_the_course_line():
     html = page._page_html(REC)
     assert f'<p class="course">{page.esc(REC["course_title"])}</p>' in html
