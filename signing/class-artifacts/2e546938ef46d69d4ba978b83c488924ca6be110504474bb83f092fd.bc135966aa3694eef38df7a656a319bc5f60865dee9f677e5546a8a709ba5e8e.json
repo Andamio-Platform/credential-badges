@@ -20,8 +20,8 @@
     "description": "Andamio is the protocol-layer attestation host for a multi-party credential process. The substantive authority for any credential issued through Andamio is split across the course owner (the Access Token holder who created the course), the assessor (the teacher who evaluated the work), and the Cardano chain (the immutable record). Andamio's cryptographic signature attests that this multi-party process completed correctly on-chain. It does not claim authority over what the credential means."
   },
   "validFrom": "2026-07-01T00:00:00Z",
-  "name": "Submit Your Pitch",
-  "description": "Defines the \"Submit Your Pitch\" credential of the \"Cardano for the Real World\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
+  "name": "Submit your pitch",
+  "description": "Defines the \"Submit your pitch\" credential of the \"UCLA Anderson Accelerator Masterclass: Cardano for the Real World\" course on Andamio (Cardano mainnet). This describes what the credential means and does not assert that any person holds it. A credential naming its holder is issued separately, per holder.",
   "credentialSubject": {
     "id": "urn:andamio:course:2e546938ef46d69d4ba978b83c488924ca6be110504474bb83f092fd:bc135966aa3694eef38df7a656a319bc5f60865dee9f677e5546a8a709ba5e8e",
     "type": [
@@ -32,10 +32,10 @@
       "type": [
         "Achievement"
       ],
-      "name": "Submit Your Pitch",
-      "description": "Submit Your Pitch — Cardano for the Real World",
+      "name": "Submit your pitch",
+      "description": "Submit your pitch — UCLA Anderson Accelerator Masterclass: Cardano for the Real World",
       "criteria": {
-        "narrative": "This credential is defined by the \"Cardano for the Real World\" course on Andamio (Cardano mainnet). It is awarded for the \"Submit Your Pitch\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
+        "narrative": "This credential is defined by the \"UCLA Anderson Accelerator Masterclass: Cardano for the Real World\" course on Andamio (Cardano mainnet). It is awarded for the \"Submit your pitch\" module, assessed through the course's on-chain assignment flow and recorded by a credential_claim transaction. This artifact defines those terms and does not assert that any person has met them."
       }
     }
   },
@@ -65,7 +65,7 @@
       "verificationMethod": "did:web:credentials.andamio.io#key-2026-07",
       "cryptosuite": "eddsa-rdfc-2022",
       "proofPurpose": "assertionMethod",
-      "proofValue": "zpoigP8X5Tgv5Pb6ctm9FJJMZPRb5U3Z4BF3Uht5A81WfUAy8Z11a3SfUKQZfybRVrbZacYMyNg9Z7ampxCTbtpX"
+      "proofValue": "z64rTKcrRtpS2wK9pNMVhMPZY6CeeH37anRVnouNiTseVMfekH6vHzuGc14Lrq9JpqVW9KtmuzMfBqTLspvMKY37q"
     }
   ]
 }
