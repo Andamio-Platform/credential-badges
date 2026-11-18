@@ -1,0 +1,9 @@
+# class-artifact signing run
+# mode:        kms
+# started:     2026-11-17T20:57:43.824Z
+# network:     mainnet
+# artifacts:   1
+# signer calls: 1 (exactly one per artifact, asserted)
+# verification method: did:web:credentials.andamio.io#key-2026-07
+
+2e546938ef46d69d4ba978b83c488924ca6be110504474bb83f092fd.bc135966aa3694eef38df7a656a319bc5f60865dee9f677e5546a8a709ba5e8e  sha256=d8497bed3e4dcf6bba1e92d01e7a604a4570f29e0eeab622352bd9dc9c855b2d  proofValue=z64rTKcrRtpS2wK9pNMVhMPZ…
