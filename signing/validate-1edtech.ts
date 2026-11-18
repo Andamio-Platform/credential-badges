@@ -117,9 +117,9 @@ async function main() {
   const pass = v.outcome.toUpperCase() === "VALID" && v.errors === 0 && v.warnings === 0;
   if (pass) {
     console.log("\n✅ VALID, 0 errors, 0 warnings — the class-artifact shape is accepted.");
-    console.log("   Safe to sign the remaining artifacts: npm run sign:class -- --signer kms --all");
+    console.log("   This artifact may be baked. A batch may be signed only after one of its artifacts passes here.");
   } else {
-    console.log("\n❌ NOT a clean pass. Do NOT batch-sign.");
+    console.log("\n❌ NOT a clean pass. Do NOT bake this artifact or batch-sign.");
     console.log("   Read the full response above; the Phase 0 pass criterion is 0 errors AND 0 warnings");
     console.log("   (archive/verifier-spike/results/onedtech.md).");
     process.exit(1);

@@ -104,11 +104,15 @@ a full refresh can drop published badge ids, and published ids are permanent
    OG card: badge-art runbook §4.2 and §4.4, with the new stem as `<stem>`.
 3. `make pages` and `make holder`. These regenerate derived output (pages,
    embeds, `_registry.json`) and do not touch badge SVGs.
-4. `git diff --stat main -- badges/` lists only the new stem's files and
-   `_registry.json`. The new badge ships unsigned (`"signed": false`).
-5. After it deploys, sign and bake it with the `--badge` form of the
-   class-artifact-signing runbook (private `andamio-ops` repo).
-   It cannot be signed earlier, because the anchor gate fetches the live badge URL.
+4. Sign and bake it in the same PR: `make sign-badge BADGE=<stem>`, then add the
+   expansion pin the target prints (procedure: the class-artifact-signing
+   runbook, private `andamio-ops` repo). Class signing has no anchor gate. Its
+   gate is the badge's row in `credentials.json`, and the signed artifact refers
+   only to the served context and status list, so the badge does not need to
+   be deployed first.
+5. `git diff --stat main -- badges/` lists only the new stem's files and
+   `_registry.json`, which shows the badge as `"signed": true`. Run
+   `make ci-local` before opening the PR.
 
 **Rasterization lives in `../imaging/`** (a separate Node package, `@resvg/resvg-js`)
 so this Python generator stays stdlib-only and hermetic. resvg needs two things
