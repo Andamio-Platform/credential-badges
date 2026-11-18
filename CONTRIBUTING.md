@@ -32,6 +32,7 @@ make verify        # decode a built badge's rings, check they equal its on-chain
 | `make verify` | Decode a built badge's rings and confirm they match its on-chain hashes. | Python 3 |
 | `make fetch`  | Refresh `credentials.json` from chain (andamioscan + Andamio CLI). | network, authed `andamio` CLI |
 | `make fonts`  | Rebuild `fonts.css` (subset + base64-embed the badge fonts). | network, `fonttools` + `brotli` |
+| `make ci-local` | Run the CI suites locally, except the Docker image builds and the npm pack check. | Python 3, Node, network for `npm ci` |
 
 See [`generator/README.md`](generator/README.md) for the full pipeline.
 
