@@ -27,7 +27,7 @@ const NETWORK = "mainnet";
 async function signedBytes(cred: unknown): Promise<string> {
   return (await jsonld.canonize(cred, {
     documentLoader: loader,
-    algorithm: "URDNA2015",
+    algorithm: "RDFC-1.0",
     format: "application/n-quads",
   })) as unknown as string;
 }

@@ -34,7 +34,7 @@ import * as vc from '@digitalbazaar/vc';
 import { cryptosuite as eddsa2022 } from '@digitalbazaar/eddsa-rdfc-2022-cryptosuite';
 import { DataIntegrityProof } from '@digitalbazaar/data-integrity';
 import * as Ed25519Multikey from '@digitalbazaar/ed25519-multikey';
-import pako from 'pako';
+import { ungzip } from 'pako';
 
 const DEFAULT_HOST = 'https://credentials.andamio.io';
 // The flagship signed badge — the one artifact every re-sign and context bump
@@ -137,7 +137,7 @@ async function verifyBadge(badgeUrl) {
     const encoded = slc.credentialSubject.encodedList;
     const b64 = encoded.startsWith('u') ? encoded.slice(1) : encoded; // multibase base64url-no-pad
     const bytes = Buffer.from(b64.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
-    const bits = pako.ungzip(bytes);
+    const bits = ungzip(bytes);
     const idx = parseInt(entry.statusListIndex, 10);
     const bit = (bits[Math.floor(idx / 8)] >> (7 - (idx % 8))) & 1;
     statusInfo = { statusPurpose: entry.statusPurpose, statusListIndex: idx, bitSet: !!bit };

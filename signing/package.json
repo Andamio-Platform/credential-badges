@@ -1,7 +1,7 @@
 {
   "name": "andamio-credential-signing",
   "version": "0.0.1",
-  "description": "The Andamio credential signing package (Rung 6, hardened at Rung 8.3): one cryptographically signed OB3 VC for a real mainnet Andamio credential \u2014 KMS Ed25519, hard-gated on a live on-chain anchor check.",
+  "description": "The Andamio credential signing package (Rung 6, hardened at Rung 8.3): one cryptographically signed OB3 VC for a real mainnet Andamio credential — KMS Ed25519, hard-gated on a live on-chain anchor check.",
   "type": "module",
   "private": true,
   "scripts": {
@@ -21,10 +21,10 @@
   },
   "dependencies": {
     "@digitalbazaar/data-integrity": "^2.5.0",
-    "@digitalbazaar/eddsa-rdfc-2022-cryptosuite": "^1.1.0",
-    "@digitalbazaar/vc": "^7.1.0",
-    "jsonld": "^8.3.2",
-    "jsonld-signatures": "^11.3.0"
+    "@digitalbazaar/eddsa-rdfc-2022-cryptosuite": "^1.3.0",
+    "@digitalbazaar/vc": "^7.3.0",
+    "jsonld": "^9.0.0",
+    "jsonld-signatures": "^11.6.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.6"

@@ -2,7 +2,7 @@
 // gate that no future context PR can change how the committed SIGNED artifacts
 // expand.
 //
-// eddsa-rdfc-2022 signs the SHA-256 of the RDFC-1.0 (URDNA2015) canonical RDF
+// eddsa-rdfc-2022 signs the SHA-256 of the RDFC-1.0 canonical RDF
 // dataset. If a context edit changes the canonical dataset a signed artifact
 // expands to, the committed proof is cryptographically dead even though the
 // JSON bytes are untouched. `isAdditiveSuperset` narrows what the transitional
@@ -58,7 +58,7 @@ async function canonicalDatasetSha256(file: string): Promise<string> {
     [ANDAMIO_CONTEXT_URL]: committedContext,
   });
   const nquads: string = await jsonld.canonize(doc, {
-    algorithm: "URDNA2015",
+    algorithm: "RDFC-1.0",
     format: "application/n-quads",
     documentLoader,
     // Safe mode: a term that fails to expand is a loud error, never a silently
